@@ -7,6 +7,10 @@ android/local.properties
 android/*.iml
 android/.DS_Store
 
+# IDE catch-all
+.idea/
+*.iml
+
 # Node
 backend/node_modules/
 backend/.env
