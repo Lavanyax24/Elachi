@@ -45,8 +45,7 @@ fun SplashScreen(
     onNavigateToLogin: () -> Unit,
 ) {
     LaunchedEffect(Unit) {
-        delay(2000)
-        // TODO: check FirebaseAuth.currentUser once AuthRepository is in place
+        delay(4000)
         onNavigateToLogin()
     }
 
