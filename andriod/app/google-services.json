@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "671162636834",
+    "project_id": "elachi-v2",
+    "storage_bucket": "elachi-v2.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:671162636834:android:8c262bf57715983afd487b",
+        "android_client_info": {
+          "package_name": "com.elachi.app"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "671162636834-omfb66s5np524ip0bvvjulmqnim15g8e.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB3x-_xenlODsZG5UYV-t_kbDBc-YvLHYg"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "671162636834-omfb66s5np524ip0bvvjulmqnim15g8e.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
