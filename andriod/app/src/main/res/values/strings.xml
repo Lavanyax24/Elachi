@@ -1,0 +1,26 @@
+<resources>
+    <string name="app_name">Elachi</string>
+    <string name="app_tagline">A Mouthful of Flavour</string>
+
+    <!-- Auth -->
+    <string name="login_title">Welcome Back</string>
+    <string name="login_subtitle">Sign in to continue cooking</string>
+    <string name="signup_title">Create Account</string>
+    <string name="signup_subtitle">Join the Elachi culinary community</string>
+    <string name="sign_in_with_google">Sign in with Google</string>
+    <string name="sign_up_with_google">Sign up with Google</string>
+    <string name="email_hint">hello@elachi.com</string>
+    <string name="password_hint">Password (min 6 chars)</string>
+
+    <!-- Navigation -->
+    <string name="nav_home">Home</string>
+    <string name="nav_cookbook">My Cookbook</string>
+    <string name="nav_discover">Discover</string>
+    <string name="nav_pantry">Pantry</string>
+    <string name="nav_ai_chef">AI Chef</string>
+    <string name="nav_achievements">Achievements</string>
+    <string name="nav_settings">Settings</string>
+
+    <!-- Firebase Web Client ID — copied from google-services.json -->
+    <string name="default_web_client_id" translatable="false">671162636834-omfb66s5np524ip0bvvjulmqnim15g8e.apps.googleusercontent.com</string>
+</resources>
