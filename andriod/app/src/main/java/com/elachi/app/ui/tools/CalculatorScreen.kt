@@ -25,18 +25,22 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.elachi.app.ui.theme.ElachiGreen
 
 @Composable
 fun CalculatorScreen() {
-    var display by remember { mutableStateOf("0") }
-    var pendingOp by remember { mutableStateOf<Char?>(null) }
-    var storedValue by remember { mutableStateOf(0.0) }
-    var waitingForOperand by remember { mutableStateOf(false) }
+    // The full expression being typed, e.g. "7 + 5 + 4"
+    var expression by remember { mutableStateOf("") }
+    // The current number being typed
+    var currentInput by remember { mutableStateOf("0") }
+    // The result shown after "=" was pressed
+    var result by remember { mutableStateOf<String?>(null) }
+    // True when we just pressed an operator or =, so the next digit starts a fresh number
+    var startFresh by remember { mutableStateOf(true) }
 
-    // formatNumber MUST be defined above applyOp, because applyOp calls it.
     fun formatNumber(value: Double): String {
         return if (value == value.toLong().toDouble()) {
             value.toLong().toString()
@@ -45,64 +49,80 @@ fun CalculatorScreen() {
         }
     }
 
-    fun applyOp() {
-        val current = display.toDoubleOrNull() ?: 0.0
-        val result = when (pendingOp) {
-            '+' -> storedValue + current
-            '-' -> storedValue - current
-            '×' -> storedValue * current
-            '÷' -> if (current != 0.0) storedValue / current else 0.0
-            else -> current
-        }
-        display = formatNumber(result)
-        storedValue = result
-    }
-
     fun onDigit(digit: String) {
-        display = if (waitingForOperand || display == "0") digit else display + digit
-        waitingForOperand = false
+        // If we just pressed = and start typing a new number, clear everything
+        if (result != null) {
+            expression = ""
+            result = null
+        }
+        currentInput = if (startFresh || currentInput == "0") digit else currentInput + digit
+        startFresh = false
     }
 
-    fun onOperator(op: Char) {
-        if (pendingOp != null && !waitingForOperand) {
-            applyOp()
-        } else {
-            storedValue = display.toDoubleOrNull() ?: 0.0
+    fun onDecimal() {
+        if (result != null) {
+            expression = ""
+            result = null
         }
-        pendingOp = op
-        waitingForOperand = true
+        if (startFresh) {
+            currentInput = "0."
+            startFresh = false
+        } else if (!currentInput.contains(".")) {
+            currentInput += "."
+        }
+    }
+
+    fun onOperator(op: String) {
+        if (result != null) {
+            // Reuse the previous result as the start of a new expression
+            expression = "$result $op "
+            currentInput = result!!
+            result = null
+            startFresh = true
+            return
+        }
+        if (!startFresh) {
+            // Finish the current number in the expression
+            expression += currentInput + " $op "
+        } else {
+            // Replace the trailing operator (user changed their mind)
+            expression = expression.trimEnd().dropLast(1).trimEnd() + " $op "
+        }
+        startFresh = true
     }
 
     fun onEquals() {
-        if (pendingOp != null) {
-            applyOp()
-            pendingOp = null
-            waitingForOperand = true
+        if (result != null) return
+        val fullExpr = if (!startFresh) expression + currentInput else expression.trimEnd()
+        if (fullExpr.isBlank()) return
+        val evaluated = evaluateExpression(fullExpr)
+        if (evaluated != null) {
+            expression = fullExpr
+            result = formatNumber(evaluated)
+            currentInput = result!!
+            startFresh = true
         }
     }
 
     fun onClear() {
-        display = "0"
-        storedValue = 0.0
-        pendingOp = null
-        waitingForOperand = false
-    }
-
-    fun onDecimal() {
-        if (waitingForOperand) {
-            display = "0."
-            waitingForOperand = false
-        } else if (!display.contains(".")) {
-            display += "."
-        }
+        expression = ""
+        currentInput = "0"
+        result = null
+        startFresh = true
     }
 
     fun onBackspace() {
-        if (display.length > 1) {
-            display = display.dropLast(1)
-        } else {
-            display = "0"
+        if (result != null) {
+            onClear()
+            return
         }
+        currentInput = if (currentInput.length > 1) currentInput.dropLast(1) else "0"
+    }
+
+    fun onPercent() {
+        val current = currentInput.toDoubleOrNull() ?: 0.0
+        currentInput = formatNumber(current / 100)
+        startFresh = false
     }
 
     Column(
@@ -118,7 +138,7 @@ fun CalculatorScreen() {
             color = ElachiGreen,
         )
 
-        // Display
+        // Display — shows the full expression on top, current number big at the bottom
         Surface(
             shape = RoundedCornerShape(16.dp),
             color = Color(0xFF1C1C19),
@@ -128,14 +148,30 @@ fun CalculatorScreen() {
                 modifier = Modifier.padding(20.dp).fillMaxWidth(),
                 horizontalAlignment = Alignment.End,
             ) {
+                // Small top line — shows the expression so far
+                val topLine = when {
+                    result != null -> "$expression ="
+                    expression.isNotEmpty() -> expression + if (startFresh) "" else currentInput
+                    else -> ""
+                }
                 Text(
-                    display,
+                    text = topLine.ifBlank { " " },
+                    style = MaterialTheme.typography.titleMedium,
+                    color = Color.White.copy(alpha = 0.55f),
+                    textAlign = TextAlign.End,
+                    maxLines = 2,
+                )
+                Spacer(Modifier.height(8.dp))
+                // Big bottom line — shows the result if = was pressed, otherwise the current number
+                Text(
+                    text = result ?: currentInput,
                     style = MaterialTheme.typography.headlineLarge.copy(
                         fontSize = 44.sp,
                         fontWeight = FontWeight.Medium,
                     ),
                     color = Color.White,
                     maxLines = 1,
+                    textAlign = TextAlign.End,
                 )
             }
         }
@@ -167,11 +203,8 @@ fun CalculatorScreen() {
                                 when (key) {
                                     "C" -> onClear()
                                     "⌫" -> onBackspace()
-                                    "%" -> {
-                                        val current = display.toDoubleOrNull() ?: 0.0
-                                        display = formatNumber(current / 100)
-                                    }
-                                    "+", "-", "×", "÷" -> onOperator(key[0])
+                                    "%" -> onPercent()
+                                    "+", "-", "×", "÷" -> onOperator(key)
                                     "=" -> onEquals()
                                     "." -> onDecimal()
                                     else -> onDigit(key)
@@ -184,6 +217,76 @@ fun CalculatorScreen() {
         }
 
         Spacer(Modifier.height(24.dp))
+    }
+}
+
+/**
+ * Evaluates a simple expression like "7 + 5 + 4" or "500 × 10" respecting
+ * operator precedence (× and ÷ before + and -). Supports only the four
+ * basic operators and decimal numbers. Returns null if the expression
+ * can't be parsed.
+ */
+private fun evaluateExpression(expr: String): Double? {
+    return try {
+        // Tokenize: split into numbers and operators
+        val tokens = mutableListOf<String>()
+        val cleaned = expr.replace(" ", "")
+        var i = 0
+        while (i < cleaned.length) {
+            val c = cleaned[i]
+            when {
+                c.isDigit() || c == '.' -> {
+                    val start = i
+                    while (i < cleaned.length && (cleaned[i].isDigit() || cleaned[i] == '.')) i++
+                    tokens += cleaned.substring(start, i)
+                }
+                c in "+-×÷" -> {
+                    tokens += c.toString()
+                    i++
+                }
+                else -> return null
+            }
+        }
+
+        if (tokens.isEmpty()) return null
+
+        // First pass: × and ÷
+        val pass1 = mutableListOf<String>()
+        var idx = 0
+        while (idx < tokens.size) {
+            val token = tokens[idx]
+            if (token == "×" || token == "÷") {
+                val left = pass1.removeLastOrNull()?.toDoubleOrNull() ?: return null
+                val right = tokens.getOrNull(idx + 1)?.toDoubleOrNull() ?: return null
+                val value = if (token == "×") left * right else {
+                    if (right == 0.0) return null
+                    left / right
+                }
+                pass1 += value.toString()
+                idx += 2
+            } else {
+                pass1 += token
+                idx++
+            }
+        }
+
+        // Second pass: + and -
+        if (pass1.isEmpty()) return null
+        var result = pass1[0].toDoubleOrNull() ?: return null
+        var j = 1
+        while (j < pass1.size) {
+            val op = pass1[j]
+            val right = pass1.getOrNull(j + 1)?.toDoubleOrNull() ?: return null
+            result = when (op) {
+                "+" -> result + right
+                "-" -> result - right
+                else -> return null
+            }
+            j += 2
+        }
+        result
+    } catch (e: Exception) {
+        null
     }
 }
 
