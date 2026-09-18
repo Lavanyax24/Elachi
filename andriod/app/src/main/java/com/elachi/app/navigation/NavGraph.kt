@@ -306,12 +306,23 @@ fun ElachiNavGraph() {
 
                 // ---------- Settings ----------
                 composable(Screen.Settings.route) {
-                    ScreenShell(
-                        title = "Settings",
-                        route = currentRoute,
-                        navController = navController,
-                        drawerState = drawerState,
-                    ) { Placeholder("Settings") {} }
+                    val vm: com.elachi.app.ui.settings.SettingsViewModel = viewModel(
+                        factory = SimpleViewModelFactory {
+                            com.elachi.app.ui.settings.SettingsViewModel(
+                                elachiApp.settingsRepository,
+                                elachiApp.authRepository,
+                            )
+                        },
+                    )
+                    com.elachi.app.ui.settings.SettingsScreen(
+                        viewModel = vm,
+                        onLoggedOut = {
+                            navController.navigate(Screen.Login.route) { popUpTo(0) }
+                        },
+                        onNavigateToPrivacyPolicy = { },
+                        onNavigateToTerms = { },
+                        onNavigateToEditProfile = { },
+                    )
                 }
 
                 // ---------- AI Chef ----------
