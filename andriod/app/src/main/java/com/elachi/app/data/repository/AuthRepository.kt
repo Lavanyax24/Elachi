@@ -39,7 +39,12 @@ class AuthRepository(
             val result = firebaseAuth.signInWithEmailAndPassword(email, password).await()
             val user = result.user ?: return AuthResult.Error("Sign in failed. Please try again.")
 
-            syncProfileWithBackend(user, firstName = "", surname = "")
+            // Derive name from the Firebase user's displayName if present.
+            // For email/password sign-ins this is often blank, so fall back to
+            // an empty string — the backend generates a profile either way.
+            val (first, last) = splitDisplayName(user.displayName)
+            syncProfileWithBackend(user, firstName = first, surname = last)
+
             AuthResult.Success(user)
         } catch (e: Exception) {
             AuthResult.Error(e.localizedMessage ?: "Incorrect email or password.")
@@ -51,16 +56,28 @@ class AuthRepository(
             val credential = GoogleAuthProvider.getCredential(idToken, null)
             val result = firebaseAuth.signInWithCredential(credential).await()
             val user = result.user ?: return AuthResult.Error("Google sign-in failed.")
-            val nameParts = (user.displayName ?: "").split(" ", limit = 2)
-            syncProfileWithBackend(
-                user,
-                firstName = nameParts.getOrElse(0) { "" },
-                surname = nameParts.getOrElse(1) { "" },
-            )
+
+            val (first, last) = splitDisplayName(user.displayName)
+            syncProfileWithBackend(user, firstName = first, surname = last)
+
             AuthResult.Success(user)
         } catch (e: Exception) {
             AuthResult.Error(e.localizedMessage ?: "Google sign-in failed.")
         }
+    }
+
+    /**
+     * Splits a Firebase displayName into (first, last). Google sign-ins
+     * typically return "First Last"; email/password sign-ups often return
+     * null, in which case both parts come back blank and the backend
+     * generates a fallback display name.
+     */
+    private fun splitDisplayName(displayName: String?): Pair<String, String> {
+        if (displayName.isNullOrBlank()) return "" to ""
+        val parts = displayName.trim().split(" ", limit = 2)
+        val first = parts.getOrElse(0) { "" }
+        val last = parts.getOrElse(1) { "" }
+        return first to last
     }
 
     private suspend fun syncProfileWithBackend(user: FirebaseUser, firstName: String, surname: String) {
@@ -77,18 +94,17 @@ class AuthRepository(
             if (response.isSuccessful && response.body() != null) {
                 val body = response.body()!!
                 UserSession.set(body.userId, body.friendCode)
+                Log.i("AuthRepository", "Synced userId=${body.userId}, code=${body.friendCode}")
             } else {
-                Log.e("AuthRepository", "Backend sync returned HTTP ${response.code()}")
+                Log.e("AuthRepository", "Backend sync returned HTTP ${response.code()} — body: ${response.errorBody()?.string()}")
             }
         } catch (e: Exception) {
-
             Log.e("AuthRepository", "Backend sync failed", e)
         }
     }
 
     fun signOut() {
         firebaseAuth.signOut()
-
         UserSession.clear()
     }
 }
