@@ -23,6 +23,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.elachi.app.ElachiApp
+import com.elachi.app.data.repository.UserSession
 import com.elachi.app.navigation.Screen
 import com.elachi.app.ui.auth.AuthViewModel
 import com.elachi.app.ui.auth.LoginScreen
@@ -30,6 +31,9 @@ import com.elachi.app.ui.auth.SignUpScreen
 import com.elachi.app.ui.common.AppDrawerContent
 import com.elachi.app.ui.common.ElachiBottomNavBar
 import com.elachi.app.ui.common.ElachiTopBar
+import com.elachi.app.ui.onboarding.CompleteProfileScreen
+import com.elachi.app.ui.onboarding.CompleteProfileViewModel
+import com.elachi.app.ui.onboarding.CreateFirstBookScreen
 import com.elachi.app.ui.onboarding.OnboardingScreen
 import com.elachi.app.ui.splash.SplashScreen
 import kotlinx.coroutines.launch
@@ -114,6 +118,7 @@ fun ElachiNavGraph() {
                 startDestination = Screen.Splash.route,
                 modifier = Modifier.padding(if (showBottomBar) padding else PaddingValues(0.dp)),
             ) {
+                // ---------- Splash ----------
                 composable(Screen.Splash.route) {
                     SplashScreen(
                         onNavigateToHome = {
@@ -129,6 +134,7 @@ fun ElachiNavGraph() {
                     )
                 }
 
+                // ---------- Login ----------
                 composable(Screen.Login.route) {
                     val vm: AuthViewModel = viewModel(factory = SimpleViewModelFactory { AuthViewModel(app.authRepository) })
                     LoginScreen(
@@ -140,27 +146,74 @@ fun ElachiNavGraph() {
                     )
                 }
 
+                // ---------- Sign Up ----------
                 composable(Screen.SignUp.route) {
                     val vm: AuthViewModel = viewModel(factory = SimpleViewModelFactory { AuthViewModel(app.authRepository) })
                     SignUpScreen(
                         viewModel = vm,
                         onSignUpSuccess = {
-                            navController.navigate(Screen.Onboarding.route)
+                            navController.navigate(Screen.Onboarding.route) {
+                                popUpTo(Screen.SignUp.route) { inclusive = true }
+                            }
                         },
                         onNavigateToLogin = { navController.popBackStack() },
                     )
                 }
 
+                // ---------- Onboarding carousel ----------
+                // Shown after sign-up. Leads into Complete Profile, then Create First Book.
                 composable(Screen.Onboarding.route) {
                     OnboardingScreen(
                         onFinish = {
-                            navController.navigate(Screen.Home.route) {
-                                popUpTo(0)
+                            navController.navigate(Screen.CompleteProfile.route) {
+                                popUpTo(Screen.Onboarding.route) { inclusive = true }
                             }
                         },
                     )
                 }
 
+                // ---------- Complete Profile ----------
+                composable(Screen.CompleteProfile.route) {
+                    val vm: CompleteProfileViewModel = viewModel(
+                        factory = SimpleViewModelFactory { CompleteProfileViewModel(app.profileRepository) },
+                    )
+                    CompleteProfileScreen(
+                        viewModel = vm,
+                        isEditMode = false,
+                        onDone = {
+                            navController.navigate(Screen.CreateFirstBook.route) {
+                                popUpTo(Screen.CompleteProfile.route) { inclusive = true }
+                            }
+                        },
+                    )
+                }
+
+                // ---------- Create First Book ----------
+                composable(Screen.CreateFirstBook.route) {
+                    CreateFirstBookScreen(
+                        onCreated = { name, description, coverImageUrl, icon, colour ->
+                            val userId = UserSession.userId
+                            if (userId != null) {
+                                scope.launch {
+                                    app.recipeRepository.createBook(
+                                        userId = userId,
+                                        name = name,
+                                        description = description,
+                                        icon = icon,
+                                        colour = colour,
+                                        coverImageUrl = coverImageUrl,
+                                    )
+                                }
+                            }
+                            navController.navigate(Screen.Home.route) { popUpTo(0) }
+                        },
+                        onSkip = {
+                            navController.navigate(Screen.Home.route) { popUpTo(0) }
+                        },
+                    )
+                }
+
+                // ---------- Home ----------
                 composable(Screen.Home.route) {
                     ScreenShell(
                         title = "Elachi",
@@ -170,15 +223,34 @@ fun ElachiNavGraph() {
                     ) { Placeholder("Home") {} }
                 }
 
+                // ---------- Cookbook ----------
                 composable(Screen.Cookbook.route) {
-                    ScreenShell(
-                        title = "My Cookbook",
-                        route = currentRoute,
-                        navController = navController,
-                        drawerState = drawerState,
-                    ) { Placeholder("My Cookbook") {} }
+                    val userId = UserSession.userId
+                    if (userId != null) {
+                        val vm: com.elachi.app.ui.cookbook.CookbookViewModel = viewModel(
+                            factory = SimpleViewModelFactory {
+                                com.elachi.app.ui.cookbook.CookbookViewModel(userId, app.recipeRepository)
+                            },
+                        )
+                        ScreenShell(
+                            title = "My Cookbook",
+                            route = currentRoute,
+                            navController = navController,
+                            drawerState = drawerState,
+                        ) {
+                            com.elachi.app.ui.cookbook.CookbookScreen(viewModel = vm)
+                        }
+                    } else {
+                        ScreenShell(
+                            title = "My Cookbook",
+                            route = currentRoute,
+                            navController = navController,
+                            drawerState = drawerState,
+                        ) { Placeholder("My Cookbook") {} }
+                    }
                 }
 
+                // ---------- Discover ----------
                 composable(Screen.Discover.route) {
                     ScreenShell(
                         title = "Discover",
@@ -188,6 +260,7 @@ fun ElachiNavGraph() {
                     ) { Placeholder("Discover") {} }
                 }
 
+                // ---------- Pantry ----------
                 composable(Screen.Pantry.route) {
                     ScreenShell(
                         title = "Pantry",
@@ -197,6 +270,7 @@ fun ElachiNavGraph() {
                     ) { Placeholder("Pantry") {} }
                 }
 
+                // ---------- Profile ----------
                 composable(Screen.Profile.route) {
                     ScreenShell(
                         title = "My Profile",
@@ -206,6 +280,7 @@ fun ElachiNavGraph() {
                     ) { Placeholder("Profile") {} }
                 }
 
+                // ---------- Settings ----------
                 composable(Screen.Settings.route) {
                     ScreenShell(
                         title = "Settings",
@@ -215,6 +290,7 @@ fun ElachiNavGraph() {
                     ) { Placeholder("Settings") {} }
                 }
 
+                // ---------- AI Chef ----------
                 composable(Screen.AiChef.route) {
                     ScreenShell(
                         title = "AI Chef Assistant",
@@ -224,6 +300,7 @@ fun ElachiNavGraph() {
                     ) { Placeholder("AI Chef Assistant") {} }
                 }
 
+                // ---------- Achievements ----------
                 composable(Screen.Achievements.route) {
                     ScreenShell(
                         title = "Achievements",
@@ -233,6 +310,7 @@ fun ElachiNavGraph() {
                     ) { Placeholder("Achievements") {} }
                 }
 
+                // ---------- Streak Calendar ----------
                 composable(Screen.StreakCalendar.route) {
                     ScreenShell(
                         title = "Streak Calendar",
@@ -242,6 +320,7 @@ fun ElachiNavGraph() {
                     ) { Placeholder("Streak Calendar") {} }
                 }
 
+                // ---------- Help ----------
                 composable(Screen.Help.route) {
                     ScreenShell(
                         title = "Help & Support",
