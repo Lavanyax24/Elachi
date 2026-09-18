@@ -13,6 +13,9 @@ sealed class Screen(val route: String) {
     // Main app
     data object Home : Screen("home")
     data object Cookbook : Screen("cookbook")
+    data object RecipeBookDetail : Screen("recipe_book/{bookId}") {
+        fun createRoute(bookId: String) = "recipe_book/$bookId"
+    }
     data object AddRecipe : Screen("add_recipe/{bookId}") {
         fun createRoute(bookId: String) = "add_recipe/$bookId"
     }
@@ -21,6 +24,9 @@ sealed class Screen(val route: String) {
     }
     data object RecipeDetail : Screen("recipe_detail/{recipeId}") {
         fun createRoute(recipeId: String) = "recipe_detail/$recipeId"
+    }
+    data object CookMode : Screen("cook_mode/{recipeId}") {
+        fun createRoute(recipeId: String) = "cook_mode/$recipeId"
     }
     data object Pantry : Screen("pantry")
     data object AiChef : Screen("ai_chef")

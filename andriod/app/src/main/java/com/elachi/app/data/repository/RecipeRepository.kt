@@ -21,6 +21,7 @@ class RecipeRepository(
     private val recipeDao: RecipeDao,
 ) {
     fun observeBooks(userId: String): Flow<List<RecipeBookEntity>> = bookDao.observeBooks(userId)
+    fun observeBook(bookId: String): Flow<RecipeBookEntity?> = bookDao.observeBook(bookId)
     fun observeAllRecipes(userId: String): Flow<List<RecipeEntity>> = recipeDao.observeAllRecipes(userId)
     fun observeRecipesInBook(bookId: String): Flow<List<RecipeEntity>> = recipeDao.observeRecipesInBook(bookId)
     fun observeRecipe(id: String) = recipeDao.observeRecipe(id)

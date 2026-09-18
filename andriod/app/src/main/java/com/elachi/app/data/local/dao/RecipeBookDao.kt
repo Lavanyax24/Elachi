@@ -12,6 +12,9 @@ interface RecipeBookDao {
     @Query("SELECT * FROM recipe_books WHERE id = :id")
     suspend fun getBook(id: String): RecipeBookEntity?
 
+    @Query("SELECT * FROM recipe_books WHERE id = :id")
+    fun observeBook(id: String): Flow<RecipeBookEntity?>
+
     @Upsert
     suspend fun upsert(book: RecipeBookEntity)
 
