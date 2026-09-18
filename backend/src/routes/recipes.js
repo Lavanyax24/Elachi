@@ -38,8 +38,8 @@ router.get('/', async (req, res) => {
   let query = 'SELECT id FROM recipes WHERE owner_id = $1';
   const params = [req.user.id];
 
-  if (bookId) { params.push(bookId); query += ` AND book_id = $${params.length}`; }
-  if (search) { params.push(%${search}%); query += ` AND title ILIKE $${params.length}`; }
+  if (bookId) { params.push(bookId); query += ' AND book_id = $' + params.length; }
+  if (search) { params.push('%' + search + '%'); query += ' AND title ILIKE $' + params.length; }
   query += ' ORDER BY created_at DESC';
 
   const ids = await pool.query(query, params);
@@ -48,7 +48,6 @@ router.get('/', async (req, res) => {
 });
 
 // GET /api/recipes/discover?mode=global|personalised&search=&cuisine=
-// No "following" mode — the social graph was cut from this build.
 router.get('/discover', async (req, res) => {
   const { mode = 'global', search, cuisine } = req.query;
   const params = [];
@@ -58,30 +57,29 @@ router.get('/discover', async (req, res) => {
     const interests = req.user.cooking_interests || [];
     if (interests.length > 0) {
       params.push(interests);
-      whereClauses.push((r.cuisine = ANY($${params.length}) OR r.category = ANY($${params.length})));
+      whereClauses.push('(r.cuisine = ANY($' + params.length + ') OR r.category = ANY($' + params.length + '))');
     }
   }
   if (search) {
-    params.push(%${search}%);
-    whereClauses.push(r.title ILIKE $${params.length});
+    params.push('%' + search + '%');
+    whereClauses.push('r.title ILIKE $' + params.length);
   }
   if (cuisine) {
     params.push(cuisine);
-    whereClauses.push(r.cuisine = $${params.length});
+    whereClauses.push('r.cuisine = $' + params.length);
   }
 
-  const query = `
-    SELECT r.id, r.title, r.image_url, r.cook_time_minutes, r.difficulty, r.cuisine,
-           r.times_cooked, u.id AS creator_id, u.display_name AS creator_name,
-           COALESCE(AVG(c.rating), 0) AS avg_rating, COUNT(DISTINCT c.id) AS rating_count
-    FROM recipes r
-    JOIN users u ON u.id = r.owner_id
-    LEFT JOIN comments c ON c.recipe_id = r.id AND c.rating IS NOT NULL
-    WHERE ${whereClauses.join(' AND ')}
-    GROUP BY r.id, u.id
-    ORDER BY r.created_at DESC
-    LIMIT 50
-  `;
+  const query = 'SELECT r.id, r.title, r.image_url, r.cook_time_minutes, r.difficulty, r.cuisine, '
+    + 'r.times_cooked, u.id AS creator_id, u.display_name AS creator_name, '
+    + 'COALESCE(AVG(c.rating), 0) AS avg_rating, COUNT(DISTINCT c.id) AS rating_count '
+    + 'FROM recipes r '
+    + 'JOIN users u ON u.id = r.owner_id '
+    + 'LEFT JOIN comments c ON c.recipe_id = r.id AND c.rating IS NOT NULL '
+    + 'WHERE ' + whereClauses.join(' AND ') + ' '
+    + 'GROUP BY r.id, u.id '
+    + 'ORDER BY r.created_at DESC '
+    + 'LIMIT 50';
+
   const result = await pool.query(query, params);
   res.json(result.rows.map((row) => ({
     id: row.id, title: row.title, imageUrl: row.image_url, cookTimeMinutes: row.cook_time_minutes,
@@ -107,8 +105,6 @@ router.get('/suggestions', async (req, res) => {
   res.json(suggestions);
 });
 
-// NEW: single overall percent for the Home screen's Pantry Health ring.
-// Must be declared before GET /:id or Express treats "pantry-health" as an id.
 router.get('/pantry-health', async (req, res) => {
   const recipesResult = await pool.query('SELECT id FROM recipes WHERE owner_id = $1', [req.user.id]);
   if (recipesResult.rows.length === 0) return res.json({ pantryHealthPercent: 0 });
@@ -136,7 +132,6 @@ router.get('/:id', async (req, res) => {
   res.json(recipe);
 });
 
-// Accepts an optional client-generated id (offline-first, same as books.js).
 router.post('/', async (req, res) => {
   const {
     id, bookId, title, category, cuisine, foodType, difficulty, servings,
@@ -147,9 +142,9 @@ router.post('/', async (req, res) => {
   try {
     await client.query('BEGIN');
     const recipeResult = await client.query(
-      `INSERT INTO recipes (id, owner_id, book_id, title, category, cuisine, food_type, difficulty,
-                             servings, cook_time_minutes, method, allergens, is_private, image_url)
-       VALUES (COALESCE($1::uuid, uuid_generate_v4()),$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14) RETURNING id`,
+      'INSERT INTO recipes (id, owner_id, book_id, title, category, cuisine, food_type, difficulty, '
+      + 'servings, cook_time_minutes, method, allergens, is_private, image_url) '
+      + 'VALUES (COALESCE($1::uuid, uuid_generate_v4()),$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14) RETURNING id',
       [id || null, req.user.id, bookId, title, category, cuisine, foodType, difficulty, servings, cookTimeMinutes, method, allergens, isPrivate, imageUrl || null],
     );
     const recipeId = recipeResult.rows[0].id;
@@ -190,8 +185,8 @@ router.delete('/:id', async (req, res) => {
 
 router.get('/:id/comments', async (req, res) => {
   const result = await pool.query(
-    `SELECT c.id, c.rating, c.text, c.created_at, u.display_name FROM comments c
-     JOIN users u ON u.id = c.user_id WHERE c.recipe_id = $1 ORDER BY c.created_at DESC`,
+    'SELECT c.id, c.rating, c.text, c.created_at, u.display_name FROM comments c '
+    + 'JOIN users u ON u.id = c.user_id WHERE c.recipe_id = $1 ORDER BY c.created_at DESC',
     [req.params.id],
   );
   res.json(result.rows.map((row) => ({
@@ -211,7 +206,7 @@ router.post('/:id/comments', async (req, res) => {
   if (recipeOwner.rows.length > 0 && recipeOwner.rows[0].owner_id !== req.user.id) {
     sendPushToUser(recipeOwner.rows[0].owner_id, {
       title: 'New Comment',
-      body: ${req.user.display_name} commented on ${recipeOwner.rows[0].title}.,
+      body: req.user.display_name + ' commented on ' + recipeOwner.rows[0].title + '.',
     }, 'comment_notifications').catch((e) => console.warn('Push notification failed:', e.message));
   }
 

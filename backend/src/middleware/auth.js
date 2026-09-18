@@ -1,7 +1,10 @@
 const admin = require('firebase-admin');
 const { pool } = require('../db');
 
-if (!admin.apps.length) {
+// admin.apps can be undefined (not just empty) when firebase-admin fails to
+// load, or in Jest's test environment where the SDK isn't initialised.
+// Guard both cases so requiring this file never throws.
+if (!admin.apps || !admin.apps.length) {
   try {
     const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT_JSON || '{}');
     // Render's env var box can't hold real newlines, so the private key

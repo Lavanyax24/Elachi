@@ -33,10 +33,10 @@ router.post('/sync', async (req, res) => {
     }
 
     const friendCode = generateFriendCode();
-    const displayName = ${firstName} ${surname}.trim();
+    const displayName = (firstName + ' ' + surname).trim();
     const result = await pool.query(
-      `INSERT INTO users (firebase_uid, email, first_name, surname, display_name, friend_code)
-       VALUES ($1, $2, $3, $4, $5, $6) RETURNING id, friend_code, created_at`,
+      'INSERT INTO users (firebase_uid, email, first_name, surname, display_name, friend_code) '
+      + 'VALUES ($1, $2, $3, $4, $5, $6) RETURNING id, friend_code, created_at',
       [firebaseUid, email, firstName, surname, displayName, friendCode],
     );
     await pool.query('INSERT INTO streak_records (user_id) VALUES ($1) ON CONFLICT DO NOTHING', [result.rows[0].id]);
@@ -64,14 +64,14 @@ router.get('/me', requireAuth, async (req, res) => {
 router.patch('/me', requireAuth, async (req, res) => {
   const { displayName, bio, avatarUrl, cookingInterests, dietaryRestrictions } = req.body;
   const result = await pool.query(
-    `UPDATE users SET
-       display_name = COALESCE($1, display_name),
-       bio = COALESCE($2, bio),
-       avatar_url = COALESCE($3, avatar_url),
-       cooking_interests = COALESCE($4, cooking_interests),
-       dietary_restrictions = COALESCE($5, dietary_restrictions),
-       updated_at = now()
-     WHERE id = $6 RETURNING *`,
+    'UPDATE users SET '
+    + 'display_name = COALESCE($1, display_name), '
+    + 'bio = COALESCE($2, bio), '
+    + 'avatar_url = COALESCE($3, avatar_url), '
+    + 'cooking_interests = COALESCE($4, cooking_interests), '
+    + 'dietary_restrictions = COALESCE($5, dietary_restrictions), '
+    + 'updated_at = now() '
+    + 'WHERE id = $6 RETURNING *',
     [displayName, bio, avatarUrl, cookingInterests, dietaryRestrictions, req.user.id],
   );
   const u = result.rows[0];
@@ -97,8 +97,8 @@ router.post('/me/notification-token', requireAuth, async (req, res) => {
   const { fcmToken } = req.body;
   if (!fcmToken) return res.status(400).json({ error: 'fcmToken is required.' });
   await pool.query(
-    `INSERT INTO notification_tokens (user_id, fcm_token) VALUES ($1, $2)
-     ON CONFLICT (fcm_token) DO UPDATE SET user_id = $1, updated_at = now()`,
+    'INSERT INTO notification_tokens (user_id, fcm_token) VALUES ($1, $2) '
+    + 'ON CONFLICT (fcm_token) DO UPDATE SET user_id = $1, updated_at = now()',
     [req.user.id, fcmToken],
   );
   res.status(204).send();
@@ -127,12 +127,12 @@ router.get('/me/notification-preferences', requireAuth, async (req, res) => {
 router.patch('/me/notification-preferences', requireAuth, async (req, res) => {
   const { commentNotifications, friendRequestNotifications, recipeShareNotifications } = req.body;
   await pool.query(
-    `INSERT INTO notification_preferences (user_id, comment_notifications, friend_request_notifications, recipe_share_notifications)
-     VALUES ($1, $2, $3, $4)
-     ON CONFLICT (user_id) DO UPDATE SET
-       comment_notifications = COALESCE($2, notification_preferences.comment_notifications),
-       friend_request_notifications = COALESCE($3, notification_preferences.friend_request_notifications),
-       recipe_share_notifications = COALESCE($4, notification_preferences.recipe_share_notifications)`,
+    'INSERT INTO notification_preferences (user_id, comment_notifications, friend_request_notifications, recipe_share_notifications) '
+    + 'VALUES ($1, $2, $3, $4) '
+    + 'ON CONFLICT (user_id) DO UPDATE SET '
+    + 'comment_notifications = COALESCE($2, notification_preferences.comment_notifications), '
+    + 'friend_request_notifications = COALESCE($3, notification_preferences.friend_request_notifications), '
+    + 'recipe_share_notifications = COALESCE($4, notification_preferences.recipe_share_notifications)',
     [req.user.id, commentNotifications, friendRequestNotifications, recipeShareNotifications],
   );
   res.status(204).send();
