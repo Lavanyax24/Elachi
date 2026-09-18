@@ -3,6 +3,7 @@ package com.elachi.app.ui.cookbook
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.elachi.app.data.local.entities.RecipeBookEntity
+import com.elachi.app.data.local.entities.RecipeEntity
 import com.elachi.app.data.repository.RecipeRepository
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -17,10 +18,31 @@ class CookbookViewModel(
     val books: StateFlow<List<RecipeBookEntity>> = recipeRepository.observeBooks(userId)
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
+    val allRecipes: StateFlow<List<RecipeEntity>> = recipeRepository.observeAllRecipes(userId)
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
     init {
-        // Pull the latest books from the backend so a fresh install shows them
         viewModelScope.launch {
             recipeRepository.refreshBooksFromNetwork(userId)
+            recipeRepository.refreshRecipesFromNetwork(userId)
+        }
+    }
+
+    fun createBook(name: String, description: String?, icon: String, colour: String, coverImageUrl: String? = null) {
+        viewModelScope.launch {
+            recipeRepository.createBook(userId, name, description, icon, colour, coverImageUrl)
+        }
+    }
+
+    fun updateBook(book: RecipeBookEntity, name: String, description: String?, icon: String, colour: String, coverImageUrl: String? = null) {
+        viewModelScope.launch {
+            recipeRepository.updateBook(book.id, userId, name, description, icon, colour, coverImageUrl ?: book.coverImageUrl)
+        }
+    }
+
+    fun deleteBook(book: RecipeBookEntity) {
+        viewModelScope.launch {
+            recipeRepository.deleteBook(book)
         }
     }
 }

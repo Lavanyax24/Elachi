@@ -52,8 +52,8 @@ import com.elachi.app.ui.theme.ElachiGreen
 import com.elachi.app.ui.theme.ElachiGreenLight
 import kotlinx.coroutines.launch
 
-private val ICON_OPTIONS = listOf("📖", "🏠", "⚡", "🍜", "🌮", "🎂", "🥗", "🔍", "🎯", "🌍")
-private val COLOUR_OPTIONS = listOf(
+internal val ICON_OPTIONS = listOf("📖", "🏠", "⚡", "🍜", "🌮", "🎂", "🥗", "🔍", "🎯", "🌍")
+internal val COLOUR_OPTIONS = listOf(
     "#2F5233", "#8A4B2A", "#3B82F6", "#9333EA",
     "#DC2626", "#0F766E", "#EA580C",
 )
@@ -260,7 +260,7 @@ fun CreateFirstBookScreen(
 }
 
 @Composable
-private fun IconChip(icon: String, selected: Boolean, onClick: () -> Unit) {
+internal fun IconChip(icon: String, selected: Boolean, onClick: () -> Unit) {
     Box(
         modifier = Modifier
             .size(52.dp)
@@ -279,7 +279,7 @@ private fun IconChip(icon: String, selected: Boolean, onClick: () -> Unit) {
 }
 
 @Composable
-private fun ColourSwatch(hex: String, selected: Boolean, onClick: () -> Unit) {
+internal fun ColourSwatch(hex: String, selected: Boolean, onClick: () -> Unit) {
     val colour = runCatching { Color(android.graphics.Color.parseColor(hex)) }.getOrDefault(ElachiGreen)
     Box(
         modifier = Modifier

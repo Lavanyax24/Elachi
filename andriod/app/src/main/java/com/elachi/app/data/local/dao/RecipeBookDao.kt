@@ -12,10 +12,10 @@ interface RecipeBookDao {
     @Query("SELECT * FROM recipe_books WHERE id = :id")
     suspend fun getBook(id: String): RecipeBookEntity?
 
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    @Upsert
     suspend fun upsert(book: RecipeBookEntity)
 
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    @Upsert
     suspend fun upsertAll(books: List<RecipeBookEntity>)
 
     @Delete

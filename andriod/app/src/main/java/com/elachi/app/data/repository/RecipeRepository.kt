@@ -157,6 +157,11 @@ class RecipeRepository(
 
     suspend fun upsertRecipeFromServer(ownerId: String, dto: com.elachi.app.data.remote.dto.RecipeDto) {
         val now = System.currentTimeMillis()
+
+        val existing = recipeDao.getRecipe(dto.id)
+        recipeDao.clearIngredients(dto.id)
+        recipeDao.clearSteps(dto.id)
+
         recipeDao.upsertRecipe(
             RecipeEntity(
                 id = dto.id, ownerId = ownerId, bookId = dto.bookId, title = dto.title,
@@ -177,5 +182,18 @@ class RecipeRepository(
                 StepEntity(id = UUID.randomUUID().toString(), recipeId = dto.id, order = step.order, instruction = step.instruction, timerSeconds = step.timerSeconds)
             },
         )
+    }
+
+    suspend fun refreshRecipesFromNetwork(userId: String) {
+        try {
+            val response = api.getRecipes()
+            if (!response.isSuccessful) {
+                Log.e("RecipeRepository", "refreshRecipes HTTP ${response.code()}")
+                return
+            }
+            response.body().orEmpty().forEach { upsertRecipeFromServer(userId, it) }
+        } catch (e: Exception) {
+            Log.e("RecipeRepository", "refreshRecipesFromNetwork failed", e)
+        }
     }
 }
