@@ -10,6 +10,7 @@ import com.elachi.app.data.repository.ChatRepository
 import com.elachi.app.data.repository.PantryRepository
 import com.elachi.app.data.repository.ProfileRepository
 import com.elachi.app.data.repository.RecipeRepository
+import com.elachi.app.ui.settings.SettingsRepository
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -25,6 +26,7 @@ class ElachiApp : Application() {
     val chatRepository: ChatRepository by lazy { ChatRepository(api) }
     val achievementRepository: AchievementRepository by lazy { AchievementRepository(database.achievementDao(), database.pantryDao(), database.recipeDao()) }
     val profileRepository: ProfileRepository by lazy { ProfileRepository(api) }
+    val settingsRepository: SettingsRepository by lazy { SettingsRepository(this) }
 
     override fun onCreate() {
         super.onCreate()
