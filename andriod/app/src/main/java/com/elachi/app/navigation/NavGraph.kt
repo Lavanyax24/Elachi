@@ -33,6 +33,7 @@ import com.elachi.app.ui.common.ElachiTopBar
 import com.elachi.app.ui.onboarding.OnboardingScreen
 import com.elachi.app.ui.splash.SplashScreen
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.tasks.await
 
 private val bottomNavRoutes = setOf(
     Screen.Home.route,
@@ -87,18 +88,21 @@ fun ElachiNavGraph() {
                     scope.launch { drawerState.close() }
                     scope.launch {
                         try {
-                            com.google.firebase.messaging.FirebaseMessaging.getInstance().token.addOnSuccessListener { token ->
-                                scope.launch {
-                                    try {
-                                        app.api.unregisterNotificationToken(com.elachi.app.data.remote.dto.NotificationTokenRequest(token))
-                                    } catch (e: Exception) { /* best effort */ }
-                                }
+                            val token = com.google.firebase.messaging.FirebaseMessaging.getInstance().token.await()
+                            try {
+                                app.api.unregisterNotificationToken(
+                                    com.elachi.app.data.remote.dto.NotificationTokenRequest(token)
+                                )
+                            } catch (e: Exception) {
+                                android.util.Log.e("Logout", "Token unregister failed (non-fatal)", e)
                             }
-                        } catch (e: Exception) { /* best effort */ }
+                        } catch (e: Exception) {
+                            android.util.Log.e("Logout", "Couldn't fetch FCM token", e)
+                        }
                         app.authRepository.signOut()
                         navController.navigate(Screen.Login.route) { popUpTo(0) }
                     }
-                },
+                }
             )
         },
     ) {
