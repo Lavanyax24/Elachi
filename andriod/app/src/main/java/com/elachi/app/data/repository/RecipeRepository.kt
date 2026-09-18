@@ -1,0 +1,181 @@
+package com.elachi.app.data.repository
+
+import android.util.Log
+import com.elachi.app.data.local.dao.RecipeBookDao
+import com.elachi.app.data.local.dao.RecipeDao
+import com.elachi.app.data.local.entities.IngredientEntity
+import com.elachi.app.data.local.entities.RecipeBookEntity
+import com.elachi.app.data.local.entities.RecipeEntity
+import com.elachi.app.data.local.entities.StepEntity
+import com.elachi.app.data.remote.ApiService
+import com.elachi.app.data.remote.dto.CreateRecipeBookRequest
+import com.elachi.app.data.remote.dto.CreateRecipeRequest
+import com.elachi.app.data.remote.dto.IngredientDto
+import com.elachi.app.data.remote.dto.StepDto
+import kotlinx.coroutines.flow.Flow
+import java.util.UUID
+
+class RecipeRepository(
+    private val api: ApiService,
+    private val bookDao: RecipeBookDao,
+    private val recipeDao: RecipeDao,
+) {
+    fun observeBooks(userId: String): Flow<List<RecipeBookEntity>> = bookDao.observeBooks(userId)
+    fun observeAllRecipes(userId: String): Flow<List<RecipeEntity>> = recipeDao.observeAllRecipes(userId)
+    fun observeRecipesInBook(bookId: String): Flow<List<RecipeEntity>> = recipeDao.observeRecipesInBook(bookId)
+    fun observeRecipe(id: String) = recipeDao.observeRecipe(id)
+    fun observeIngredients(recipeId: String) = recipeDao.observeIngredients(recipeId)
+    fun observeSteps(recipeId: String) = recipeDao.observeSteps(recipeId)
+
+    suspend fun createBook(
+        userId: String, name: String, description: String?, icon: String, colour: String,
+        coverImageUrl: String? = null,
+    ) {
+        val id = UUID.randomUUID().toString()
+        val now = System.currentTimeMillis()
+        bookDao.upsert(
+            RecipeBookEntity(
+                id = id, ownerId = userId, name = name, description = description,
+                coverImageUrl = coverImageUrl, icon = icon, colour = colour, createdAt = now,
+            ),
+        )
+        try {
+
+            api.createBook(CreateRecipeBookRequest(id = id, name, description, coverImageUrl, icon, colour))
+        } catch (e: Exception) {
+            Log.e("RecipeRepository", "createBook backend sync failed", e)
+        }
+    }
+
+    suspend fun createRecipe(
+        userId: String, bookId: String, title: String, category: String, cuisine: String,
+        foodType: String, difficulty: String, servings: Int, cookTimeMinutes: Int, method: String,
+        ingredients: List<Pair<String, Pair<Double, String>>>,
+        steps: List<String>, allergens: List<String>, isPrivate: Boolean, imageUrl: String? = null,
+    ): String {
+        val recipeId = UUID.randomUUID().toString()
+        val now = System.currentTimeMillis()
+
+        recipeDao.upsertRecipe(
+            RecipeEntity(
+                id = recipeId, ownerId = userId, bookId = bookId, title = title,
+                category = category, cuisine = cuisine, foodType = foodType,
+                difficulty = difficulty, servings = servings, cookTimeMinutes = cookTimeMinutes,
+                method = method, allergensCsv = allergens.joinToString(","),
+                isPrivate = isPrivate, imageUrl = imageUrl, createdAt = now, updatedAt = now,
+            ),
+        )
+        recipeDao.upsertIngredients(
+            ingredients.mapIndexed { index, (name, qtyUnit) ->
+                IngredientEntity(
+                    id = UUID.randomUUID().toString(), recipeId = recipeId, name = name,
+                    quantity = qtyUnit.first, unit = qtyUnit.second, sortOrder = index,
+                )
+            },
+        )
+        recipeDao.upsertSteps(
+            steps.mapIndexed { index, instruction ->
+                StepEntity(
+                    id = UUID.randomUUID().toString(), recipeId = recipeId,
+                    order = index, instruction = instruction,
+                )
+            },
+        )
+
+        try {
+
+            api.createRecipe(
+                CreateRecipeRequest(
+                    id = recipeId, bookId = bookId, title = title, category = category, cuisine = cuisine,
+                    foodType = foodType, difficulty = difficulty, servings = servings,
+                    cookTimeMinutes = cookTimeMinutes, method = method,
+                    ingredients = ingredients.map { (name, qtyUnit) -> IngredientDto(name, qtyUnit.first, qtyUnit.second) },
+                    steps = steps.mapIndexed { i, s -> StepDto(i, s) },
+                    allergens = allergens, isPrivate = isPrivate, imageUrl = imageUrl,
+                ),
+            )
+        } catch (e: Exception) {
+            Log.e("RecipeRepository", "createRecipe backend sync failed", e)
+        }
+        return recipeId
+    }
+
+    suspend fun deleteRecipe(id: String) {
+        recipeDao.deleteRecipe(id)
+        try { api.deleteRecipe(id) } catch (e: Exception) {
+            Log.e("RecipeRepository", "deleteRecipe backend sync failed", e)
+        }
+    }
+
+    suspend fun toggleFavourite(id: String, favourite: Boolean) = recipeDao.setFavourite(id, favourite)
+    suspend fun markCooked(id: String) = recipeDao.incrementTimesCooked(id)
+
+    suspend fun updateBook(bookId: String, userId: String, name: String, description: String?, icon: String, colour: String, coverImageUrl: String?) {
+        val existing = bookDao.getBook(bookId) ?: return
+        bookDao.upsert(existing.copy(name = name, description = description, icon = icon, colour = colour, coverImageUrl = coverImageUrl))
+        try {
+            api.updateBook(bookId, CreateRecipeBookRequest(name = name, description = description, coverImageUrl = coverImageUrl, icon = icon, colour = colour))
+        } catch (e: Exception) {
+
+        }
+    }
+
+    suspend fun deleteBook(book: RecipeBookEntity) {
+        bookDao.delete(book)
+        try { api.deleteBook(book.id) } catch (e: Exception) {
+            Log.e("RecipeRepository", "deleteBook backend sync failed", e)
+        }
+    }
+
+    suspend fun refreshBooksFromNetwork(userId: String) {
+        try {
+            val remoteBooks = api.getBooks().body().orEmpty()
+            bookDao.upsertAll(
+                remoteBooks.map {
+                    RecipeBookEntity(
+                        id = it.id, ownerId = userId, name = it.name, description = it.description,
+                        coverImageUrl = it.coverImageUrl, icon = it.icon, colour = it.colour,
+                        createdAt = System.currentTimeMillis(),
+                    )
+                },
+            )
+        } catch (e: Exception) {
+            // Same note as updateBook above.
+        }
+    }
+
+    suspend fun parseRecipeTextViaAi(rawText: String): Result<com.elachi.app.data.remote.dto.ParsedRecipeAiDto> = try {
+        val response = api.parseRecipeText(com.elachi.app.data.remote.dto.ParseRecipeTextRequest(rawText))
+        if (response.isSuccessful && response.body() != null) {
+            Result.success(response.body()!!)
+        } else {
+            Result.failure(Exception("AI recipe parsing failed (HTTP ${response.code()})."))
+        }
+    } catch (e: Exception) {
+        Result.failure(Exception("Couldn't reach the AI recipe parser."))
+    }
+
+    suspend fun upsertRecipeFromServer(ownerId: String, dto: com.elachi.app.data.remote.dto.RecipeDto) {
+        val now = System.currentTimeMillis()
+        recipeDao.upsertRecipe(
+            RecipeEntity(
+                id = dto.id, ownerId = ownerId, bookId = dto.bookId, title = dto.title,
+                category = dto.category, cuisine = dto.cuisine, foodType = dto.foodType,
+                difficulty = dto.difficulty, servings = dto.servings, cookTimeMinutes = dto.cookTimeMinutes,
+                method = dto.method, allergensCsv = dto.allergens.joinToString(","),
+                isPrivate = dto.isPrivate, forkedFromRecipeId = dto.forkedFromRecipeId,
+                timesCooked = dto.timesCooked, imageUrl = dto.imageUrl, createdAt = now, updatedAt = now,
+            ),
+        )
+        recipeDao.upsertIngredients(
+            dto.ingredients.mapIndexed { index, ing ->
+                IngredientEntity(id = UUID.randomUUID().toString(), recipeId = dto.id, name = ing.name, quantity = ing.quantity, unit = ing.unit, sortOrder = index)
+            },
+        )
+        recipeDao.upsertSteps(
+            dto.steps.map { step ->
+                StepEntity(id = UUID.randomUUID().toString(), recipeId = dto.id, order = step.order, instruction = step.instruction, timerSeconds = step.timerSeconds)
+            },
+        )
+    }
+}
