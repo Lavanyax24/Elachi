@@ -38,7 +38,7 @@ import com.google.android.gms.common.api.ApiException
 @Composable
 fun LoginScreen(
     viewModel: AuthViewModel,
-    onLoginSuccess: () -> Unit,
+    onLoginSuccess: (Boolean) -> Unit,
     onNavigateToSignUp: () -> Unit,
 ) {
     val context = LocalContext.current
@@ -60,14 +60,21 @@ fun LoginScreen(
     ) { result ->
         try {
             val account = GoogleSignIn.getSignedInAccountFromIntent(result.data).getResult(ApiException::class.java)
-            account.idToken?.let { viewModel.signInWithGoogleToken(it) }
+            val idToken = account.idToken
+            if (idToken != null) {
+                viewModel.signInWithGoogleToken(idToken)
+            } else {
+                viewModel.setError("Google Sign-in failed: ID Token missing")
+            }
         } catch (e: ApiException) {
-            // Surfaced via uiState error path; kept minimal here since this is a launcher callback.
+            viewModel.setError("Google Sign-in failed: ${e.localizedMessage}")
         }
     }
 
     LaunchedEffect(uiState) {
-        if (uiState is AuthUiState.Success) onLoginSuccess()
+        if (uiState is AuthUiState.Success) {
+            onLoginSuccess((uiState as AuthUiState.Success).isNewUser)
+        }
     }
 
     Box(

@@ -39,7 +39,7 @@ import com.google.android.gms.common.api.ApiException
 @Composable
 fun SignUpScreen(
     viewModel: AuthViewModel,
-    onSignUpSuccess: () -> Unit,
+    onSignUpSuccess: (Boolean) -> Unit,
     onNavigateToLogin: () -> Unit,
 ) {
     val context = LocalContext.current
@@ -51,15 +51,9 @@ fun SignUpScreen(
     val uiState by viewModel.uiState.collectAsState()
 
 
-    val webClientId = if (context.resources.getIdentifier("default_web_client_id", "string", context.packageName) != 0) {
-        stringResource(R.string.default_web_client_id)
-    } else {
-        "YOUR_WEB_CLIENT_ID_HERE"
-    }
-
-    val googleSignInClient = remember(webClientId) {
+    val googleSignInClient = remember {
         val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
-            .requestIdToken(webClientId)
+            .requestIdToken(context.getString(R.string.default_web_client_id))
             .requestEmail()
             .build()
         GoogleSignIn.getClient(context, gso)
@@ -70,14 +64,21 @@ fun SignUpScreen(
     ) { result ->
         try {
             val account = GoogleSignIn.getSignedInAccountFromIntent(result.data).getResult(ApiException::class.java)
-            account.idToken?.let { viewModel.signInWithGoogleToken(it) }
+            val idToken = account.idToken
+            if (idToken != null) {
+                viewModel.signInWithGoogleToken(idToken)
+            } else {
+                viewModel.setError("Google Sign-up failed: ID Token missing")
+            }
         } catch (e: ApiException) {
-            // Surfaced via uiState error path; kept minimal here since this is a launcher callback.
+            viewModel.setError("Google Sign-up failed: ${e.localizedMessage}")
         }
     }
 
     LaunchedEffect(uiState) {
-        if (uiState is AuthUiState.Success) onSignUpSuccess()
+        if (uiState is AuthUiState.Success) {
+            onSignUpSuccess((uiState as AuthUiState.Success).isNewUser)
+        }
     }
 
     fun submit() {

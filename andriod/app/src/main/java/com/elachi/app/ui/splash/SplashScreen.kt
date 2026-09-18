@@ -90,7 +90,7 @@ fun SplashScreen(
                     modifier = Modifier.padding(20.dp),
                 ) {
                     Image(
-                        painter = painterResource(id = R.mipmap.ic_launcher),
+                        painter = painterResource(id = R.mipmap.ic_launcher_foreground),
                         contentDescription = "Elachi Logo",
                         modifier = Modifier.fillMaxSize(),
                     )

@@ -12,6 +12,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -62,8 +63,23 @@ private val drawerEnabledRoutes = setOf(
 @Composable
 fun ElachiNavGraph() {
 
-    val app = LocalContext.current.applicationContext as ElachiApp
+    val context = LocalContext.current
+    val app = remember(context) { 
+        try {
+            context.applicationContext as ElachiApp
+        } catch (e: Exception) {
+            null
+        }
+    }
 
+    if (app == null) {
+        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+            Text("Critical Error: Application context mismatch")
+        }
+        return
+    }
+
+    val elachiApp = app // Smart cast holder
     val navController = rememberNavController()
     val backStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = backStackEntry?.destination?.route
@@ -94,7 +110,7 @@ fun ElachiNavGraph() {
                         try {
                             val token = com.google.firebase.messaging.FirebaseMessaging.getInstance().token.await()
                             try {
-                                app.api.unregisterNotificationToken(
+                                elachiApp.api.unregisterNotificationToken(
                                     com.elachi.app.data.remote.dto.NotificationTokenRequest(token)
                                 )
                             } catch (e: Exception) {
@@ -103,7 +119,7 @@ fun ElachiNavGraph() {
                         } catch (e: Exception) {
                             android.util.Log.e("Logout", "Couldn't fetch FCM token", e)
                         }
-                        app.authRepository.signOut()
+                        elachiApp.authRepository.signOut()
                         navController.navigate(Screen.Login.route) { popUpTo(0) }
                     }
                 }
@@ -136,11 +152,15 @@ fun ElachiNavGraph() {
 
                 // ---------- Login ----------
                 composable(Screen.Login.route) {
-                    val vm: AuthViewModel = viewModel(factory = SimpleViewModelFactory { AuthViewModel(app.authRepository) })
+                    val vm: AuthViewModel = viewModel(factory = SimpleViewModelFactory { AuthViewModel(elachiApp.authRepository) })
                     LoginScreen(
                         viewModel = vm,
-                        onLoginSuccess = {
-                            navController.navigate(Screen.Home.route) { popUpTo(0) }
+                        onLoginSuccess = { isNewUser ->
+                            if (isNewUser) {
+                                navController.navigate(Screen.Onboarding.route) { popUpTo(0) }
+                            } else {
+                                navController.navigate(Screen.Home.route) { popUpTo(0) }
+                            }
                         },
                         onNavigateToSignUp = { navController.navigate(Screen.SignUp.route) },
                     )
@@ -148,12 +168,16 @@ fun ElachiNavGraph() {
 
                 // ---------- Sign Up ----------
                 composable(Screen.SignUp.route) {
-                    val vm: AuthViewModel = viewModel(factory = SimpleViewModelFactory { AuthViewModel(app.authRepository) })
+                    val vm: AuthViewModel = viewModel(factory = SimpleViewModelFactory { AuthViewModel(elachiApp.authRepository) })
                     SignUpScreen(
                         viewModel = vm,
-                        onSignUpSuccess = {
-                            navController.navigate(Screen.Onboarding.route) {
-                                popUpTo(Screen.SignUp.route) { inclusive = true }
+                        onSignUpSuccess = { isNewUser ->
+                            if (isNewUser) {
+                                navController.navigate(Screen.Onboarding.route) {
+                                    popUpTo(Screen.SignUp.route) { inclusive = true }
+                                }
+                            } else {
+                                navController.navigate(Screen.Home.route) { popUpTo(0) }
                             }
                         },
                         onNavigateToLogin = { navController.popBackStack() },
@@ -175,7 +199,7 @@ fun ElachiNavGraph() {
                 // ---------- Complete Profile ----------
                 composable(Screen.CompleteProfile.route) {
                     val vm: CompleteProfileViewModel = viewModel(
-                        factory = SimpleViewModelFactory { CompleteProfileViewModel(app.profileRepository) },
+                        factory = SimpleViewModelFactory { CompleteProfileViewModel(elachiApp.profileRepository) },
                     )
                     CompleteProfileScreen(
                         viewModel = vm,
@@ -195,7 +219,7 @@ fun ElachiNavGraph() {
                             val userId = UserSession.userId
                             if (userId != null) {
                                 scope.launch {
-                                    app.recipeRepository.createBook(
+                                    elachiApp.recipeRepository.createBook(
                                         userId = userId,
                                         name = name,
                                         description = description,
@@ -229,7 +253,7 @@ fun ElachiNavGraph() {
                     if (userId != null) {
                         val vm: com.elachi.app.ui.cookbook.CookbookViewModel = viewModel(
                             factory = SimpleViewModelFactory {
-                                com.elachi.app.ui.cookbook.CookbookViewModel(userId, app.recipeRepository)
+                                com.elachi.app.ui.cookbook.CookbookViewModel(userId, elachiApp.recipeRepository)
                             },
                         )
                         ScreenShell(

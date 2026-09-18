@@ -16,39 +16,26 @@ import kotlinx.coroutines.launch
 
 class ElachiApp : Application() {
 
-    lateinit var database: AppDatabase
-        private set
-    lateinit var authRepository: AuthRepository
-        private set
-    lateinit var recipeRepository: RecipeRepository
-        private set
-    lateinit var pantryRepository: PantryRepository
-        private set
-    lateinit var chatRepository: ChatRepository
-        private set
-    lateinit var achievementRepository: AchievementRepository
-        private set
-    lateinit var profileRepository: ProfileRepository
-        private set
-    lateinit var api: ApiService
-        private set
+    val database: AppDatabase by lazy { AppDatabase.getInstance(this) }
+    val api: ApiService by lazy { RetrofitClient.apiService }
+
+    val authRepository: AuthRepository by lazy { AuthRepository() }
+    val recipeRepository: RecipeRepository by lazy { RecipeRepository(api, database.recipeBookDao(), database.recipeDao()) }
+    val pantryRepository: PantryRepository by lazy { PantryRepository(api, database.pantryDao(), database.recipeDao()) }
+    val chatRepository: ChatRepository by lazy { ChatRepository(api) }
+    val achievementRepository: AchievementRepository by lazy { AchievementRepository(database.achievementDao(), database.pantryDao(), database.recipeDao()) }
+    val profileRepository: ProfileRepository by lazy { ProfileRepository(api) }
 
     override fun onCreate() {
         super.onCreate()
 
-        database = AppDatabase.getInstance(this)
-        api = RetrofitClient.apiService
-
-        authRepository = AuthRepository()
-        recipeRepository = RecipeRepository(api, database.recipeBookDao(), database.recipeDao())
-        pantryRepository = PantryRepository(api, database.pantryDao(), database.recipeDao())
-        chatRepository = ChatRepository(api)
-        achievementRepository = AchievementRepository(database.achievementDao(), database.pantryDao(), database.recipeDao())
-        profileRepository = ProfileRepository(api)
-
-
+        // Seed achievements in background without blocking app startup
         CoroutineScope(Dispatchers.IO).launch {
-            achievementRepository.seedDefinitionsIfNeeded()
+            try {
+                achievementRepository.seedDefinitionsIfNeeded()
+            } catch (e: Exception) {
+                android.util.Log.e("ElachiApp", "Failed to seed achievements", e)
+            }
         }
     }
 }

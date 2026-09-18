@@ -14,7 +14,12 @@ import com.elachi.app.ui.theme.ElachiTheme
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        enableEdgeToEdge()
+        try {
+            enableEdgeToEdge()
+        } catch (e: Exception) {
+            android.util.Log.e("MainActivity", "edge-to-edge failed", e)
+        }
+        
         setContent {
             ElachiTheme {
                 Surface(
