@@ -99,7 +99,7 @@ fun LoginScreen(
                 ) {
                     Box(contentAlignment = Alignment.Center, modifier = Modifier.padding(16.dp)) {
                         Image(
-                            painter = painterResource(id = R.mipmap.ic_launcher_foreground),
+                            painter = painterResource(id = R.drawable.elachi_logo),
                             contentDescription = "Elachi Logo",
                             modifier = Modifier.fillMaxSize(),
                         )

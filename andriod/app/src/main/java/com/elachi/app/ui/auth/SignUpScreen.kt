@@ -25,6 +25,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
@@ -49,9 +50,16 @@ fun SignUpScreen(
     var showPw by remember { mutableStateOf(false) }
     val uiState by viewModel.uiState.collectAsState()
 
-    val googleSignInClient = remember {
+
+    val webClientId = if (context.resources.getIdentifier("default_web_client_id", "string", context.packageName) != 0) {
+        stringResource(R.string.default_web_client_id)
+    } else {
+        "YOUR_WEB_CLIENT_ID_HERE"
+    }
+
+    val googleSignInClient = remember(webClientId) {
         val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
-            .requestIdToken(context.getString(R.string.default_web_client_id))
+            .requestIdToken(webClientId)
             .requestEmail()
             .build()
         GoogleSignIn.getClient(context, gso)
@@ -105,7 +113,7 @@ fun SignUpScreen(
                 ) {
                     Box(contentAlignment = Alignment.Center, modifier = Modifier.padding(14.dp)) {
                         Image(
-                            painter = painterResource(id = R.mipmap.ic_launcher_foreground),
+                            painter = painterResource(id = R.drawable.elachi_logo),
                             contentDescription = "Elachi Logo",
                             modifier = Modifier.fillMaxSize(),
                         )
