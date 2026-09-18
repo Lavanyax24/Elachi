@@ -9,14 +9,14 @@ import com.google.firebase.auth.GoogleAuthProvider
 import kotlinx.coroutines.tasks.await
 
 sealed class AuthResult {
-    data class Success(val user: FirebaseUser) : AuthResult()
+    data class Success(val user: FirebaseUser, val isNewUser: Boolean = false) : AuthResult()
     data class Error(val message: String) : AuthResult()
 }
 
 class AuthRepository(
-    private val firebaseAuth: FirebaseAuth = FirebaseAuth.getInstance(),
+    private val firebaseAuth: FirebaseAuth? = try { FirebaseAuth.getInstance() } catch (e: Exception) { null },
 ) {
-    val currentUser: FirebaseUser? get() = firebaseAuth.currentUser
+    val currentUser: FirebaseUser? get() = firebaseAuth?.currentUser
 
     suspend fun signUpWithEmail(
         firstName: String,
@@ -24,19 +24,21 @@ class AuthRepository(
         email: String,
         password: String,
     ): AuthResult {
+        val auth = firebaseAuth ?: return AuthResult.Error("Firebase not initialized correctly.")
         return try {
-            val result = firebaseAuth.createUserWithEmailAndPassword(email, password).await()
+            val result = auth.createUserWithEmailAndPassword(email, password).await()
             val user = result.user ?: return AuthResult.Error("Registration failed. Please try again.")
             syncProfileWithBackend(user, firstName, surname)
-            AuthResult.Success(user)
+            AuthResult.Success(user, isNewUser = true)
         } catch (e: Exception) {
             AuthResult.Error(e.localizedMessage ?: "Registration failed.")
         }
     }
 
     suspend fun signInWithEmail(email: String, password: String): AuthResult {
+        val auth = firebaseAuth ?: return AuthResult.Error("Firebase not initialized correctly.")
         return try {
-            val result = firebaseAuth.signInWithEmailAndPassword(email, password).await()
+            val result = auth.signInWithEmailAndPassword(email, password).await()
             val user = result.user ?: return AuthResult.Error("Sign in failed. Please try again.")
 
             // Derive name from the Firebase user's displayName if present.
@@ -45,22 +47,24 @@ class AuthRepository(
             val (first, last) = splitDisplayName(user.displayName)
             syncProfileWithBackend(user, firstName = first, surname = last)
 
-            AuthResult.Success(user)
+            AuthResult.Success(user, isNewUser = false)
         } catch (e: Exception) {
             AuthResult.Error(e.localizedMessage ?: "Incorrect email or password.")
         }
     }
 
     suspend fun signInWithGoogle(idToken: String): AuthResult {
+        val auth = firebaseAuth ?: return AuthResult.Error("Firebase not initialized correctly.")
         return try {
             val credential = GoogleAuthProvider.getCredential(idToken, null)
-            val result = firebaseAuth.signInWithCredential(credential).await()
+            val result = auth.signInWithCredential(credential).await()
             val user = result.user ?: return AuthResult.Error("Google sign-in failed.")
+            val isNewUser = result.additionalUserInfo?.isNewUser == true
 
             val (first, last) = splitDisplayName(user.displayName)
             syncProfileWithBackend(user, firstName = first, surname = last)
 
-            AuthResult.Success(user)
+            AuthResult.Success(user, isNewUser = isNewUser)
         } catch (e: Exception) {
             AuthResult.Error(e.localizedMessage ?: "Google sign-in failed.")
         }
@@ -104,7 +108,7 @@ class AuthRepository(
     }
 
     fun signOut() {
-        firebaseAuth.signOut()
+        firebaseAuth?.signOut()
         UserSession.clear()
     }
 }

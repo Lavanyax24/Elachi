@@ -12,7 +12,7 @@ import kotlinx.coroutines.launch
 sealed class AuthUiState {
     data object Idle : AuthUiState()
     data object Loading : AuthUiState()
-    data object Success : AuthUiState()
+    data class Success(val isNewUser: Boolean) : AuthUiState()
     data class Error(val message: String) : AuthUiState()
 }
 
@@ -37,7 +37,7 @@ class AuthViewModel(private val authRepository: AuthRepository) : ViewModel() {
         _uiState.value = AuthUiState.Loading
         viewModelScope.launch {
             when (val result = authRepository.signUpWithEmail(firstName, surname, email, password)) {
-                is AuthResult.Success -> _uiState.value = AuthUiState.Success
+                is AuthResult.Success -> _uiState.value = AuthUiState.Success(result.isNewUser)
                 is AuthResult.Error -> _uiState.value = AuthUiState.Error(result.message)
             }
         }
@@ -51,7 +51,7 @@ class AuthViewModel(private val authRepository: AuthRepository) : ViewModel() {
         _uiState.value = AuthUiState.Loading
         viewModelScope.launch {
             when (val result = authRepository.signInWithEmail(email, password)) {
-                is AuthResult.Success -> _uiState.value = AuthUiState.Success
+                is AuthResult.Success -> _uiState.value = AuthUiState.Success(result.isNewUser)
                 is AuthResult.Error -> _uiState.value = AuthUiState.Error(result.message)
             }
         }
@@ -61,10 +61,14 @@ class AuthViewModel(private val authRepository: AuthRepository) : ViewModel() {
         _uiState.value = AuthUiState.Loading
         viewModelScope.launch {
             when (val result = authRepository.signInWithGoogle(idToken)) {
-                is AuthResult.Success -> _uiState.value = AuthUiState.Success
+                is AuthResult.Success -> _uiState.value = AuthUiState.Success(result.isNewUser)
                 is AuthResult.Error -> _uiState.value = AuthUiState.Error(result.message)
             }
         }
+    }
+
+    fun setError(message: String) {
+        _uiState.value = AuthUiState.Error(message)
     }
 
     fun resetState() { _uiState.value = AuthUiState.Idle }

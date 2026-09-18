@@ -15,13 +15,17 @@ import retrofit2.converter.gson.GsonConverterFactory
 class AuthInterceptor : Interceptor {
     override fun intercept(chain: Interceptor.Chain): Response {
         val token = try {
-            runBlocking {
-                FirebaseAuth.getInstance().currentUser
-                    ?.getIdToken(false)
-                    ?.await()
-                    ?.token
-            }
-        } catch (e: Exception) {
+            // Check if Firebase is initialized to avoid crashes on devices without Play Services
+            val firebaseApp = try { com.google.firebase.FirebaseApp.getInstance() } catch (t: Throwable) { null }
+            if (firebaseApp != null) {
+                runBlocking {
+                    FirebaseAuth.getInstance().currentUser
+                        ?.getIdToken(false)
+                        ?.await()
+                        ?.token
+                }
+            } else null
+        } catch (t: Throwable) {
             null
         }
 

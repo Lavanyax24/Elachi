@@ -33,6 +33,43 @@
           ]
         }
       }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:671162636834:android:b7b1b3d2b7057868fd487b",
+        "android_client_info": {
+          "package_name": "com.elachi.app.new"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "671162636834-8acc3j8975qhvffs6p9um68ju2j6g66f.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.elachi.app.new",
+            "certificate_hash": "eea1fe26058f08d7e445ba5fb5d7ac42b9629ea0"
+          }
+        },
+        {
+          "client_id": "671162636834-omfb66s5np524ip0bvvjulmqnim15g8e.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB3x-_xenlODsZG5UYV-t_kbDBc-YvLHYg"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "671162636834-omfb66s5np524ip0bvvjulmqnim15g8e.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
     }
   ],
   "configuration_version": "1"
