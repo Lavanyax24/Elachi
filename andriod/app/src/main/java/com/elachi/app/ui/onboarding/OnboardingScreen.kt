@@ -116,16 +116,31 @@ val ONBOARDING_SLIDES = listOf(
     ),
 )
 
+/**
+ * @param tutorialMode when true, the carousel is being shown from Help &
+ *   Support. The Skip button and final "Finish" label change to match, and
+ *   the caller is expected to popBackStack rather than continue into the
+ *   Complete Profile flow.
+ */
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
-fun OnboardingScreen(onFinish: () -> Unit) {
+fun OnboardingScreen(
+    onFinish: () -> Unit,
+    tutorialMode: Boolean = false,
+) {
     val pagerState = rememberPagerState(pageCount = { ONBOARDING_SLIDES.size })
     val scope = rememberCoroutineScope()
 
     Column(modifier = Modifier.fillMaxSize().background(Color(0xFFFCF9F4))) {
         HorizontalPager(state = pagerState, modifier = Modifier.weight(1f), userScrollEnabled = true) { page ->
             val slide = ONBOARDING_SLIDES[page]
-            OnboardingContent(slide = slide, pageIndex = page, totalPages = ONBOARDING_SLIDES.size, onSkip = onFinish)
+            OnboardingContent(
+                slide = slide,
+                pageIndex = page,
+                totalPages = ONBOARDING_SLIDES.size,
+                onSkip = onFinish,
+                tutorialMode = tutorialMode,
+            )
         }
 
         Column(
@@ -157,6 +172,13 @@ fun OnboardingScreen(onFinish: () -> Unit) {
                     }
                 }
 
+                val isLastSlide = pagerState.currentPage == ONBOARDING_SLIDES.size - 1
+                val buttonLabel = when {
+                    isLastSlide && tutorialMode -> "Done"
+                    isLastSlide -> "\uD83C\uDF73 Start Cooking!"
+                    else -> "Next"
+                }
+
                 Button(
                     onClick = {
                         if (pagerState.currentPage < ONBOARDING_SLIDES.size - 1) {
@@ -172,11 +194,11 @@ fun OnboardingScreen(onFinish: () -> Unit) {
                 ) {
                     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.Center) {
                         Text(
-                            text = if (pagerState.currentPage == ONBOARDING_SLIDES.size - 1) "\uD83C\uDF73 Start Cooking!" else "Next",
+                            text = buttonLabel,
                             style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
                             color = Color.White,
                         )
-                        if (pagerState.currentPage < ONBOARDING_SLIDES.size - 1) {
+                        if (!isLastSlide) {
                             Spacer(modifier = Modifier.width(8.dp))
                             Icon(Icons.AutoMirrored.Filled.ArrowForward, contentDescription = null, tint = Color.White)
                         }
@@ -188,7 +210,13 @@ fun OnboardingScreen(onFinish: () -> Unit) {
 }
 
 @Composable
-private fun OnboardingContent(slide: OnboardingSlide, pageIndex: Int, totalPages: Int, onSkip: () -> Unit) {
+private fun OnboardingContent(
+    slide: OnboardingSlide,
+    pageIndex: Int,
+    totalPages: Int,
+    onSkip: () -> Unit,
+    tutorialMode: Boolean,
+) {
     Box(modifier = Modifier.fillMaxSize()) {
         Box(modifier = Modifier.fillMaxWidth().height(260.dp).background(slide.color)) {
             AsyncImage(
@@ -209,7 +237,11 @@ private fun OnboardingContent(slide: OnboardingSlide, pageIndex: Int, totalPages
                     .border(1.dp, Color.White.copy(alpha = 0.25f), RoundedCornerShape(20.dp)),
                 contentPadding = PaddingValues(horizontal = 14.dp, vertical = 4.dp),
             ) {
-                Text("SKIP", style = MaterialTheme.typography.labelSmall.copy(fontFamily = FontFamily.Monospace, letterSpacing = 0.96.sp), color = Color.White.copy(alpha = 0.85f))
+                Text(
+                    if (tutorialMode) "CLOSE" else "SKIP",
+                    style = MaterialTheme.typography.labelSmall.copy(fontFamily = FontFamily.Monospace, letterSpacing = 0.96.sp),
+                    color = Color.White.copy(alpha = 0.85f),
+                )
             }
 
             Row(

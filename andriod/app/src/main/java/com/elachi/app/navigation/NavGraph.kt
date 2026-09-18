@@ -374,12 +374,27 @@ fun ElachiNavGraph() {
 
                 // ---------- Help ----------
                 composable(Screen.Help.route) {
-                    ScreenShell(
-                        title = "Help & Support",
-                        route = currentRoute,
-                        navController = navController,
-                        drawerState = drawerState,
-                    ) { Placeholder("Help & Support") {} }
+                    com.elachi.app.ui.help.HelpScreen(
+                        onBack = { navController.popBackStack() },
+                        onNavigateToPrivacyPolicy = {
+                            navController.navigate(Screen.PrivacyPolicy.route)
+                        },
+                        onNavigateToTerms = {
+                            navController.navigate(Screen.TermsOfService.route)
+                        },
+                        onOpenGettingStarted = {
+                            navController.navigate("onboarding_tutorial")
+                        },
+                    )
+                }
+
+                // Tutorial-only onboarding — returns to Help when finished, does not
+                // continue into Complete Profile / Create First Book.
+                composable("onboarding_tutorial") {
+                    OnboardingScreen(
+                        tutorialMode = true,
+                        onFinish = { navController.popBackStack() },
+                    )
                 }
             }
         }
