@@ -64,7 +64,7 @@ private val drawerEnabledRoutes = setOf(
 fun ElachiNavGraph() {
 
     val context = LocalContext.current
-    val app = remember(context) { 
+    val app = remember(context) {
         try {
             context.applicationContext as ElachiApp
         } catch (e: Exception) {
@@ -185,7 +185,6 @@ fun ElachiNavGraph() {
                 }
 
                 // ---------- Onboarding carousel ----------
-                // Shown after sign-up. Leads into Complete Profile, then Create First Book.
                 composable(Screen.Onboarding.route) {
                     OnboardingScreen(
                         onFinish = {
@@ -306,12 +305,41 @@ fun ElachiNavGraph() {
 
                 // ---------- Settings ----------
                 composable(Screen.Settings.route) {
-                    ScreenShell(
-                        title = "Settings",
-                        route = currentRoute,
-                        navController = navController,
-                        drawerState = drawerState,
-                    ) { Placeholder("Settings") {} }
+                    val vm: com.elachi.app.ui.settings.SettingsViewModel = viewModel(
+                        factory = SimpleViewModelFactory {
+                            com.elachi.app.ui.settings.SettingsViewModel(
+                                elachiApp.settingsRepository,
+                                elachiApp.authRepository,
+                            )
+                        },
+                    )
+                    com.elachi.app.ui.settings.SettingsScreen(
+                        viewModel = vm,
+                        onLoggedOut = {
+                            navController.navigate(Screen.Login.route) { popUpTo(0) }
+                        },
+                        onNavigateToPrivacyPolicy = {
+                            navController.navigate(Screen.PrivacyPolicy.route)
+                        },
+                        onNavigateToTerms = {
+                            navController.navigate(Screen.TermsOfService.route)
+                        },
+                        onNavigateToEditProfile = { /* Profile edit screen is Phase 7 follow-up */ },
+                    )
+                }
+
+                // ---------- Privacy Policy ----------
+                composable(Screen.PrivacyPolicy.route) {
+                    com.elachi.app.ui.settings.PrivacyPolicyScreen(
+                        onBack = { navController.popBackStack() },
+                    )
+                }
+
+                // ---------- Terms of Service ----------
+                composable(Screen.TermsOfService.route) {
+                    com.elachi.app.ui.settings.TermsOfServiceScreen(
+                        onBack = { navController.popBackStack() },
+                    )
                 }
 
                 // ---------- AI Chef ----------
@@ -346,12 +374,27 @@ fun ElachiNavGraph() {
 
                 // ---------- Help ----------
                 composable(Screen.Help.route) {
-                    ScreenShell(
-                        title = "Help & Support",
-                        route = currentRoute,
-                        navController = navController,
-                        drawerState = drawerState,
-                    ) { Placeholder("Help & Support") {} }
+                    com.elachi.app.ui.help.HelpScreen(
+                        onBack = { navController.popBackStack() },
+                        onNavigateToPrivacyPolicy = {
+                            navController.navigate(Screen.PrivacyPolicy.route)
+                        },
+                        onNavigateToTerms = {
+                            navController.navigate(Screen.TermsOfService.route)
+                        },
+                        onOpenGettingStarted = {
+                            navController.navigate("onboarding_tutorial")
+                        },
+                    )
+                }
+
+                // Tutorial-only onboarding — returns to Help when finished, does not
+                // continue into Complete Profile / Create First Book.
+                composable("onboarding_tutorial") {
+                    OnboardingScreen(
+                        tutorialMode = true,
+                        onFinish = { navController.popBackStack() },
+                    )
                 }
             }
         }
