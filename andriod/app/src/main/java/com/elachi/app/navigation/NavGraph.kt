@@ -15,12 +15,18 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import com.elachi.app.ElachiApp
 import com.elachi.app.navigation.Screen
+import com.elachi.app.ui.auth.AuthViewModel
+import com.elachi.app.ui.auth.LoginScreen
+import com.elachi.app.ui.auth.SignUpScreen
 import com.elachi.app.ui.common.AppDrawerContent
 import com.elachi.app.ui.common.ElachiBottomNavBar
 import com.elachi.app.ui.common.ElachiTopBar
@@ -28,7 +34,6 @@ import com.elachi.app.ui.onboarding.OnboardingScreen
 import com.elachi.app.ui.splash.SplashScreen
 import kotlinx.coroutines.launch
 
-/** Routes that show the bottom navigation bar. */
 private val bottomNavRoutes = setOf(
     Screen.Home.route,
     Screen.Cookbook.route,
@@ -36,7 +41,6 @@ private val bottomNavRoutes = setOf(
     Screen.Pantry.route,
 )
 
-/** Routes that show the hamburger drawer. */
 private val drawerEnabledRoutes = setOf(
     Screen.Home.route,
     Screen.Cookbook.route,
@@ -52,6 +56,9 @@ private val drawerEnabledRoutes = setOf(
 
 @Composable
 fun ElachiNavGraph() {
+
+    val app = LocalContext.current.applicationContext as ElachiApp
+
     val navController = rememberNavController()
     val backStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = backStackEntry?.destination?.route
@@ -78,8 +85,19 @@ fun ElachiNavGraph() {
                 },
                 onLogout = {
                     scope.launch { drawerState.close() }
-                    // TODO: clear session once AuthRepository is added in Phase 1
-                    navController.navigate(Screen.Login.route) { popUpTo(0) }
+                    scope.launch {
+                        try {
+                            com.google.firebase.messaging.FirebaseMessaging.getInstance().token.addOnSuccessListener { token ->
+                                scope.launch {
+                                    try {
+                                        app.api.unregisterNotificationToken(com.elachi.app.data.remote.dto.NotificationTokenRequest(token))
+                                    } catch (e: Exception) { /* best effort */ }
+                                }
+                            }
+                        } catch (e: Exception) { /* best effort */ }
+                        app.authRepository.signOut()
+                        navController.navigate(Screen.Login.route) { popUpTo(0) }
+                    }
                 },
             )
         },
@@ -108,15 +126,25 @@ fun ElachiNavGraph() {
                 }
 
                 composable(Screen.Login.route) {
-                    Placeholder("Login") {
-                        navController.navigate(Screen.SignUp.route)
-                    }
+                    val vm: AuthViewModel = viewModel(factory = SimpleViewModelFactory { AuthViewModel(app.authRepository) })
+                    LoginScreen(
+                        viewModel = vm,
+                        onLoginSuccess = {
+                            navController.navigate(Screen.Home.route) { popUpTo(0) }
+                        },
+                        onNavigateToSignUp = { navController.navigate(Screen.SignUp.route) },
+                    )
                 }
 
                 composable(Screen.SignUp.route) {
-                    Placeholder("Sign Up") {
-                        navController.navigate(Screen.Onboarding.route)
-                    }
+                    val vm: AuthViewModel = viewModel(factory = SimpleViewModelFactory { AuthViewModel(app.authRepository) })
+                    SignUpScreen(
+                        viewModel = vm,
+                        onSignUpSuccess = {
+                            navController.navigate(Screen.Onboarding.route)
+                        },
+                        onNavigateToLogin = { navController.popBackStack() },
+                    )
                 }
 
                 composable(Screen.Onboarding.route) {
