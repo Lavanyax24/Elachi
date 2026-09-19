@@ -39,6 +39,8 @@ import com.elachi.app.ui.onboarding.CompleteProfileScreen
 import com.elachi.app.ui.onboarding.CompleteProfileViewModel
 import com.elachi.app.ui.onboarding.CreateFirstBookScreen
 import com.elachi.app.ui.onboarding.OnboardingScreen
+import com.elachi.app.ui.profile.ProfileScreen
+import com.elachi.app.ui.profile.ProfileViewModel
 import com.elachi.app.ui.recipe.AddRecipeScreen
 import com.elachi.app.ui.recipe.AddRecipeViewModel
 import com.elachi.app.ui.recipe.CameraCaptureScreen
@@ -616,14 +618,58 @@ fun ElachiNavGraph() {
                         }
                     }
                 }
+
                 // ---------- Profile ----------
                 composable(Screen.Profile.route) {
-                    ScreenShell(
-                        title = "My Profile",
-                        route = currentRoute,
-                        navController = navController,
-                        drawerState = drawerState,
-                    ) { Placeholder("Profile") {} }
+                    val userId = UserSession.userId
+                    if (userId != null) {
+                        val vm: ProfileViewModel = viewModel(
+                            factory = SimpleViewModelFactory {
+                                ProfileViewModel(
+                                    userId,
+                                    elachiApp.profileRepository,
+                                    elachiApp.recipeRepository,
+                                    elachiApp.database.achievementDao(),
+                                )
+                            },
+                        )
+                        ScreenShell(
+                            title = "My Profile",
+                            route = currentRoute,
+                            navController = navController,
+                            drawerState = drawerState,
+                        ) {
+                            ProfileScreen(
+                                viewModel = vm,
+                                onEdit = { navController.navigate(Screen.EditProfile.route) },
+                            )
+                        }
+                    } else {
+                        ScreenShell(
+                            title = "My Profile",
+                            route = currentRoute,
+                            navController = navController,
+                            drawerState = drawerState,
+                        ) {
+                            Placeholder("Please sign in again") {
+                                navController.navigate(Screen.Login.route) { popUpTo(0) }
+                            }
+                        }
+                    }
+                }
+
+                // ---------- Edit Profile ----------
+                composable(Screen.EditProfile.route) {
+                    val vm: CompleteProfileViewModel = viewModel(
+                        factory = SimpleViewModelFactory {
+                            CompleteProfileViewModel(elachiApp.profileRepository)
+                        },
+                    )
+                    CompleteProfileScreen(
+                        viewModel = vm,
+                        isEditMode = true,
+                        onDone = { navController.popBackStack() },
+                    )
                 }
 
                 // ---------- Settings ----------
@@ -647,7 +693,9 @@ fun ElachiNavGraph() {
                         onNavigateToTerms = {
                             navController.navigate(Screen.TermsOfService.route)
                         },
-                        onNavigateToEditProfile = { /* Profile edit screen is Phase 7 follow-up */ },
+                        onNavigateToEditProfile = {
+                            navController.navigate(Screen.EditProfile.route)
+                        },
                     )
                 }
 
