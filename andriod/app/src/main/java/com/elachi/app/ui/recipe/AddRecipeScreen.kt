@@ -16,6 +16,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -50,40 +51,58 @@ fun AddRecipeScreen(
     onOpenCamera: () -> Unit,
     onSaved: (String) -> Unit,
 ) {
-    var tab by remember { mutableIntStateOf(0) } // 0 = Manual, 1 = Camera, 2 = Screenshot
-
     LaunchedEffect(viewModel.savedRecipeId.value) {
         viewModel.savedRecipeId.value?.let { onSaved(it) }
     }
 
-    Column(modifier = Modifier.fillMaxSize().background(ElachiCream).imePadding()) {
-        // Header
-        Row(
-            modifier = Modifier.fillMaxWidth().padding(top = 30.dp, start = 16.dp, end = 16.dp, bottom = 10.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Text("Add Recipe", style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold), color = ElachiGreen)
-            Surface(
-                modifier = Modifier.size(64.dp, 34.dp).clickable(onClick = onClose),
-                color = Color(0xFFF0EDE9),
-                shape = RoundedCornerShape(17.dp),
-            ) {
-                Box(contentAlignment = Alignment.Center) { Icon(Icons.Filled.Close, contentDescription = "Close", modifier = Modifier.size(22.dp)) }
-            }
-        }
-        HorizontalDivider(thickness = 2.4.dp, color = Color(0xFFF0EDE9))
-
-        Row(modifier = Modifier.fillMaxWidth().background(Color.White)) {
-            ManualTabItem("Manual", tab == 0, Modifier.weight(1f).clickable { tab = 0 })
-            ManualTabItem("Camera", tab == 1, Modifier.weight(1f).clickable { onOpenCamera() })
-            ManualTabItem("Screenshot", tab == 2, Modifier.weight(1f).clickable { onOpenCamera() })
-        }
-        HorizontalDivider(thickness = 2.4.dp, color = Color(0xFFE5E2DD))
-
-        if (tab == 0) {
-            ManualForm(viewModel, modifier = Modifier.weight(1f))
+    Scaffold(
+        containerColor = ElachiCream,
+        bottomBar = {
             BottomActionBar(viewModel, onCancel = onClose)
+        },
+    ) { scaffoldPadding ->
+        Column(
+            modifier = Modifier
+                .padding(scaffoldPadding)
+                .fillMaxSize()
+                .background(ElachiCream),
+        ) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .statusBarsPadding()
+                    .padding(horizontal = 16.dp, vertical = 10.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Column {
+                    Text(
+                        "Add Recipe",
+                        style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold),
+                        color = ElachiGreen,
+                    )
+                    Text(
+                        "Fields marked * are required",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = ElachiTextSecondary,
+                    )
+                }
+                IconButton(onClick = onClose) {
+                    Icon(Icons.Filled.Close, contentDescription = "Close")
+                }
+            }
+
+            HorizontalDivider(color = Color(0xFFE5E2DD))
+
+            Row(modifier = Modifier.fillMaxWidth().background(Color.White)) {
+                ManualTabItem("Manual", true, Modifier.weight(1f))
+                ManualTabItem("Camera", false, Modifier.weight(1f).clickable { onOpenCamera() })
+                ManualTabItem("Screenshot", false, Modifier.weight(1f).clickable { onOpenCamera() })
+            }
+
+            HorizontalDivider(color = Color(0xFFE5E2DD))
+
+            ManualForm(viewModel, modifier = Modifier.weight(1f))
         }
     }
 }
@@ -91,161 +110,340 @@ fun AddRecipeScreen(
 @Composable
 private fun ManualForm(vm: AddRecipeViewModel, modifier: Modifier = Modifier) {
     val context = LocalContext.current
+    var optionalExpanded by rememberSaveable { mutableStateOf(false) }
     val photoPicker = rememberLauncherForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri ->
         if (uri != null) vm.uploadPhoto(context, uri)
     }
 
     Column(
-        modifier = modifier.verticalScroll(rememberScrollState()).padding(16.dp),
-        verticalArrangement = Arrangement.spacedBy(14.dp),
+        modifier = modifier
+            .fillMaxWidth()
+            .verticalScroll(rememberScrollState())
+            .imePadding()
+            .padding(16.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
-        // Recipe photo
-        Text("Recipe Photo (optional)", style = MaterialTheme.typography.titleMedium)
-        Box(
-            modifier = Modifier.fillMaxWidth().height(140.dp)
-                .clickable { photoPicker.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)) },
-            contentAlignment = Alignment.Center,
+        Surface(
+            modifier = Modifier.fillMaxWidth(),
+            color = Color(0xFFE8F2E7),
+            shape = RoundedCornerShape(12.dp),
         ) {
-            when {
-                vm.isUploadingPhoto.value -> CircularProgressIndicator()
-                vm.photoUri.value != null -> AsyncImage(model = vm.photoUri.value, contentDescription = "Recipe photo", contentScale = ContentScale.Crop, modifier = Modifier.fillMaxSize())
-                else -> Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Icon(Icons.Filled.AddAPhoto, contentDescription = null)
-                    Text("Tap to add a photo", style = MaterialTheme.typography.bodyMedium)
+            Row(
+                modifier = Modifier.padding(14.dp),
+                verticalAlignment = Alignment.Top,
+                horizontalArrangement = Arrangement.spacedBy(10.dp),
+            ) {
+                Icon(Icons.Filled.Info, contentDescription = null, tint = ElachiGreen)
+                Column {
+                    Text(
+                        "What you need to save",
+                        style = MaterialTheme.typography.titleSmall,
+                        fontWeight = FontWeight.Bold,
+                        color = ElachiGreen,
+                    )
+                    Text(
+                        "Choose a recipe book, enter a title, then add at least one ingredient and one cooking step.",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = ElachiTextPrimary,
+                    )
                 }
             }
         }
 
-        // Main info card
         Surface(
             modifier = Modifier.fillMaxWidth(),
             color = Color.White,
             shape = RoundedCornerShape(16.dp),
-            border = androidx.compose.foundation.BorderStroke(2.4.dp, Color(0xFFE5E2DD)),
+            border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFE5E2DD)),
         ) {
             Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                ManualLabel("Recipe Book")
+                Text(
+                    "Recipe details",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = ElachiGreen,
+                )
+
+                ManualLabel("Recipe Book", required = true)
                 RecipeBookDropdown(vm)
 
-                ManualLabel("Title")
+                ManualLabel("Title", required = true)
                 ManualTextField(vm.title.value, "e.g. Grandma's Apple Pie") { vm.title.value = it }
-
-                ManualLabel("Category")
-                PresetDropdown(vm.category.value, vm.categoryOptions) { vm.category.value = it }
-
-                ManualLabel("Cuisine")
-                PresetDropdown(vm.cuisine.value, vm.cuisineOptions) { vm.cuisine.value = it }
-
-                ManualLabel("Food Type")
-                PresetDropdown(vm.foodType.value, vm.foodTypeOptions) { vm.foodType.value = it }
-
-                Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                    Column(modifier = Modifier.weight(1f)) {
-                        ManualLabel("Difficulty")
-                        PresetDropdown(vm.difficulty.value, vm.difficultyOptions) { vm.difficulty.value = it }
-                    }
-                    Column(modifier = Modifier.weight(1f)) {
-                        ManualLabel("Servings")
-                        ManualTextField(vm.servings.value, "4", keyboardType = KeyboardType.Number) { vm.servings.value = it }
-                    }
-                }
-
-                Row(horizontalArrangement = Arrangement.spacedBy(10.dp), verticalAlignment = Alignment.Bottom) {
-                    Column(modifier = Modifier.weight(1f)) {
-                        ManualLabel("Cook Time (min)")
-                        ManualTextField(vm.cookTimeMinutes.value, "45", keyboardType = KeyboardType.Number) { vm.cookTimeMinutes.value = it }
-                    }
-                    Surface(modifier = Modifier.weight(1f).height(42.dp), color = Color(0xFFF0EDE9), shape = RoundedCornerShape(10.dp)) {
-                        Row(modifier = Modifier.padding(horizontal = 12.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
-                            Text("\uD83D\uDD12 Private", style = MaterialTheme.typography.bodySmall, color = Color(0xFF45483E))
-                            Switch(
-                                checked = vm.isPrivate.value,
-                                onCheckedChange = { vm.isPrivate.value = it },
-                                colors = SwitchDefaults.colors(checkedThumbColor = Color.White, checkedTrackColor = ElachiGreen, uncheckedThumbColor = Color.White, uncheckedTrackColor = Color(0xFFC5C8BA)),
-                            )
-                        }
-                    }
-                }
-
-                ManualLabel("Method")
-                PresetDropdown(vm.method.value, vm.methodOptions) { vm.method.value = it }
             }
         }
 
-        // Allergens
-        Column {
-            ManualLabel("Allergens Present")
-            AllergenFlow(vm)
-        }
-
-        // Ingredients card
-        Surface(modifier = Modifier.fillMaxWidth(), color = Color.White, shape = RoundedCornerShape(16.dp), border = androidx.compose.foundation.BorderStroke(2.4.dp, Color(0xFFE5E2DD))) {
+        Surface(
+            modifier = Modifier.fillMaxWidth(),
+            color = Color.White,
+            shape = RoundedCornerShape(16.dp),
+            border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFE5E2DD)),
+        ) {
             Column(modifier = Modifier.padding(16.dp)) {
                 Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     Icon(Icons.Filled.Kitchen, contentDescription = null, tint = ElachiGreen, modifier = Modifier.size(18.dp))
-                    Text("Ingredients", style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold), color = ElachiGreen)
+                    Text("Ingredients *", style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold), color = ElachiGreen)
                 }
+                Text("Add at least one ingredient.", style = MaterialTheme.typography.bodySmall, color = ElachiTextSecondary)
                 Spacer(Modifier.height(12.dp))
+
                 vm.ingredients.forEachIndexed { index, ingredient ->
-                    Row(modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
-                        ManualTextField(ingredient.name, "e.g. Flour", modifier = Modifier.weight(2f)) { ingredient.name = it }
-                        ManualTextField(ingredient.quantity, "2", modifier = Modifier.weight(1f), keyboardType = KeyboardType.Decimal) { ingredient.quantity = it }
-                        ManualTextField(ingredient.unit, "cups", modifier = Modifier.weight(1f)) { ingredient.unit = it }
-                        Surface(modifier = Modifier.size(44.dp, 51.dp).clickable { vm.removeIngredientRow(index) }, color = Color(0xFFFFDAD6), shape = RoundedCornerShape(8.dp)) {
-                            Box(contentAlignment = Alignment.Center) { Icon(Icons.Filled.Delete, contentDescription = "Remove", tint = Color(0xFFBA1A1A), modifier = Modifier.size(18.dp)) }
+                    Column(
+                        modifier = Modifier.fillMaxWidth().padding(bottom = 12.dp),
+                        verticalArrangement = Arrangement.spacedBy(8.dp),
+                    ) {
+                        ManualTextField(
+                            value = ingredient.name,
+                            placeholder = "Ingredient name, e.g. Flour",
+                        ) {
+                            vm.updateIngredient(index, ingredient.copy(name = it))
+                        }
+
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            ManualTextField(
+                                value = ingredient.quantity,
+                                placeholder = "Quantity",
+                                modifier = Modifier.weight(1f),
+                                keyboardType = KeyboardType.Decimal,
+                            ) {
+                                vm.updateIngredient(index, ingredient.copy(quantity = it))
+                            }
+                            ManualTextField(
+                                value = ingredient.unit,
+                                placeholder = "Unit",
+                                modifier = Modifier.weight(1f),
+                            ) {
+                                vm.updateIngredient(index, ingredient.copy(unit = it))
+                            }
+                            IconButton(
+                                onClick = { vm.removeIngredientRow(index) },
+                                enabled = vm.ingredients.size > 1,
+                            ) {
+                                Icon(
+                                    Icons.Filled.Delete,
+                                    contentDescription = "Remove ingredient",
+                                    tint = if (vm.ingredients.size > 1) Color(0xFFBA1A1A) else Color.LightGray,
+                                )
+                            }
                         }
                     }
                 }
+
                 DashedButtonManual("Add Ingredient") { vm.addIngredientRow() }
             }
         }
 
-        // Steps card
-        Surface(modifier = Modifier.fillMaxWidth(), color = Color.White, shape = RoundedCornerShape(16.dp), border = androidx.compose.foundation.BorderStroke(2.4.dp, Color(0xFFE5E2DD))) {
+        Surface(
+            modifier = Modifier.fillMaxWidth(),
+            color = Color.White,
+            shape = RoundedCornerShape(16.dp),
+            border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFE5E2DD)),
+        ) {
             Column(modifier = Modifier.padding(16.dp)) {
                 Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     Icon(Icons.Filled.FormatListNumbered, contentDescription = null, tint = ElachiGreen, modifier = Modifier.size(18.dp))
-                    Text("Steps", style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold), color = ElachiGreen)
+                    Text("Cooking steps *", style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold), color = ElachiGreen)
                 }
+                Text("Add at least one cooking instruction.", style = MaterialTheme.typography.bodySmall, color = ElachiTextSecondary)
                 Spacer(Modifier.height(12.dp))
+
                 vm.steps.forEachIndexed { index, step ->
                     Row(modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         Surface(modifier = Modifier.padding(top = 10.dp).size(28.dp), color = ElachiGreenLight, shape = CircleShape) {
                             Box(contentAlignment = Alignment.Center) { Text("${index + 1}", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 13.sp) }
                         }
                         ManualTextField(step, "Describe this step...", modifier = Modifier.weight(1f), height = 74.dp) { vm.steps[index] = it }
-                        Surface(modifier = Modifier.padding(top = 6.dp).size(44.dp, 51.dp).clickable { vm.removeStepRow(index) }, color = Color(0xFFFFDAD6), shape = RoundedCornerShape(8.dp)) {
-                            Box(contentAlignment = Alignment.Center) { Icon(Icons.Filled.Delete, contentDescription = "Remove", tint = Color(0xFFBA1A1A), modifier = Modifier.size(18.dp)) }
+                        IconButton(
+                            onClick = { vm.removeStepRow(index) },
+                            enabled = vm.steps.size > 1,
+                            modifier = Modifier.padding(top = 6.dp),
+                        ) {
+                            Icon(
+                                Icons.Filled.Delete,
+                                contentDescription = "Remove step",
+                                tint = if (vm.steps.size > 1) Color(0xFFBA1A1A) else Color.LightGray,
+                            )
                         }
                     }
                 }
+
                 DashedButtonManual("Add Step") { vm.addStepRow() }
             }
         }
 
-        vm.errorMessage.value?.let {
-            Text(it, color = MaterialTheme.colorScheme.error)
+        Surface(
+            onClick = { optionalExpanded = !optionalExpanded },
+            modifier = Modifier.fillMaxWidth(),
+            color = Color.White,
+            shape = RoundedCornerShape(16.dp),
+            border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFE5E2DD)),
+        ) {
+            Row(
+                modifier = Modifier.padding(16.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween,
+            ) {
+                Column(modifier = Modifier.weight(1f)) {
+                    Text("Optional details", fontWeight = FontWeight.Bold, color = ElachiGreen)
+                    Text("Photo, cuisine, servings, allergens and more", style = MaterialTheme.typography.bodySmall, color = ElachiTextSecondary)
+                }
+                Icon(
+                    if (optionalExpanded) Icons.Filled.ExpandLess else Icons.Filled.ExpandMore,
+                    contentDescription = if (optionalExpanded) "Hide optional details" else "Show optional details",
+                )
+            }
         }
-        Spacer(Modifier.height(8.dp))
+
+        if (optionalExpanded) {
+            OptionalDetails(
+                vm = vm,
+                onPickPhoto = {
+                    photoPicker.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
+                },
+            )
+        }
+
+        vm.errorMessage.value?.let {
+            Surface(
+                modifier = Modifier.fillMaxWidth(),
+                color = MaterialTheme.colorScheme.errorContainer,
+                shape = RoundedCornerShape(12.dp),
+            ) {
+                Text(
+                    it,
+                    modifier = Modifier.padding(12.dp),
+                    color = MaterialTheme.colorScheme.onErrorContainer,
+                )
+            }
+        }
+        Spacer(Modifier.height(16.dp))
+    }
+}
+
+@Composable
+private fun OptionalDetails(
+    vm: AddRecipeViewModel,
+    onPickPhoto: () -> Unit,
+) {
+    Surface(
+        modifier = Modifier.fillMaxWidth(),
+        color = Color.White,
+        shape = RoundedCornerShape(16.dp),
+        border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFE5E2DD)),
+    ) {
+        Column(
+            modifier = Modifier.padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
+            ManualLabel("Recipe Photo")
+            Surface(
+                onClick = onPickPhoto,
+                modifier = Modifier.fillMaxWidth().height(110.dp),
+                color = Color(0xFFF5F3EF),
+                shape = RoundedCornerShape(12.dp),
+            ) {
+                Box(contentAlignment = Alignment.Center) {
+                    when {
+                        vm.isUploadingPhoto.value -> CircularProgressIndicator()
+                        vm.photoUri.value != null -> AsyncImage(
+                            model = vm.photoUri.value,
+                            contentDescription = "Recipe photo",
+                            contentScale = ContentScale.Crop,
+                            modifier = Modifier.fillMaxSize(),
+                        )
+                        else -> Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            Icon(Icons.Filled.AddAPhoto, contentDescription = null)
+                            Text("Tap to add a photo")
+                        }
+                    }
+                }
+            }
+
+            ManualLabel("Category")
+            PresetDropdown(vm.category.value, vm.categoryOptions) { vm.category.value = it }
+
+            ManualLabel("Cuisine")
+            PresetDropdown(vm.cuisine.value, vm.cuisineOptions) { vm.cuisine.value = it }
+
+            ManualLabel("Food Type")
+            PresetDropdown(vm.foodType.value, vm.foodTypeOptions) { vm.foodType.value = it }
+
+            ManualLabel("Difficulty")
+            PresetDropdown(vm.difficulty.value, vm.difficultyOptions) { vm.difficulty.value = it }
+
+            Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                Column(modifier = Modifier.weight(1f)) {
+                    ManualLabel("Servings")
+                    ManualTextField(vm.servings.value, "4", keyboardType = KeyboardType.Number) {
+                        vm.servings.value = it
+                    }
+                }
+                Column(modifier = Modifier.weight(1f)) {
+                    ManualLabel("Cook Time (min)")
+                    ManualTextField(vm.cookTimeMinutes.value, "30", keyboardType = KeyboardType.Number) {
+                        vm.cookTimeMinutes.value = it
+                    }
+                }
+            }
+
+            ManualLabel("Method")
+            PresetDropdown(vm.method.value, vm.methodOptions) { vm.method.value = it }
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween,
+            ) {
+                Column {
+                    Text("Private recipe", fontWeight = FontWeight.Medium)
+                    Text("Only you can see it", style = MaterialTheme.typography.bodySmall, color = ElachiTextSecondary)
+                }
+                Switch(
+                    checked = vm.isPrivate.value,
+                    onCheckedChange = { vm.isPrivate.value = it },
+                )
+            }
+
+            ManualLabel("Allergens Present")
+            AllergenFlow(vm)
+        }
     }
 }
 
 @Composable
 private fun BottomActionBar(vm: AddRecipeViewModel, onCancel: () -> Unit) {
+    val canSave = vm.selectedBookId.value.isNotBlank() &&
+            vm.title.value.isNotBlank() &&
+            vm.ingredients.any { it.name.isNotBlank() } &&
+            vm.steps.any { it.isNotBlank() }
+
     Surface(modifier = Modifier.fillMaxWidth(), color = Color.White, shadowElevation = 8.dp) {
-        Column(modifier = Modifier.padding(horizontal = 20.dp, vertical = 12.dp).navigationBarsPadding()) {
+        Column(
+            modifier = Modifier
+                .navigationBarsPadding()
+                .imePadding()
+                .padding(horizontal = 16.dp, vertical = 10.dp),
+        ) {
+            Text(
+                text = if (canSave) "Ready to save" else "Complete all fields marked *",
+                style = MaterialTheme.typography.labelMedium,
+                color = if (canSave) ElachiGreen else MaterialTheme.colorScheme.error,
+                modifier = Modifier.padding(bottom = 8.dp),
+            )
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                Button(
+                OutlinedButton(
                     onClick = onCancel,
                     modifier = Modifier.weight(1f).height(48.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFF0EDE9)),
                     shape = RoundedCornerShape(12.dp),
                 ) {
                     Text("Cancel", color = Color(0xFF45483E), fontWeight = FontWeight.W600)
                 }
                 Button(
                     onClick = { vm.save() },
-                    enabled = !vm.isSaving.value && !vm.isUploadingPhoto.value,
+                    enabled = canSave && !vm.isSaving.value && !vm.isUploadingPhoto.value,
                     modifier = Modifier.weight(2f).height(48.dp),
                     colors = ButtonDefaults.buttonColors(containerColor = ElachiGreenLight),
                     shape = RoundedCornerShape(12.dp),
@@ -260,7 +458,6 @@ private fun BottomActionBar(vm: AddRecipeViewModel, onCancel: () -> Unit) {
                     }
                 }
             }
-            Spacer(Modifier.height(12.dp))
         }
     }
 }
@@ -317,13 +514,6 @@ private fun PresetDropdown(value: String, options: List<String>, onSelect: (Stri
             }
         }
     }
-    var customValue by remember { mutableStateOf("") }
-    CustomAddRow(customValue, "Add custom value...") {
-        customValue = it
-    }
-    LaunchedEffect(customValue) {
-        if (customValue.isNotBlank()) onSelect(customValue)
-    }
 }
 
 @Composable
@@ -338,9 +528,9 @@ private fun ManualTabItem(label: String, isSelected: Boolean, modifier: Modifier
 }
 
 @Composable
-private fun ManualLabel(text: String) {
+private fun ManualLabel(text: String, required: Boolean = false) {
     Text(
-        text = text.uppercase(),
+        text = if (required) "${text.uppercase()} *" else text.uppercase(),
         style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold, fontSize = 11.sp, letterSpacing = 0.88.sp),
         color = Color(0xFF45483E),
         modifier = Modifier.padding(bottom = 6.dp),
@@ -367,35 +557,28 @@ private fun ManualTextField(
     )
 }
 
-@Composable
-private fun CustomAddRow(value: String, placeholder: String, modifier: Modifier = Modifier, onValueChange: (String) -> Unit) {
-    var local by remember { mutableStateOf("") }
-    Row(modifier = modifier.fillMaxWidth().height(44.dp), horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {
-        ManualTextField(local, placeholder, modifier = Modifier.weight(1f).height(38.dp)) { local = it }
-        Box(
-            modifier = Modifier.size(32.dp, 38.dp).background(ElachiGreenLight, RoundedCornerShape(8.dp))
-                .clickable { if (local.isNotBlank()) { onValueChange(local); local = "" } },
-            contentAlignment = Alignment.Center,
-        ) {
-            Text("+", color = Color.White, fontWeight = FontWeight.Bold)
-        }
-    }
-}
-
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun AllergenFlow(vm: AddRecipeViewModel) {
-    vm.allergenOptions.chunked(3).forEach { row ->
-        Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.padding(bottom = 8.dp)) {
-            row.forEach { allergen ->
-                val isSelected = vm.selectedAllergens.contains(allergen)
-                Surface(
-                    modifier = Modifier.clickable { vm.toggleAllergen(allergen) },
-                    color = if (isSelected) ElachiGreenLight else Color.White,
-                    shape = RoundedCornerShape(999.dp),
-                    border = androidx.compose.foundation.BorderStroke(2.4.dp, if (isSelected) ElachiGreenLight else Color(0xFFC5C8BA)),
-                ) {
-                    Text(allergen, modifier = Modifier.padding(horizontal = 14.dp, vertical = 6.dp), style = MaterialTheme.typography.bodySmall, color = if (isSelected) Color.White else ElachiTextPrimary)
-                }
+    FlowRow(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        vm.allergenOptions.forEach { allergen ->
+            val isSelected = vm.selectedAllergens.contains(allergen)
+            Surface(
+                modifier = Modifier.clickable { vm.toggleAllergen(allergen) },
+                color = if (isSelected) ElachiGreenLight else Color.White,
+                shape = RoundedCornerShape(999.dp),
+                border = androidx.compose.foundation.BorderStroke(1.dp, if (isSelected) ElachiGreenLight else Color(0xFFC5C8BA)),
+            ) {
+                Text(
+                    allergen,
+                    modifier = Modifier.padding(horizontal = 14.dp, vertical = 7.dp),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = if (isSelected) Color.White else ElachiTextPrimary,
+                )
             }
         }
     }

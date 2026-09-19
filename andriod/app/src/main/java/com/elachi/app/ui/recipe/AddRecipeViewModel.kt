@@ -11,7 +11,11 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
-data class DraftIngredient(var name: String = "", var quantity: String = "", var unit: String = "")
+data class DraftIngredient(
+    val name: String = "",
+    val quantity: String = "",
+    val unit: String = "",
+)
 
 class AddRecipeViewModel(
     private val userId: String,
@@ -38,10 +42,7 @@ class AddRecipeViewModel(
     var method = mutableStateOf("Stovetop")
     var isPrivate = mutableStateOf(true)
 
-    // Preset option lists backing the dropdowns, matching the demo's
-    // ManualEntryScreen. Each field stays a free text value underneath
-    // (category.value etc.), so picking a preset or typing a custom one
-    // through CustomAddRow both just set the same state.
+    // Preset option lists backing the optional-detail dropdowns.
     val categoryOptions = listOf("Breakfast", "Lunch", "Dinner", "Dessert", "Snack", "Appetizer")
     val cuisineOptions = listOf("Italian", "Indian", "Mexican", "Asian", "Mediterranean", "American", "Moroccan")
     val foodTypeOptions = listOf("Vegetarian", "Vegan", "Non-Vegetarian", "Pescatarian", "Gluten-Free")
@@ -64,6 +65,9 @@ class AddRecipeViewModel(
 
     fun addIngredientRow() { ingredients.add(DraftIngredient()) }
     fun removeIngredientRow(index: Int) { if (ingredients.size > 1) ingredients.removeAt(index) }
+    fun updateIngredient(index: Int, ingredient: DraftIngredient) {
+        ingredients[index] = ingredient
+    }
 
     fun addStepRow() { steps.add("") }
     fun removeStepRow(index: Int) { if (steps.size > 1) steps.removeAt(index) }
@@ -132,27 +136,32 @@ class AddRecipeViewModel(
         isSaving.value = true
         errorMessage.value = null
         viewModelScope.launch {
-            val id = recipeRepository.createRecipe(
-                userId = userId,
-                bookId = selectedBookId.value,
-                title = title.value,
-                category = category.value,
-                cuisine = cuisine.value.ifBlank { "Other" },
-                foodType = foodType.value.ifBlank { "Other" },
-                difficulty = difficulty.value,
-                servings = servings.value.toIntOrNull() ?: 1,
-                cookTimeMinutes = cookTimeMinutes.value.toIntOrNull() ?: 0,
-                method = method.value,
-                ingredients = cleanedIngredients.map {
-                    it.name to ((it.quantity.toDoubleOrNull() ?: 0.0) to it.unit)
-                },
-                steps = cleanedSteps,
-                allergens = selectedAllergens.toList(),
-                isPrivate = isPrivate.value,
-                imageUrl = imageUrl.value,
-            )
-            isSaving.value = false
-            savedRecipeId.value = id
+            try {
+                val id = recipeRepository.createRecipe(
+                    userId = userId,
+                    bookId = selectedBookId.value,
+                    title = title.value.trim(),
+                    category = category.value,
+                    cuisine = cuisine.value.ifBlank { "Other" },
+                    foodType = foodType.value.ifBlank { "Other" },
+                    difficulty = difficulty.value,
+                    servings = servings.value.toIntOrNull() ?: 1,
+                    cookTimeMinutes = cookTimeMinutes.value.toIntOrNull() ?: 0,
+                    method = method.value,
+                    ingredients = cleanedIngredients.map {
+                        it.name.trim() to ((it.quantity.toDoubleOrNull() ?: 0.0) to it.unit.trim())
+                    },
+                    steps = cleanedSteps.map { it.trim() },
+                    allergens = selectedAllergens.toList(),
+                    isPrivate = isPrivate.value,
+                    imageUrl = imageUrl.value,
+                )
+                savedRecipeId.value = id
+            } catch (e: Exception) {
+                errorMessage.value = "The recipe could not be saved. Please try again."
+            } finally {
+                isSaving.value = false
+            }
         }
     }
 }

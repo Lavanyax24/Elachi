@@ -30,6 +30,9 @@ interface RecipeDao {
     @Query("SELECT * FROM ingredients WHERE recipeId = :recipeId ORDER BY sortOrder ASC")
     suspend fun getIngredientsOnce(recipeId: String): List<IngredientEntity>
 
+    @Query("SELECT * FROM steps WHERE recipeId = :recipeId ORDER BY `order` ASC")
+    suspend fun getStepsOnce(recipeId: String): List<StepEntity>
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun upsertRecipe(recipe: RecipeEntity)
 

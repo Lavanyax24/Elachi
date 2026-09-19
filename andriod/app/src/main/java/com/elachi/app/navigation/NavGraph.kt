@@ -41,6 +41,10 @@ import com.elachi.app.ui.recipe.AddRecipeScreen
 import com.elachi.app.ui.recipe.AddRecipeViewModel
 import com.elachi.app.ui.recipe.CameraCaptureScreen
 import com.elachi.app.ui.recipe.CameraCaptureViewModel
+import com.elachi.app.ui.cookbook.CookbookScreen
+import com.elachi.app.ui.cookbook.RecipeBookDetailScreen
+import com.elachi.app.ui.cookbook.RecipeBookDetailViewModel
+import com.elachi.app.ui.recipe.CookModeScreen
 import com.elachi.app.ui.recipe.RecipeDetailScreen
 import com.elachi.app.ui.recipe.RecipeDetailViewModel
 import com.elachi.app.ui.settings.PrivacyPolicyScreen
@@ -51,6 +55,7 @@ import com.elachi.app.ui.splash.SplashScreen
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 
 private val bottomNavRoutes = setOf(
     Screen.Home.route,
@@ -273,7 +278,7 @@ fun ElachiNavGraph() {
                             navController = navController,
                             drawerState = drawerState,
                         ) {
-                            com.elachi.app.ui.cookbook.CookbookScreen(
+                            CookbookScreen(
                                 viewModel = vm,
                                 onOpenBook = { bookId ->
                                     navController.navigate(Screen.RecipeBookDetail.createRoute(bookId))
@@ -298,16 +303,16 @@ fun ElachiNavGraph() {
 
                 composable(Screen.RecipeBookDetail.route) { backStackEntry ->
                     val bookId = backStackEntry.arguments?.getString("bookId").orEmpty()
-                    val vm: com.elachi.app.ui.cookbook.RecipeBookDetailViewModel = viewModel(
+                    val vm: RecipeBookDetailViewModel = viewModel(
                         factory = SimpleViewModelFactory {
-                            com.elachi.app.ui.cookbook.RecipeBookDetailViewModel(
+                            RecipeBookDetailViewModel(
                                 bookId = bookId,
                                 recipeRepository = elachiApp.recipeRepository,
                             )
                         },
                     )
 
-                    com.elachi.app.ui.cookbook.RecipeBookDetailScreen(
+                    RecipeBookDetailScreen(
                         viewModel = vm,
                         onBack = { navController.popBackStack() },
                         onAddRecipe = {
@@ -319,15 +324,15 @@ fun ElachiNavGraph() {
                     )
                 }
 
-// ---------- Add Recipe ----------
+                // ---------- Add Recipe ----------
                 composable(Screen.AddRecipe.route) { backStackEntry ->
                     val userId = UserSession.userId
                     val bookId = backStackEntry.arguments?.getString("bookId").orEmpty()
 
                     if (userId != null) {
-                        val vm: com.elachi.app.ui.recipe.AddRecipeViewModel = viewModel(
+                        val vm: AddRecipeViewModel = viewModel(
                             factory = SimpleViewModelFactory {
-                                com.elachi.app.ui.recipe.AddRecipeViewModel(
+                                AddRecipeViewModel(
                                     userId = userId,
                                     initialBookId = bookId,
                                     recipeRepository = elachiApp.recipeRepository,
@@ -335,7 +340,7 @@ fun ElachiNavGraph() {
                             },
                         )
 
-                        com.elachi.app.ui.recipe.AddRecipeScreen(
+                        AddRecipeScreen(
                             viewModel = vm,
                             onClose = { navController.popBackStack() },
                             onOpenCamera = {
@@ -354,7 +359,7 @@ fun ElachiNavGraph() {
                     }
                 }
 
-// ---------- Camera and Screenshot OCR ----------
+                // ---------- Camera and Screenshot OCR ----------
                 composable(Screen.CameraCapture.route) { backStackEntry ->
                     val userId = UserSession.userId
                     val bookId = backStackEntry.arguments?.getString("bookId").orEmpty()
@@ -363,23 +368,23 @@ fun ElachiNavGraph() {
                     }
 
                     if (userId != null && addRecipeEntry != null) {
-                        val addRecipeVm: com.elachi.app.ui.recipe.AddRecipeViewModel = viewModel(
+                        val addRecipeVm: AddRecipeViewModel = viewModel(
                             viewModelStoreOwner = addRecipeEntry,
                             factory = SimpleViewModelFactory {
-                                com.elachi.app.ui.recipe.AddRecipeViewModel(
+                                AddRecipeViewModel(
                                     userId = userId,
                                     initialBookId = bookId,
                                     recipeRepository = elachiApp.recipeRepository,
                                 )
                             },
                         )
-                        val cameraVm: com.elachi.app.ui.recipe.CameraCaptureViewModel = viewModel(
+                        val cameraVm: CameraCaptureViewModel = viewModel(
                             factory = SimpleViewModelFactory {
-                                com.elachi.app.ui.recipe.CameraCaptureViewModel(elachiApp.recipeRepository)
+                                CameraCaptureViewModel(elachiApp.recipeRepository)
                             },
                         )
 
-                        com.elachi.app.ui.recipe.CameraCaptureScreen(
+                        CameraCaptureScreen(
                             viewModel = cameraVm,
                             onTextRecognized = { title, ingredients, steps, method, servings, cookTime ->
                                 addRecipeVm.prefillFromParsedRecipe(
@@ -401,15 +406,15 @@ fun ElachiNavGraph() {
                     }
                 }
 
-// ---------- Recipe Detail ----------
+                // ---------- Recipe Detail ----------
                 composable(Screen.RecipeDetail.route) { backStackEntry ->
                     val userId = UserSession.userId
                     val recipeId = backStackEntry.arguments?.getString("recipeId").orEmpty()
 
                     if (userId != null) {
-                        val vm: com.elachi.app.ui.recipe.RecipeDetailViewModel = viewModel(
+                        val vm: RecipeDetailViewModel = viewModel(
                             factory = SimpleViewModelFactory {
-                                com.elachi.app.ui.recipe.RecipeDetailViewModel(
+                                RecipeDetailViewModel(
                                     userId = userId,
                                     recipeId = recipeId,
                                     recipeRepository = elachiApp.recipeRepository,
@@ -420,7 +425,7 @@ fun ElachiNavGraph() {
                             },
                         )
 
-                        com.elachi.app.ui.recipe.RecipeDetailScreen(
+                        RecipeDetailScreen(
                             viewModel = vm,
                             onBack = { navController.popBackStack() },
                             onStartCookMode = {
@@ -434,15 +439,15 @@ fun ElachiNavGraph() {
                     }
                 }
 
-// ---------- Cook Mode ----------
+                // ---------- Cook Mode ----------
                 composable(Screen.CookMode.route) { backStackEntry ->
                     val userId = UserSession.userId
                     val recipeId = backStackEntry.arguments?.getString("recipeId").orEmpty()
 
                     if (userId != null) {
-                        val vm: com.elachi.app.ui.recipe.RecipeDetailViewModel = viewModel(
+                        val vm: RecipeDetailViewModel = viewModel(
                             factory = SimpleViewModelFactory {
-                                com.elachi.app.ui.recipe.RecipeDetailViewModel(
+                                RecipeDetailViewModel(
                                     userId = userId,
                                     recipeId = recipeId,
                                     recipeRepository = elachiApp.recipeRepository,
@@ -454,7 +459,7 @@ fun ElachiNavGraph() {
                         )
                         val steps by vm.steps.collectAsState()
 
-                        com.elachi.app.ui.recipe.CookModeScreen(
+                        CookModeScreen(
                             steps = steps.map { it.instruction },
                             onExit = { navController.popBackStack() },
                             onFinish = {
@@ -595,78 +600,6 @@ fun ElachiNavGraph() {
                     )
                 }
 
-                // ---------- Add Recipe ----------
-                composable(Screen.AddRecipe.route) { backStackEntry ->
-                    val bookId = backStackEntry.arguments?.getString("bookId") ?: ""
-                    val userId = UserSession.userId
-                    if (userId != null) {
-                        val vm: AddRecipeViewModel = viewModel(
-                            factory = SimpleViewModelFactory {
-                                AddRecipeViewModel(userId, bookId, elachiApp.recipeRepository)
-                            }
-                        )
-                        AddRecipeScreen(
-                            viewModel = vm,
-                            onClose = { navController.popBackStack() },
-                            onOpenCamera = {
-                                navController.navigate(Screen.CameraCapture.createRoute(bookId))
-                            },
-                            onSaved = { recipeId ->
-                                navController.navigate(Screen.RecipeDetail.createRoute(recipeId)) {
-                                    popUpTo(Screen.Cookbook.route)
-                                }
-                            }
-                        )
-                    }
-                }
-
-                // ---------- Camera Capture ----------
-                composable(Screen.CameraCapture.route) {
-                    val vm: CameraCaptureViewModel = viewModel(
-                        factory = SimpleViewModelFactory {
-                            CameraCaptureViewModel(elachiApp.recipeRepository)
-                        }
-                    )
-                    CameraCaptureScreen(
-                        viewModel = vm,
-                        onTextRecognized = { title, ingredients, steps, method, servings, cookTimeMinutes ->
-                            val prevEntry = navController.previousBackStackEntry
-                            prevEntry?.savedStateHandle?.set("parsed_title", title)
-                            prevEntry?.savedStateHandle?.set("parsed_ingredients", ingredients)
-                            prevEntry?.savedStateHandle?.set("parsed_steps", steps)
-                            prevEntry?.savedStateHandle?.set("parsed_method", method)
-                            prevEntry?.savedStateHandle?.set("parsed_servings", servings)
-                            prevEntry?.savedStateHandle?.set("parsed_cookTime", cookTimeMinutes)
-                            navController.popBackStack()
-                        },
-                        onCancel = { navController.popBackStack() }
-                    )
-                }
-
-                // ---------- Recipe Detail ----------
-                composable(Screen.RecipeDetail.route) { backStackEntry ->
-                    val recipeId = backStackEntry.arguments?.getString("recipeId") ?: ""
-                    val userId = UserSession.userId
-                    if (userId != null) {
-                        val vm: RecipeDetailViewModel = viewModel(
-                            factory = SimpleViewModelFactory {
-                                RecipeDetailViewModel(
-                                    userId, recipeId,
-                                    elachiApp.recipeRepository,
-                                    elachiApp.pantryRepository,
-                                    elachiApp.achievementRepository,
-                                    elachiApp.api
-                                )
-                            }
-                        )
-                        RecipeDetailScreen(
-                            viewModel = vm,
-                            onBack = { navController.popBackStack() },
-                            onStartCookMode = { /* Start cook mode flow */ }
-                        )
-                    }
-                }
-
                 // Tutorial-only onboarding — returns to Help when finished, does not
                 // continue into Complete Profile / Create First Book.
                 composable("onboarding_tutorial") {
@@ -676,6 +609,7 @@ fun ElachiNavGraph() {
                     )
                 }
             }
+
         }
     }
 }

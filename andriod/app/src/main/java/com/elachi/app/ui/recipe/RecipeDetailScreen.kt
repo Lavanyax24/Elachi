@@ -8,6 +8,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
@@ -32,6 +33,7 @@ fun RecipeDetailScreen(
     var servingMultiplier by remember { mutableIntStateOf(1) }
     var newCommentText by remember { mutableStateOf("") }
     var newCommentRating by remember { mutableIntStateOf(0) }
+    val reviewState by viewModel.reviewUiState
 
     LaunchedEffect(recipe?.id) { if (recipe != null) viewModel.loadComments() }
 
@@ -120,7 +122,9 @@ fun RecipeDetailScreen(
                         Button(
                             onClick = onStartCookMode,
                             modifier = Modifier.weight(1f),
-                        ) { Text("Cook") }
+                        ) {
+                            Text("Cook")
+                        }
                     }
                     Text(
                         "Fork: coming in final version",
@@ -155,55 +159,178 @@ fun RecipeDetailScreen(
                 }
 
                 item {
-                    Spacer(Modifier.height(16.dp))
-                    Text("Reviews", style = MaterialTheme.typography.titleLarge)
-                    Spacer(Modifier.height(8.dp))
-                    Row(verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    Text(
+                        text = "Reviews",
+                        style = MaterialTheme.typography.titleLarge,
+                    )
+
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    Text(
+                        text = "Select a rating",
+                        style = MaterialTheme.typography.labelLarge,
+                    )
+
+                    Row(
+                        verticalAlignment = androidx.compose.ui.Alignment.CenterVertically,
+                    ) {
                         (1..5).forEach { star ->
-                            IconButton(onClick = { newCommentRating = star }, modifier = Modifier.size(32.dp)) {
+                            IconButton(
+                                onClick = {
+                                    newCommentRating = star
+                                    viewModel.clearReviewMessage()
+                                },
+                                modifier = Modifier.size(40.dp),
+                            ) {
                                 Icon(
-                                    if (star <= newCommentRating) Icons.Filled.Star else Icons.Filled.StarBorder,
+                                    imageVector =
+                                        if (star <= newCommentRating) {
+                                            Icons.Filled.Star
+                                        } else {
+                                            Icons.Filled.StarBorder
+                                        },
                                     contentDescription = "$star stars",
                                     tint = androidx.compose.ui.graphics.Color(0xFFF5A623),
                                 )
                             }
                         }
                     }
+
                     OutlinedTextField(
                         value = newCommentText,
-                        onValueChange = { newCommentText = it },
-                        placeholder = { Text("Add a comment...") },
+                        onValueChange = {
+                            newCommentText = it
+                            viewModel.clearReviewMessage()
+                        },
+                        label = {
+                            Text("Your review")
+                        },
+                        placeholder = {
+                            Text("What did you think about this recipe?")
+                        },
+                        minLines = 3,
+                        maxLines = 5,
                         modifier = Modifier.fillMaxWidth(),
                     )
-                    Spacer(Modifier.height(8.dp))
-                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
-                        Button(
-                            onClick = {
-                                viewModel.postComment(newCommentRating.takeIf { it > 0 }, newCommentText.ifBlank { null }) {
+
+                    reviewState.errorMessage?.let { message ->
+                        Spacer(modifier = Modifier.height(8.dp))
+
+                        Text(
+                            text = message,
+                            color = MaterialTheme.colorScheme.error,
+                            style = MaterialTheme.typography.bodyMedium,
+                        )
+                    }
+
+                    reviewState.successMessage?.let { message ->
+                        Spacer(modifier = Modifier.height(8.dp))
+
+                        Text(
+                            text = message,
+                            color = MaterialTheme.colorScheme.primary,
+                            style = MaterialTheme.typography.bodyMedium,
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    Button(
+                        onClick = {
+                            viewModel.postComment(
+                                rating = newCommentRating.takeIf { it > 0 },
+                                text = newCommentText,
+                                onPosted = {
                                     newCommentText = ""
                                     newCommentRating = 0
-                                }
-                            },
-                            enabled = newCommentText.isNotBlank() || newCommentRating > 0,
-                        ) { Text("Post") }
+                                },
+                            )
+                        },
+                        enabled =
+                            newCommentRating in 1..5 &&
+                                    newCommentText.isNotBlank() &&
+                                    !reviewState.isPosting,
+                        modifier = Modifier.fillMaxWidth(),
+                    ) {
+                        if (reviewState.isPosting) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(20.dp),
+                                strokeWidth = 2.dp,
+                                color = MaterialTheme.colorScheme.onPrimary,
+                            )
+
+                            Spacer(modifier = Modifier.width(8.dp))
+
+                            Text("Posting...")
+                        } else {
+                            Text("Post Review")
+                        }
                     }
                 }
 
-                if (comments.isEmpty()) {
-                    item { Text("No reviews yet, be the first to leave one.", style = MaterialTheme.typography.bodyMedium) }
+                if (reviewState.isLoading) {
+                    item {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(16.dp),
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            CircularProgressIndicator()
+                        }
+                    }
+                } else if (comments.isEmpty()) {
+                    item {
+                        Text(
+                            text = "No reviews yet. Be the first to leave one.",
+                            style = MaterialTheme.typography.bodyMedium,
+                        )
+                    }
                 } else {
-                    items(comments) { comment ->
-                        Column(modifier = Modifier.padding(vertical = 6.dp)) {
-                            Row(verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
-                                Text(comment.displayName, fontWeight = FontWeight.Bold)
-                                comment.rating?.let {
-                                    Spacer(Modifier.width(6.dp))
+                    items(
+                        items = comments,
+                        key = { comment -> comment.id },
+                    ) { comment ->
+                        Card(
+                            modifier = Modifier.fillMaxWidth(),
+                        ) {
+                            Column(
+                                modifier = Modifier.padding(12.dp),
+                            ) {
+                                Text(
+                                    text = comment.displayName,
+                                    fontWeight = FontWeight.Bold,
+                                )
+
+                                comment.rating?.let { rating ->
                                     Row {
-                                        repeat(it) { Icon(Icons.Filled.Star, contentDescription = null, modifier = Modifier.size(14.dp), tint = androidx.compose.ui.graphics.Color(0xFFF5A623)) }
+                                        repeat(5) { index ->
+                                            Icon(
+                                                imageVector =
+                                                if (index < rating) {
+                                                    Icons.Filled.Star
+                                                } else {
+                                                    Icons.Filled.StarBorder
+                                                },
+                                                contentDescription = null,
+                                                modifier = Modifier.size(16.dp),
+                                                tint = androidx.compose.ui.graphics.Color(
+                                                    0xFFF5A623,
+                                                ),
+                                            )
+                                        }
                                     }
                                 }
+
+                                comment.text
+                                    ?.takeIf { it.isNotBlank() }
+                                    ?.let { reviewText ->
+                                        Spacer(modifier = Modifier.height(4.dp))
+                                        Text(reviewText, style = MaterialTheme.typography.bodyMedium)
+                                    }
                             }
-                            comment.text?.let { Text(it, style = MaterialTheme.typography.bodyMedium) }
                         }
                     }
                 }

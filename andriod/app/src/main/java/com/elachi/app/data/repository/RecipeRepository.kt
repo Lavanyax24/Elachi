@@ -197,4 +197,124 @@ class RecipeRepository(
             Log.e("RecipeRepository", "refreshRecipesFromNetwork failed", e)
         }
     }
+
+    suspend fun syncRecipeToBackend(
+        recipeId: String,
+        currentUserId: String,
+    ): Result<Unit> {
+        return try {
+            val recipe = recipeDao.getRecipe(recipeId)
+                ?: return Result.failure(
+                    IllegalStateException("Recipe was not found on this device."),
+                )
+
+            if (recipe.ownerId != currentUserId) {
+                return Result.failure(
+                    IllegalStateException("This recipe belongs to another user."),
+                )
+            }
+
+            // Check whether the recipe already exists on the backend.
+            val existingRecipeResponse = api.getRecipe(recipeId)
+
+            if (existingRecipeResponse.isSuccessful) {
+                return Result.success(Unit)
+            }
+
+            if (existingRecipeResponse.code() != 404) {
+                return Result.failure(
+                    IllegalStateException(
+                        "Could not check recipe synchronization. " +
+                                "HTTP ${existingRecipeResponse.code()}",
+                    ),
+                )
+            }
+
+            val book = bookDao.getBook(recipe.bookId)
+                ?: return Result.failure(
+                    IllegalStateException("The recipe book was not found."),
+                )
+
+            /*
+             * Make sure the book exists remotely before creating its recipe.
+             * HTTP 409 means that it already exists, which is acceptable.
+             */
+            val bookResponse = api.createBook(
+                CreateRecipeBookRequest(
+                    id = book.id,
+                    name = book.name,
+                    description = book.description,
+                    coverImageUrl = book.coverImageUrl,
+                    icon = book.icon,
+                    colour = book.colour,
+                ),
+            )
+
+            if (!bookResponse.isSuccessful && bookResponse.code() != 409) {
+                return Result.failure(
+                    IllegalStateException(
+                        "The recipe book could not be synchronized. " +
+                                "HTTP ${bookResponse.code()}",
+                    ),
+                )
+            }
+
+            val ingredients = recipeDao.getIngredientsOnce(recipeId)
+            val steps = recipeDao.getStepsOnce(recipeId)
+
+            val recipeResponse = api.createRecipe(
+                CreateRecipeRequest(
+                    id = recipe.id,
+                    bookId = recipe.bookId,
+                    title = recipe.title,
+                    category = recipe.category,
+                    cuisine = recipe.cuisine,
+                    foodType = recipe.foodType,
+                    difficulty = recipe.difficulty,
+                    servings = recipe.servings,
+                    cookTimeMinutes = recipe.cookTimeMinutes,
+                    method = recipe.method,
+                    ingredients = ingredients.map { ingredient ->
+                        IngredientDto(
+                            name = ingredient.name,
+                            quantity = ingredient.quantity,
+                            unit = ingredient.unit,
+                        )
+                    },
+                    steps = steps.map { step ->
+                        StepDto(
+                            order = step.order,
+                            instruction = step.instruction,
+                            timerSeconds = step.timerSeconds,
+                        )
+                    },
+                    allergens = recipe.allergensCsv
+                        .split(",")
+                        .map { it.trim() }
+                        .filter { it.isNotBlank() },
+                    isPrivate = recipe.isPrivate,
+                    imageUrl = recipe.imageUrl,
+                ),
+            )
+
+            if (recipeResponse.isSuccessful || recipeResponse.code() == 409) {
+                Result.success(Unit)
+            } else {
+                Result.failure(
+                    IllegalStateException(
+                        "The recipe could not be synchronized. " +
+                                "HTTP ${recipeResponse.code()}",
+                    ),
+                )
+            }
+        } catch (exception: Exception) {
+            Log.e(
+                "RecipeRepository",
+                "syncRecipeToBackend failed",
+                exception,
+            )
+
+            Result.failure(exception)
+        }
+    }
 }

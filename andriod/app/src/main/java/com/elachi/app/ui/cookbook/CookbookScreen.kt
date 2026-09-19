@@ -173,44 +173,179 @@ private fun BookCard(
     onEdit: () -> Unit,
     onDelete: () -> Unit,
 ) {
-    val headerColor = runCatching { Color(android.graphics.Color.parseColor(book.colour)) }.getOrDefault(ElachiGreen)
+    val headerColor = runCatching {
+        Color(android.graphics.Color.parseColor(book.colour))
+    }.getOrDefault(ElachiGreen)
+
+    val coverImage = book.coverImageUrl
+        ?.takeIf { it.isNotBlank() }
+
     Surface(
-        modifier = Modifier.fillMaxWidth().height(207.dp).clickable(onClick = onClick),
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(230.dp)
+            .clickable(onClick = onClick),
         color = Color.White,
         shape = RoundedCornerShape(16.dp),
-        border = androidx.compose.foundation.BorderStroke(1.2.dp, Color(0xFFE5E2DD)),
+        border = androidx.compose.foundation.BorderStroke(
+            width = 1.2.dp,
+            color = Color(0xFFE5E2DD),
+        ),
     ) {
         Column {
-            Box(modifier = Modifier.fillMaxWidth().height(70.dp).background(headerColor).padding(horizontal = 14.dp, vertical = 12.dp)) {
-                Text(book.icon.ifBlank { "\uD83D\uDCD6" }, fontSize = 28.sp, modifier = Modifier.align(Alignment.CenterStart))
-                Row(modifier = Modifier.align(Alignment.TopEnd), horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                    Surface(modifier = Modifier.size(28.dp).clickable(onClick = onEdit), color = Color.White.copy(alpha = 0.2f), shape = RoundedCornerShape(6.dp)) {
-                        Box(contentAlignment = Alignment.Center) { Icon(Icons.Filled.Edit, contentDescription = "Edit", modifier = Modifier.size(15.dp), tint = Color.White) }
+            /*
+             * Cookbook cover.
+             *
+             * The selected cookbook image is now displayed here.
+             * The colour remains behind it as a fallback if loading fails.
+             */
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(110.dp)
+                    .background(headerColor),
+            ) {
+                if (coverImage != null) {
+                    AsyncImage(
+                        model = coverImage,
+                        contentDescription = "${book.name} cover",
+                        contentScale = ContentScale.Crop,
+                        modifier = Modifier.fillMaxSize(),
+                    )
+
+                    // Dark overlay so the icon buttons remain visible.
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .background(Color.Black.copy(alpha = 0.22f)),
+                    )
+                }
+
+                Text(
+                    text = book.icon.ifBlank { "📖" },
+                    fontSize = 28.sp,
+                    modifier = Modifier
+                        .align(Alignment.BottomStart)
+                        .padding(12.dp),
+                )
+
+                Row(
+                    modifier = Modifier
+                        .align(Alignment.TopEnd)
+                        .padding(8.dp),
+                    horizontalArrangement = Arrangement.spacedBy(6.dp),
+                ) {
+                    Surface(
+                        modifier = Modifier
+                            .size(32.dp)
+                            .clickable(onClick = onEdit),
+                        color = Color.Black.copy(alpha = 0.35f),
+                        shape = RoundedCornerShape(8.dp),
+                    ) {
+                        Box(
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            Icon(
+                                imageVector = Icons.Filled.Edit,
+                                contentDescription = "Edit ${book.name}",
+                                modifier = Modifier.size(17.dp),
+                                tint = Color.White,
+                            )
+                        }
                     }
-                    Surface(modifier = Modifier.size(28.dp).clickable(onClick = onDelete), color = Color.White.copy(alpha = 0.2f), shape = RoundedCornerShape(6.dp)) {
-                        Box(contentAlignment = Alignment.Center) { Icon(Icons.Filled.Delete, contentDescription = "Delete", modifier = Modifier.size(15.dp), tint = Color.White) }
+
+                    Surface(
+                        modifier = Modifier
+                            .size(32.dp)
+                            .clickable(onClick = onDelete),
+                        color = Color.Black.copy(alpha = 0.35f),
+                        shape = RoundedCornerShape(8.dp),
+                    ) {
+                        Box(
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            Icon(
+                                imageVector = Icons.Filled.Delete,
+                                contentDescription = "Delete ${book.name}",
+                                modifier = Modifier.size(17.dp),
+                                tint = Color.White,
+                            )
+                        }
                     }
                 }
             }
 
-            Row(modifier = Modifier.fillMaxWidth().height(36.dp)) {
-                if (previewImages.isEmpty()) {
-                    Box(modifier = Modifier.weight(1f).fillMaxHeight().background(Color(0xFFF0EDE9)))
-                } else {
-                    previewImages.forEach { url ->
-                        AsyncImage(model = url, contentDescription = null, modifier = Modifier.weight(1f).fillMaxHeight(), contentScale = ContentScale.Crop)
+            /*
+             * Recipe preview strip.
+             * These are recipe images, separate from the cookbook cover.
+             */
+            if (previewImages.isNotEmpty()) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(32.dp),
+                ) {
+                    previewImages.forEach { imageUrl ->
+                        AsyncImage(
+                            model = imageUrl,
+                            contentDescription = null,
+                            contentScale = ContentScale.Crop,
+                            modifier = Modifier
+                                .weight(1f)
+                                .fillMaxHeight(),
+                        )
+                    }
+
+                    repeat(3 - previewImages.size) {
+                        Box(
+                            modifier = Modifier
+                                .weight(1f)
+                                .fillMaxHeight()
+                                .background(Color(0xFFF0EDE9)),
+                        )
                     }
                 }
             }
 
-            Column(modifier = Modifier.padding(horizontal = 12.dp, vertical = 10.dp).weight(1f), verticalArrangement = Arrangement.SpaceBetween) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .weight(1f)
+                    .padding(
+                        horizontal = 12.dp,
+                        vertical = 10.dp,
+                    ),
+                verticalArrangement = Arrangement.SpaceBetween,
+            ) {
                 Column {
-                    Text(book.name, style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold), maxLines = 1)
-                    book.description?.let {
-                        Text(it, style = MaterialTheme.typography.labelSmall, maxLines = 2)
-                    }
+                    Text(
+                        text = book.name,
+                        style = MaterialTheme.typography.bodyMedium.copy(
+                            fontWeight = FontWeight.Bold,
+                        ),
+                        maxLines = 1,
+                    )
+
+                    book.description
+                        ?.takeIf { it.isNotBlank() }
+                        ?.let { description ->
+                            Text(
+                                text = description,
+                                style = MaterialTheme.typography.labelSmall,
+                                maxLines = 2,
+                            )
+                        }
                 }
-                Text("$recipeCount recipes", style = MaterialTheme.typography.labelSmall, color = headerColor)
+
+                Text(
+                    text = if (recipeCount == 1) {
+                        "1 recipe"
+                    } else {
+                        "$recipeCount recipes"
+                    },
+                    style = MaterialTheme.typography.labelSmall,
+                    color = headerColor,
+                )
             }
         }
     }
@@ -239,15 +374,42 @@ private fun BookFormDialog(
     title: String,
     initial: RecipeBookEntity?,
     onDismiss: () -> Unit,
-    onSave: (name: String, description: String?, coverImageUrl: String?, icon: String, colour: String) -> Unit,
+    onSave: (
+        name: String,
+        description: String?,
+        coverImageUrl: String?,
+        icon: String,
+        colour: String,
+    ) -> Unit,
 ) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
-    var name by remember(initial) { mutableStateOf(initial?.name ?: "") }
-    var description by remember(initial) { mutableStateOf(initial?.description ?: "") }
-    var coverImageUrl by remember(initial) { mutableStateOf(initial?.coverImageUrl) }
-    var icon by remember(initial) { mutableStateOf(initial?.icon?.ifBlank { null } ?: ICON_OPTIONS.first()) }
-    var colour by remember(initial) { mutableStateOf(initial?.colour?.ifBlank { null } ?: COLOUR_OPTIONS.first()) }
+
+    var name by remember(initial) {
+        mutableStateOf(initial?.name ?: "")
+    }
+
+    var description by remember(initial) {
+        mutableStateOf(initial?.description ?: "")
+    }
+
+    var coverImageUrl by remember(initial) {
+        mutableStateOf(initial?.coverImageUrl)
+    }
+
+    var icon by remember(initial) {
+        mutableStateOf(
+            initial?.icon?.ifBlank { null }
+                ?: ICON_OPTIONS.first(),
+        )
+    }
+
+    var colour by remember(initial) {
+        mutableStateOf(
+            initial?.colour?.ifBlank { null }
+                ?: COLOUR_OPTIONS.first(),
+        )
+    }
 
     var localPreviewUri by remember(initial) {
         mutableStateOf<Uri?>(null)
@@ -257,81 +419,251 @@ private fun BookFormDialog(
         mutableStateOf(false)
     }
 
-    val photoPicker = rememberLauncherForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri ->
+    var uploadError by remember(initial) {
+        mutableStateOf<String?>(null)
+    }
+
+    val photoPicker = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.PickVisualMedia(),
+    ) { uri ->
         if (uri != null) {
             localPreviewUri = uri
+            uploadError = null
             isUploading = true
+
             scope.launch {
-                SupabaseStorageClient.uploadImage(context, uri, folder = "book-covers")
-                    .onSuccess { url -> coverImageUrl = url }
+                SupabaseStorageClient.uploadImage(
+                    context = context,
+                    uri = uri,
+                    folder = "book-covers",
+                ).onSuccess { uploadedUrl ->
+                    coverImageUrl = uploadedUrl
+                    uploadError = null
+                }.onFailure { exception ->
+                    localPreviewUri = null
+
+                    uploadError = exception.message
+                        ?: "The cover image could not be uploaded."
+                }
+
                 isUploading = false
             }
         }
     }
 
     AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text(title) },
+        onDismissRequest = {
+            if (!isUploading) {
+                onDismiss()
+            }
+        },
+        title = {
+            Text(title)
+        },
         text = {
-            Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
+            Column(
+                modifier = Modifier.verticalScroll(
+                    rememberScrollState(),
+                ),
+            ) {
                 OutlinedTextField(
                     value = name,
-                    onValueChange = { name = it },
-                    label = { Text("Book Name") },
+                    onValueChange = {
+                        name = it
+                    },
+                    label = {
+                        Text("Book Name")
+                    },
+                    singleLine = true,
                     modifier = Modifier.fillMaxWidth(),
                 )
-                Spacer(Modifier.height(8.dp))
+
+                Spacer(modifier = Modifier.height(8.dp))
+
                 OutlinedTextField(
                     value = description,
-                    onValueChange = { description = it },
-                    label = { Text("Description (optional)") },
+                    onValueChange = {
+                        description = it
+                    },
+                    label = {
+                        Text("Description (optional)")
+                    },
+                    minLines = 2,
+                    maxLines = 3,
                     modifier = Modifier.fillMaxWidth(),
                 )
 
-                Spacer(Modifier.height(12.dp))
-                Text("Icon", style = MaterialTheme.typography.labelMedium)
-                Spacer(Modifier.height(6.dp))
+                Spacer(modifier = Modifier.height(12.dp))
+
+                Text(
+                    text = "Icon",
+                    style = MaterialTheme.typography.labelMedium,
+                )
+
+                Spacer(modifier = Modifier.height(6.dp))
+
                 Row(
-                    modifier = Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .horizontalScroll(rememberScrollState()),
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                 ) {
-                    ICON_OPTIONS.forEach { IconChip(it, icon == it) { icon = it } }
+                    ICON_OPTIONS.forEach { option ->
+                        IconChip(
+                            icon = option,
+                            selected = icon == option,
+                            onClick = {
+                                icon = option
+                            },
+                        )
+                    }
                 }
 
-                Spacer(Modifier.height(12.dp))
-                Text("Colour", style = MaterialTheme.typography.labelMedium)
-                Spacer(Modifier.height(6.dp))
+                Spacer(modifier = Modifier.height(12.dp))
+
+                Text(
+                    text = "Colour",
+                    style = MaterialTheme.typography.labelMedium,
+                )
+
+                Spacer(modifier = Modifier.height(6.dp))
+
                 Row(
-                    modifier = Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .horizontalScroll(rememberScrollState()),
                     horizontalArrangement = Arrangement.spacedBy(10.dp),
                 ) {
-                    COLOUR_OPTIONS.forEach { ColourSwatch(it, colour == it) { colour = it } }
+                    COLOUR_OPTIONS.forEach { option ->
+                        ColourSwatch(
+                            hex = option,
+                            selected = colour == option,
+                            onClick = {
+                                colour = option
+                            },
+                        )
+                    }
                 }
 
-                Spacer(Modifier.height(12.dp))
+                Spacer(modifier = Modifier.height(12.dp))
+
+                Text(
+                    text = "Cover Photo",
+                    style = MaterialTheme.typography.labelMedium,
+                )
+
+                Spacer(modifier = Modifier.height(6.dp))
+
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(100.dp)
-                        .clickable {
-                            photoPicker.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
+                        .height(120.dp)
+                        .background(
+                            color = MaterialTheme.colorScheme.surfaceVariant,
+                            shape = RoundedCornerShape(12.dp),
+                        )
+                        .clickable(enabled = !isUploading) {
+                            photoPicker.launch(
+                                PickVisualMediaRequest(
+                                    ActivityResultContracts
+                                        .PickVisualMedia
+                                        .ImageOnly,
+                                ),
+                            )
                         },
                     contentAlignment = Alignment.Center,
                 ) {
                     when {
-                        isUploading -> CircularProgressIndicator()
-                        localPreviewUri != null -> AsyncImage(
-                            model = localPreviewUri, contentDescription = null,
-                            contentScale = ContentScale.Crop, modifier = Modifier.fillMaxSize(),
-                        )
-                        coverImageUrl != null -> AsyncImage(
-                            model = coverImageUrl, contentDescription = null,
-                            contentScale = ContentScale.Crop, modifier = Modifier.fillMaxSize(),
-                        )
-                        else -> Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                            Icon(Icons.Filled.AddAPhoto, contentDescription = null)
-                            Text("Add Cover Photo", style = MaterialTheme.typography.bodyMedium)
+                        isUploading -> {
+                            CircularProgressIndicator()
                         }
+
+                        localPreviewUri != null -> {
+                            AsyncImage(
+                                model = localPreviewUri,
+                                contentDescription =
+                                    "Selected cookbook cover",
+                                contentScale = ContentScale.Crop,
+                                modifier = Modifier.fillMaxSize(),
+                            )
+                        }
+
+                        !coverImageUrl.isNullOrBlank() -> {
+                            AsyncImage(
+                                model = coverImageUrl,
+                                contentDescription =
+                                    "Current cookbook cover",
+                                contentScale = ContentScale.Crop,
+                                modifier = Modifier.fillMaxSize(),
+                            )
+                        }
+
+                        else -> {
+                            Column(
+                                horizontalAlignment =
+                                    Alignment.CenterHorizontally,
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Filled.AddAPhoto,
+                                    contentDescription = null,
+                                )
+
+                                Spacer(modifier = Modifier.height(4.dp))
+
+                                Text(
+                                    text = "Add Cover Photo",
+                                    style =
+                                        MaterialTheme.typography.bodyMedium,
+                                )
+                            }
+                        }
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(6.dp))
+
+                when {
+                    isUploading -> {
+                        Text(
+                            text = "Uploading cookbook cover...",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.primary,
+                        )
+                    }
+
+                    uploadError != null -> {
+                        Text(
+                            text = uploadError.orEmpty(),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.error,
+                        )
+
+                        Text(
+                            text = "Tap the image area to try again.",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme
+                                .colorScheme
+                                .onSurfaceVariant,
+                        )
+                    }
+
+                    localPreviewUri != null &&
+                            coverImageUrl != null -> {
+                        Text(
+                            text = "Cover image uploaded successfully.",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.primary,
+                        )
+                    }
+
+                    !coverImageUrl.isNullOrBlank() -> {
+                        Text(
+                            text = "A cover image is currently saved.",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme
+                                .colorScheme
+                                .onSurfaceVariant,
+                        )
                     }
                 }
             }
@@ -339,13 +671,32 @@ private fun BookFormDialog(
         confirmButton = {
             TextButton(
                 onClick = {
-                    if (name.isNotBlank()) {
-                        onSave(name, description.ifBlank { null }, coverImageUrl, icon, colour)
-                    }
+                    onSave(
+                        name.trim(),
+                        description.trim().ifBlank { null },
+                        coverImageUrl,
+                        icon,
+                        colour,
+                    )
                 },
-                enabled = !isUploading,
-            ) { Text("Save") }
+                enabled = name.isNotBlank() && !isUploading,
+            ) {
+                Text(
+                    text = if (isUploading) {
+                        "Uploading..."
+                    } else {
+                        "Save"
+                    },
+                )
+            }
         },
-        dismissButton = { TextButton(onClick = onDismiss) { Text("Cancel") } },
+        dismissButton = {
+            TextButton(
+                onClick = onDismiss,
+                enabled = !isUploading,
+            ) {
+                Text("Cancel")
+            }
+        },
     )
 }
