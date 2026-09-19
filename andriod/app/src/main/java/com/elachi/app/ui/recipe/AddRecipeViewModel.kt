@@ -6,6 +6,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.elachi.app.data.local.entities.RecipeBookEntity
 import com.elachi.app.data.repository.RecipeRepository
+import com.elachi.app.util.RecipeTextParser
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn
@@ -52,6 +53,7 @@ class AddRecipeViewModel(
     val difficultyOptions = listOf("Easy", "Medium", "Hard")
     val methodOptions = listOf("Stovetop", "Oven", "Grill", "Air Fryer", "Slow Cooker", "Pressure Cooker", "Microwave", "No-Cook")
     val ingredientUnitOptions = listOf(
+        "mg",
         "g",
         "kg",
         "ml",
@@ -72,6 +74,8 @@ class AddRecipeViewModel(
         "bunch",
         "handful",
         "to taste",
+        "oz",
+        "lb",
         "None",
     )
     val allergenOptions = mutableStateListOf("Nuts", "Dairy", "Gluten", "Soy", "Eggs", "Shellfish", "Fish", "Peanuts", "Sesame")
@@ -190,18 +194,54 @@ class AddRecipeViewModel(
         parsedServings: String = "",
         parsedCookTimeMinutes: String = "",
     ) {
-        if (parsedTitle.isNotBlank()) title.value = parsedTitle
-        if (parsedIngredients.isNotEmpty()) {
+        if (parsedTitle.isNotBlank()) {
+            title.value = parsedTitle.trim()
+        }
+
+        val cleanedIngredients = parsedIngredients
+            .map { ingredient ->
+                ingredient.copy(
+                    name = ingredient.name.trim(),
+                    quantity = ingredient.quantity.trim(),
+                    unit = RecipeTextParser.normalizeUnit(
+                        ingredient.unit,
+                    ),
+                )
+            }
+            .filter { it.name.isNotBlank() }
+
+        if (cleanedIngredients.isNotEmpty()) {
             ingredients.clear()
-            ingredients.addAll(parsedIngredients)
+            ingredients.addAll(cleanedIngredients)
         }
-        if (parsedSteps.isNotEmpty()) {
+
+        val cleanedSteps = RecipeTextParser.normalizeSteps(
+            rawSteps = parsedSteps,
+            mergeUnnumberedParagraph = false,
+        )
+
+        if (cleanedSteps.isNotEmpty()) {
             steps.clear()
-            steps.addAll(parsedSteps)
+            steps.addAll(cleanedSteps)
         }
-        if (parsedMethod.isNotBlank()) method.value = parsedMethod
-        if (parsedServings.isNotBlank()) servings.value = parsedServings
-        if (parsedCookTimeMinutes.isNotBlank()) cookTimeMinutes.value = parsedCookTimeMinutes
+
+        val normalizedMethod =
+            RecipeTextParser.normalizeMethod(parsedMethod)
+        if (normalizedMethod.isNotBlank()) {
+            method.value = normalizedMethod
+        }
+
+        parsedServings
+            .trim()
+            .toIntOrNull()
+            ?.takeIf { it > 0 }
+            ?.let { servings.value = it.toString() }
+
+        parsedCookTimeMinutes
+            .trim()
+            .toIntOrNull()
+            ?.takeIf { it > 0 }
+            ?.let { cookTimeMinutes.value = it.toString() }
     }
 
     fun save() {
@@ -218,7 +258,10 @@ class AddRecipeViewModel(
             errorMessage.value = "Add at least one ingredient."
             return
         }
-        val cleanedSteps = steps.filter { it.isNotBlank() }
+        val cleanedSteps = RecipeTextParser.normalizeSteps(
+            rawSteps = steps.toList(),
+            mergeUnnumberedParagraph = false,
+        )
         if (cleanedSteps.isEmpty()) {
             errorMessage.value = "Add at least one step."
             return

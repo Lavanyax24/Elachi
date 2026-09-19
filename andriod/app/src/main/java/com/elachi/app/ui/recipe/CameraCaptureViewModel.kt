@@ -43,6 +43,11 @@ class CameraCaptureViewModel(
             return
         }
 
+        /*
+         * Always parse locally as well. The local result supplies any fields
+         * omitted by the backend and is also the offline fallback.
+         */
+        val localResult = RecipeTextParser.parse(cleanedLines)
         val combinedRawText = cleanedLines.joinToString("\n")
 
         viewModelScope.launch {
@@ -56,7 +61,9 @@ class CameraCaptureViewModel(
 
                     onResult(
                         OcrResult(
-                            title = aiResult.title.trim(),
+                            title = aiResult.title
+                                .trim()
+                                .ifBlank { localResult.title },
                             ingredients = aiResult.ingredients
                                 .map { ingredient ->
                                     DraftIngredient(
@@ -64,28 +71,44 @@ class CameraCaptureViewModel(
                                         quantity = ingredient.quantity
                                             .toString()
                                             .removeSuffix(".0"),
-                                        unit = ingredient.unit.trim(),
+                                        unit = RecipeTextParser.normalizeUnit(
+                                            ingredient.unit,
+                                        ),
                                     )
                                 }
+                                .filter { it.name.isNotBlank() }
                                 .ifEmpty {
-                                    listOf(DraftIngredient())
+                                    localResult.ingredients.map {
+                                            ingredient ->
+                                        DraftIngredient(
+                                            name = ingredient.name,
+                                            quantity = ingredient.quantity,
+                                            unit = RecipeTextParser
+                                                .normalizeUnit(
+                                                    ingredient.unit,
+                                                ),
+                                        )
+                                    }
                                 },
-                            steps = aiResult.steps
-                                .map { it.trim() }
-                                .filter { it.isNotBlank() }
+                            steps = RecipeTextParser.normalizeSteps(
+                                rawSteps = aiResult.steps,
+                                mergeUnnumberedParagraph = false,
+                            )
                                 .ifEmpty {
-                                    listOf("")
+                                    localResult.steps
                                 },
-                            method = aiResult.method.trim(),
+                            method = RecipeTextParser.normalizeMethod(
+                                aiResult.method,
+                            ).ifBlank { localResult.method },
                             servings = aiResult.servings
                                 .takeIf { it > 0 }
                                 ?.toString()
-                                .orEmpty(),
+                                ?: localResult.servings,
                             cookTimeMinutes =
                                 aiResult.cookTimeMinutes
                                     .takeIf { it > 0 }
                                     ?.toString()
-                                    .orEmpty(),
+                                    ?: localResult.cookTimeMinutes,
                         ),
                     )
                 }
@@ -95,9 +118,6 @@ class CameraCaptureViewModel(
                         "AI parsing failed. Using local parser.",
                         exception,
                     )
-
-                    val localResult =
-                        RecipeTextParser.parse(cleanedLines)
 
                     onResult(
                         OcrResult(
@@ -118,9 +138,10 @@ class CameraCaptureViewModel(
                                 .ifEmpty {
                                     listOf("")
                                 },
-                            method = "",
-                            servings = "",
-                            cookTimeMinutes = "",
+                            method = localResult.method,
+                            servings = localResult.servings,
+                            cookTimeMinutes =
+                                localResult.cookTimeMinutes,
                         ),
                     )
                 }
