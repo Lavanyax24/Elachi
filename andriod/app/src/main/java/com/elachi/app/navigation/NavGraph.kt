@@ -33,6 +33,8 @@ import com.elachi.app.ui.common.ElachiBottomNavBar
 import com.elachi.app.ui.common.ElachiTopBar
 import com.elachi.app.ui.cookbook.CookbookViewModel
 import com.elachi.app.ui.help.HelpScreen
+import com.elachi.app.ui.home.HomeScreen
+import com.elachi.app.ui.home.HomeViewModel
 import com.elachi.app.ui.onboarding.CompleteProfileScreen
 import com.elachi.app.ui.onboarding.CompleteProfileViewModel
 import com.elachi.app.ui.onboarding.CreateFirstBookScreen
@@ -262,12 +264,26 @@ fun ElachiNavGraph() {
 
                 // ---------- Home ----------
                 composable(Screen.Home.route) {
-                    ScreenShell(
-                        title = "Elachi",
-                        route = currentRoute,
-                        navController = navController,
-                        drawerState = drawerState,
-                    ) { Placeholder("Home") {} }
+                    val userId = UserSession.userId
+                    if (userId != null) {
+                        val vm: HomeViewModel = viewModel(
+                            factory = SimpleViewModelFactory {
+                                HomeViewModel(userId, elachiApp.recipeRepository, elachiApp.pantryRepository, elachiApp.database.achievementDao())
+                            },
+                        )
+                        HomeScreen(
+                            viewModel = vm,
+                            onOpenRecipe = { id -> navController.navigate(Screen.RecipeDetail.createRoute(id)) },
+                            onOpenAiChef = { navController.navigate(Screen.AiChef.route) },
+                            onOpenAchievements = { navController.navigate(Screen.Achievements.route) },
+                            onOpenSettings = { navController.navigate(Screen.Settings.route) },
+                            onOpenDrawer = { scope.launch { drawerState.open() } },
+                        )
+                    } else {
+                        Placeholder("Please sign in again") {
+                            navController.navigate(Screen.Login.route) { popUpTo(0) }
+                        }
+                    }
                 }
 
                 // ---------- Cookbook ----------
