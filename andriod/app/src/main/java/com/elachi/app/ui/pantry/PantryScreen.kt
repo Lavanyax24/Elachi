@@ -12,7 +12,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import com.elachi.app.ui.common.ElachiTopBar
 import android.media.Ringtone
 import android.media.RingtoneManager
 import android.os.CountDownTimer
@@ -30,21 +29,17 @@ fun PantryScreen(viewModel: PantryViewModel) {
     var tab by remember { mutableIntStateOf(0) }
 
     Scaffold(
-        topBar = {
-            ElachiTopBar(
-                title = "Pantry & Tools",
-                actions = {
-                    // The add button only makes sense on the Pantry and Shopping List tabs
-                    if (tab != 2) {
-                        IconButton(onClick = { showAddDialog = true }) {
-                            Icon(
-                                Icons.Filled.Add,
-                                contentDescription = if (tab == 0) "Add pantry item" else "Add shopping item",
-                            )
-                        }
-                    }
+        // ScreenShell in NavGraph already provides the top bar and handles insets
+        contentWindowInsets = WindowInsets(0.dp, 0.dp, 0.dp, 0.dp),
+        floatingActionButton = {
+            if (tab != 2) {
+                FloatingActionButton(onClick = { showAddDialog = true }) {
+                    Icon(
+                        Icons.Filled.Add,
+                        contentDescription = if (tab == 0) "Add pantry item" else "Add shopping item",
+                    )
                 }
-            )
+            }
         },
     ) { padding ->
         Column(modifier = Modifier.padding(padding).fillMaxSize()) {
@@ -56,7 +51,7 @@ fun PantryScreen(viewModel: PantryViewModel) {
 
             when (tab) {
                 0 -> LazyColumn(
-                    contentPadding = PaddingValues(16.dp),
+                    contentPadding = PaddingValues(start = 16.dp, top = 16.dp, end = 16.dp, bottom = 88.dp),
                     verticalArrangement = Arrangement.spacedBy(4.dp),
                 ) {
                     items(pantryItems, key = { it.id }) { item ->

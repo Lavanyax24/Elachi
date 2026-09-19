@@ -29,7 +29,6 @@ import androidx.lifecycle.viewModelScope
 import coil.compose.AsyncImage
 import com.elachi.app.data.remote.ApiService
 import com.elachi.app.data.remote.dto.DiscoverRecipeDto
-import com.elachi.app.ui.common.ElachiTopBar
 import com.elachi.app.ui.theme.ElachiCream
 import com.elachi.app.ui.theme.ElachiGreen
 import com.elachi.app.ui.theme.ElachiGreenLight
@@ -136,7 +135,8 @@ fun DiscoverScreen(viewModel: DiscoverViewModel, onOpenRecipe: (String) -> Unit)
     val filtersActive = selectedCuisine != null || selectedDietary != null
 
     Scaffold(
-        topBar = { ElachiTopBar(title = "Discover") },
+        containerColor = ElachiCream,
+        contentWindowInsets = WindowInsets(0.dp, 0.dp, 0.dp, 0.dp),
     ) { padding ->
         Column(modifier = Modifier.padding(padding).fillMaxSize().background(ElachiCream)) {
             Column(modifier = Modifier.padding(16.dp)) {
