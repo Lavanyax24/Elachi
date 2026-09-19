@@ -175,6 +175,7 @@ data class DiscoverRecipeDto(
     val difficulty: String,
     val cuisine: String,
     val timesCooked: Int,
+    val foodType: String? = null,
     val creatorId: String,
     val creatorName: String,
     val avgRating: Double,
