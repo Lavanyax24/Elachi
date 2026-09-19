@@ -1,5 +1,6 @@
 package com.elachi.app.ui.recipe
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.elachi.app.data.repository.RecipeRepository
@@ -15,15 +16,6 @@ data class OcrResult(
     val cookTimeMinutes: String,
 )
 
-/**
- * Owns the "what do we do with the raw OCR text" decision for both Camera
- * capture and Screenshot import.
- *
- * Primary path: send the raw text to the backend's AI-powered structuring
- * endpoint (Cohere, POST /api/recipes/parse-text).
- * Fallback path: if the AI call fails (offline, Render cold start, Cohere
- * rate limit), silently fall back to the on-device RecipeTextParser.
- */
 class CameraCaptureViewModel(
     private val recipeRepository: RecipeRepository,
 ) : ViewModel() {
@@ -32,50 +24,100 @@ class CameraCaptureViewModel(
         rawLines: List<String>,
         onResult: (OcrResult) -> Unit,
     ) {
-        val rawText = rawLines.joinToString("\n")
+        val cleanedLines = rawLines
+            .map { it.trim() }
+            .filter { it.isNotBlank() }
+
+        if (cleanedLines.isEmpty()) {
+            onResult(
+                OcrResult(
+                    title = "",
+                    ingredients = listOf(DraftIngredient()),
+                    steps = listOf(""),
+                    method = "",
+                    servings = "",
+                    cookTimeMinutes = "",
+                ),
+            )
+
+            return
+        }
+
+        val combinedRawText = cleanedLines.joinToString("\n")
 
         viewModelScope.launch {
-            recipeRepository.parseRecipeTextViaAi(rawText)
-                .onSuccess { ai ->
+            recipeRepository
+                .parseRecipeTextViaAi(combinedRawText)
+                .onSuccess { aiResult ->
+                    Log.d(
+                        "RecipeOCR",
+                        "Recipe text was structured by the AI backend.",
+                    )
+
                     onResult(
                         OcrResult(
-                            title = ai.title,
-                            ingredients = ai.ingredients
-                                .map {
+                            title = aiResult.title.trim(),
+                            ingredients = aiResult.ingredients
+                                .map { ingredient ->
                                     DraftIngredient(
-                                        it.name,
-                                        it.quantity.toString(),
-                                        it.unit,
+                                        name = ingredient.name.trim(),
+                                        quantity = ingredient.quantity
+                                            .toString()
+                                            .removeSuffix(".0"),
+                                        unit = ingredient.unit.trim(),
                                     )
                                 }
-                                .ifEmpty { listOf(DraftIngredient()) },
-                            steps = ai.steps.ifEmpty { listOf("") },
-                            method = ai.method,
-                            servings = if (ai.servings > 0) ai.servings.toString() else "",
-                            cookTimeMinutes = if (ai.cookTimeMinutes > 0) {
-                                ai.cookTimeMinutes.toString()
-                            } else {
-                                ""
-                            },
+                                .ifEmpty {
+                                    listOf(DraftIngredient())
+                                },
+                            steps = aiResult.steps
+                                .map { it.trim() }
+                                .filter { it.isNotBlank() }
+                                .ifEmpty {
+                                    listOf("")
+                                },
+                            method = aiResult.method.trim(),
+                            servings = aiResult.servings
+                                .takeIf { it > 0 }
+                                ?.toString()
+                                .orEmpty(),
+                            cookTimeMinutes =
+                                aiResult.cookTimeMinutes
+                                    .takeIf { it > 0 }
+                                    ?.toString()
+                                    .orEmpty(),
                         ),
                     )
                 }
-                .onFailure {
-                    val local = RecipeTextParser.parse(rawLines)
+                .onFailure { exception ->
+                    Log.w(
+                        "RecipeOCR",
+                        "AI parsing failed. Using local parser.",
+                        exception,
+                    )
+
+                    val localResult =
+                        RecipeTextParser.parse(cleanedLines)
 
                     onResult(
                         OcrResult(
-                            title = local.title,
-                            ingredients = local.ingredients
-                                .map {
+                            title = localResult.title,
+                            ingredients = localResult.ingredients
+                                .map { ingredient ->
                                     DraftIngredient(
-                                        it.name,
-                                        it.quantity,
-                                        it.unit,
+                                        name = ingredient.name,
+                                        quantity = ingredient.quantity,
+                                        unit = ingredient.unit,
                                     )
                                 }
-                                .ifEmpty { listOf(DraftIngredient()) },
-                            steps = local.steps.ifEmpty { listOf("") },
+                                .ifEmpty {
+                                    listOf(DraftIngredient())
+                                },
+                            steps = localResult.steps
+                                .filter { it.isNotBlank() }
+                                .ifEmpty {
+                                    listOf("")
+                                },
                             method = "",
                             servings = "",
                             cookTimeMinutes = "",

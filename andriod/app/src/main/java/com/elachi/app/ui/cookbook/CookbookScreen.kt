@@ -545,7 +545,6 @@ private fun BookFormDialog(
                     }
                 }
 
-                
                 Spacer(modifier = Modifier.height(12.dp))
 
                 Text(

@@ -23,6 +23,28 @@ class AddRecipeViewModel(
     private val recipeRepository: RecipeRepository,
 ) : ViewModel() {
 
+    val ingredientUnitOptions = listOf(
+        "No unit",
+        "g",
+        "kg",
+        "mg",
+        "ml",
+        "L",
+        "tsp",
+        "tbsp",
+        "cup",
+        "oz",
+        "lb",
+        "pinch",
+        "slice",
+        "piece",
+        "can",
+        "packet",
+        "bunch",
+        "handful",
+        "to taste",
+    )
+
     // Every recipe must belong to a Recipe Book. This is the user's full
     // book list so the form can offer a real picker (matching the demo's
     // "Recipe Book" dropdown) instead of being locked to whichever book the
@@ -49,7 +71,7 @@ class AddRecipeViewModel(
     val difficultyOptions = listOf("Easy", "Medium", "Hard")
     val methodOptions = listOf("Stovetop", "Oven", "Grill", "Air Fryer", "Slow Cooker", "Pressure Cooker", "Microwave", "No-Cook")
 
-    val allergenOptions = listOf("Nuts", "Dairy", "Gluten", "Soy", "Eggs", "Shellfish", "Fish", "Peanuts", "Sesame")
+    val allergenOptions = mutableStateListOf("Nuts", "Dairy", "Gluten", "Soy", "Eggs", "Shellfish", "Fish", "Peanuts", "Sesame")
     val selectedAllergens = mutableStateListOf<String>()
 
     val ingredients = mutableStateListOf(DraftIngredient())
@@ -162,6 +184,50 @@ class AddRecipeViewModel(
             } finally {
                 isSaving.value = false
             }
+        }
+    }
+
+    fun addCustomAllergen(allergenName: String) {
+        val cleanedName = allergenName
+            .trim()
+            .replace(Regex("\\s+"), " ")
+
+        if (cleanedName.isBlank()) {
+            return
+        }
+
+        /*
+         * Find an existing allergy without treating uppercase and
+         * lowercase versions as different allergies.
+         */
+        val existingAllergen = allergenOptions.firstOrNull {
+            it.equals(cleanedName, ignoreCase = true)
+        }
+
+        val allergenToSelect = if (existingAllergen != null) {
+            existingAllergen
+        } else {
+            val formattedName = cleanedName.replaceFirstChar { firstCharacter ->
+                if (firstCharacter.isLowerCase()) {
+                    firstCharacter.titlecase()
+                } else {
+                    firstCharacter.toString()
+                }
+            }
+
+            allergenOptions.add(formattedName)
+            formattedName
+        }
+
+        /*
+         * Automatically select the newly created allergy for the recipe.
+         */
+        if (
+            selectedAllergens.none {
+                it.equals(allergenToSelect, ignoreCase = true)
+            }
+        ) {
+            selectedAllergens.add(allergenToSelect)
         }
     }
 }

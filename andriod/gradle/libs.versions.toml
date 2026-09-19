@@ -21,6 +21,7 @@ firebaseBom = "33.7.0"
 googleServices = "4.4.2"
 playServicesAuth = "21.3.0"
 material = "1.12.0"
+material3 = "1.4.0"
 
 [libraries]
 # Core / Compose
@@ -83,6 +84,7 @@ play-services-auth = { group = "com.google.android.gms", name = "play-services-a
 junit = { group = "junit", name = "junit", version.ref = "junit" }
 androidx-junit = { group = "androidx.test.ext", name = "junit", version.ref = "junitVersion" }
 androidx-espresso-core = { group = "androidx.test.espresso", name = "espresso-core", version.ref = "espressoCore" }
+androidx-material3 = { group = "androidx.compose.material3", name = "material3", version.ref = "material3" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
