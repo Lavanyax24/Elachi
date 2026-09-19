@@ -166,16 +166,6 @@ data class ParsedRecipeAiDto(
 
 data class ForkRecipeRequest(val bookId: String)
 
-data class CommentDto(
-    val id: String,
-    val rating: Int?,
-    val text: String?,
-    val createdAt: String,
-    val displayName: String,
-)
-
-data class PostCommentRequest(val rating: Int?, val text: String?)
-
 
 data class DiscoverRecipeDto(
     val id: String,

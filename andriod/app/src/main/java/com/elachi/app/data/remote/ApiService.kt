@@ -81,13 +81,6 @@ interface ApiService {
     @POST("api/recipes/{id}/fork")
     suspend fun forkRecipe(@Path("id") id: String, @Body body: ForkRecipeRequest): Response<RecipeDto>
 
-    // --- Comments and Reviews ---
-    @GET("api/recipes/{id}/comments")
-    suspend fun getComments(@Path("id") id: String): Response<List<CommentDto>>
-
-    @POST("api/recipes/{id}/comments")
-    suspend fun postComment(@Path("id") id: String, @Body body: PostCommentRequest): Response<CommentDto>
-
     // --- Discover ---
     @GET("api/recipes/discover")
     suspend fun discoverRecipes(@retrofit2.http.Query("mode") mode: String, @retrofit2.http.Query("search") search: String? = null): Response<List<DiscoverRecipeDto>>
