@@ -56,7 +56,10 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-
+import com.elachi.app.ui.discover.DiscoverScreen
+import com.elachi.app.ui.discover.DiscoverViewModel
+import com.elachi.app.ui.pantry.PantryScreen
+import com.elachi.app.ui.pantry.PantryViewModel
 private val bottomNavRoutes = setOf(
     Screen.Home.route,
     Screen.Cookbook.route,
@@ -537,24 +540,56 @@ fun ElachiNavGraph() {
 
                 // ---------- Discover ----------
                 composable(Screen.Discover.route) {
+                    val vm: DiscoverViewModel = viewModel(
+                        factory = SimpleViewModelFactory { DiscoverViewModel(elachiApp.api) },
+                    )
                     ScreenShell(
                         title = "Discover",
                         route = currentRoute,
                         navController = navController,
                         drawerState = drawerState,
-                    ) { Placeholder("Discover") {} }
+                    ) {
+                        DiscoverScreen(
+                            viewModel = vm,
+                            onOpenRecipe = { recipeId ->
+                                navController.navigate(Screen.RecipeDetail.createRoute(recipeId))
+                            },
+                        )
+                    }
                 }
 
                 // ---------- Pantry ----------
                 composable(Screen.Pantry.route) {
-                    ScreenShell(
-                        title = "Pantry",
-                        route = currentRoute,
-                        navController = navController,
-                        drawerState = drawerState,
-                    ) { Placeholder("Pantry") {} }
+                    val userId = UserSession.userId
+                    if (userId != null) {
+                        val vm: PantryViewModel = viewModel(
+                            factory = SimpleViewModelFactory {
+                                PantryViewModel(
+                                    userId = userId,
+                                    pantryRepository = elachiApp.pantryRepository,
+                                    achievementRepository = elachiApp.achievementRepository,
+                                )
+                            },
+                        )
+                        ScreenShell(
+                            title = "Pantry & Tools",
+                            route = currentRoute,
+                            navController = navController,
+                            drawerState = drawerState,
+                        ) { PantryScreen(viewModel = vm) }
+                    } else {
+                        ScreenShell(
+                            title = "Pantry & Tools",
+                            route = currentRoute,
+                            navController = navController,
+                            drawerState = drawerState,
+                        ) {
+                            Placeholder("Please sign in again") {
+                                navController.navigate(Screen.Login.route) { popUpTo(0) }
+                            }
+                        }
+                    }
                 }
-
                 // ---------- Profile ----------
                 composable(Screen.Profile.route) {
                     ScreenShell(
