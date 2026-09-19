@@ -1,5 +1,7 @@
 package com.elachi.app
 
+import android.Manifest
+import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -11,7 +13,9 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import com.elachi.app.navigation.ElachiNavGraph
+import com.elachi.app.notifications.ElachiMessagingService
 import com.elachi.app.ui.theme.ElachiTheme
+import com.google.firebase.messaging.FirebaseMessaging
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -22,8 +26,21 @@ class MainActivity : ComponentActivity() {
             android.util.Log.e("MainActivity", "edge-to-edge failed", e)
         }
 
+        // Request notification permission on Android 13+ (API 33).
+        if (Build.VERSION.SDK_INT >= 33) {
+            requestPermissions(arrayOf(Manifest.permission.POST_NOTIFICATIONS), 0)
+        }
+
         val app = application as ElachiApp
         val settingsRepository = app.settingsRepository
+
+        // If already signed in, register the current FCM token with the backend.
+        // Covers log-out/log-in with a different account on the same device, or an app upgrade where onNewToken doesn't fire.
+        app.authRepository.currentUser?.let {
+            FirebaseMessaging.getInstance().token.addOnSuccessListener { token ->
+                ElachiMessagingService.registerTokenWithBackend(applicationContext, token)
+            }
+        }
 
         setContent {
             val isDarkTheme by settingsRepository.isDarkTheme.collectAsState(initial = false)
