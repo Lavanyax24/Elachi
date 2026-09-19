@@ -43,6 +43,12 @@ interface ApiService {
     @GET("api/recipes/{id}")
     suspend fun getRecipe(@Path("id") id: String): Response<RecipeDto>
 
+    @PATCH("api/recipes/{id}")
+    suspend fun updateRecipe(
+        @Path("id") id: String,
+        @Body body: CreateRecipeRequest,
+    ): Response<RecipeDto>
+
     @DELETE("api/recipes/{id}")
     suspend fun deleteRecipe(@Path("id") id: String): Response<Unit>
 
@@ -80,13 +86,6 @@ interface ApiService {
     // --- Fork ---
     @POST("api/recipes/{id}/fork")
     suspend fun forkRecipe(@Path("id") id: String, @Body body: ForkRecipeRequest): Response<RecipeDto>
-
-    // --- Comments and Reviews ---
-    @GET("api/recipes/{id}/comments")
-    suspend fun getComments(@Path("id") id: String): Response<List<CommentDto>>
-
-    @POST("api/recipes/{id}/comments")
-    suspend fun postComment(@Path("id") id: String, @Body body: PostCommentRequest): Response<CommentDto>
 
     // --- Discover ---
     @GET("api/recipes/discover")
