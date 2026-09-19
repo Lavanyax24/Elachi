@@ -1,6 +1,7 @@
 package com.elachi.app.ui.recipe
 
 import android.util.Log
+import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.elachi.app.data.local.entities.IngredientEntity
@@ -26,53 +27,72 @@ class RecipeDetailViewModel(
     private val api: ApiService,
 ) : ViewModel() {
 
+    val isDeleting = mutableStateOf(false)
+    val deleteError = mutableStateOf<String?>(null)
+
     val recipe: StateFlow<RecipeEntity?> =
         recipeRepository.observeRecipe(recipeId)
             .stateIn(
-                scope = viewModelScope,
-                started = SharingStarted.WhileSubscribed(5_000),
-                initialValue = null,
+                viewModelScope,
+                SharingStarted.WhileSubscribed(5_000),
+                null,
             )
 
     val availableBooks: StateFlow<List<RecipeBookEntity>> =
         recipeRepository.observeBooks(userId)
             .stateIn(
-                scope = viewModelScope,
-                started = SharingStarted.WhileSubscribed(5_000),
-                initialValue = emptyList(),
+                viewModelScope,
+                SharingStarted.WhileSubscribed(5_000),
+                emptyList(),
             )
 
     val ingredients: StateFlow<List<IngredientEntity>> =
         recipeRepository.observeIngredients(recipeId)
             .stateIn(
-                scope = viewModelScope,
-                started = SharingStarted.WhileSubscribed(5_000),
-                initialValue = emptyList(),
+                viewModelScope,
+                SharingStarted.WhileSubscribed(5_000),
+                emptyList(),
             )
 
     val steps: StateFlow<List<StepEntity>> =
         recipeRepository.observeSteps(recipeId)
             .stateIn(
-                scope = viewModelScope,
-                started = SharingStarted.WhileSubscribed(5_000),
-                initialValue = emptyList(),
+                viewModelScope,
+                SharingStarted.WhileSubscribed(5_000),
+                emptyList(),
             )
 
-    fun toggleFavourite(currentFavouriteValue: Boolean) {
+    fun toggleFavourite(current: Boolean) {
         viewModelScope.launch {
-            recipeRepository.toggleFavourite(
-                recipeId,
-                !currentFavouriteValue,
-            )
+            recipeRepository.toggleFavourite(recipeId, !current)
         }
     }
 
     fun addMissingIngredientsToShoppingList() {
         viewModelScope.launch {
             pantryRepository.generateShoppingListFromRecipe(
-                userId = userId,
-                recipeId = recipeId,
+                userId,
+                recipeId,
             )
+        }
+    }
+
+    fun deleteRecipe(onDeleted: () -> Unit) {
+        if (isDeleting.value) return
+
+        viewModelScope.launch {
+            isDeleting.value = true
+            deleteError.value = null
+
+            try {
+                recipeRepository.deleteRecipe(recipeId)
+                onDeleted()
+            } catch (exception: Exception) {
+                Log.e("RecipeDetailVM", "deleteRecipe failed", exception)
+                deleteError.value = "The recipe could not be deleted. Please try again."
+            } finally {
+                isDeleting.value = false
+            }
         }
     }
 
@@ -82,29 +102,28 @@ class RecipeDetailViewModel(
         viewModelScope.launch {
             recipeRepository.markCooked(recipeId)
 
-            val unlockedAchievements =
+            val unlocked =
                 achievementRepository.onRecipeCooked(
-                    userId = userId,
-                    recipeId = recipeId,
+                    userId,
+                    recipeId,
                 )
 
             try {
                 api.logCookSession(
                     CookSessionRequest(
-                        recipeId = recipeId,
-                        completedAt =
-                            java.time.Instant.now().toString(),
+                        recipeId,
+                        java.time.Instant.now().toString(),
                     ),
                 )
             } catch (exception: Exception) {
                 Log.e(
                     "RecipeDetailVM",
-                    "Logging cook session failed",
+                    "logCookSession failed",
                     exception,
                 )
             }
 
-            onUnlocked(unlockedAchievements)
+            onUnlocked(unlocked)
         }
     }
 }

@@ -359,6 +359,48 @@ fun ElachiNavGraph() {
                     }
                 }
 
+                // ---------- Edit Recipe ----------
+                composable(Screen.EditRecipe.route) { backStackEntry ->
+                    val userId = UserSession.userId
+                    val recipeId = backStackEntry.arguments
+                        ?.getString("recipeId")
+                        .orEmpty()
+
+                    if (userId != null) {
+                        val vm: AddRecipeViewModel = viewModel(
+                            factory = SimpleViewModelFactory {
+                                AddRecipeViewModel(
+                                    userId = userId,
+                                    initialBookId = "",
+                                    recipeRepository = elachiApp.recipeRepository,
+                                    editingRecipeId = recipeId,
+                                )
+                            },
+                        )
+
+                        AddRecipeScreen(
+                            viewModel = vm,
+                            onClose = { navController.popBackStack() },
+                            onOpenCamera = {
+                                navController.navigate(
+                                    Screen.CameraCapture.createRoute(
+                                        vm.selectedBookId.value,
+                                    ),
+                                )
+                            },
+                            onSaved = {
+                                navController.popBackStack()
+                            },
+                        )
+                    } else {
+                        Placeholder("Please sign in again") {
+                            navController.navigate(Screen.Login.route) {
+                                popUpTo(0)
+                            }
+                        }
+                    }
+                }
+
                 // ---------- Camera and Screenshot OCR ----------
                 composable(Screen.CameraCapture.route) { backStackEntry ->
                     val userId = UserSession.userId
@@ -428,6 +470,14 @@ fun ElachiNavGraph() {
                         RecipeDetailScreen(
                             viewModel = vm,
                             onBack = { navController.popBackStack() },
+                            onEdit = {
+                                navController.navigate(
+                                    Screen.EditRecipe.createRoute(recipeId),
+                                )
+                            },
+                            onDeleted = {
+                                navController.popBackStack()
+                            },
                             onStartCookMode = {
                                 navController.navigate(Screen.CookMode.createRoute(recipeId))
                             },

@@ -28,6 +28,10 @@ class RecipeRepository(
     fun observeIngredients(recipeId: String) = recipeDao.observeIngredients(recipeId)
     fun observeSteps(recipeId: String) = recipeDao.observeSteps(recipeId)
 
+    suspend fun getRecipeOnce(recipeId: String) = recipeDao.getRecipe(recipeId)
+    suspend fun getIngredientsOnce(recipeId: String) = recipeDao.getIngredientsOnce(recipeId)
+    suspend fun getStepsOnce(recipeId: String) = recipeDao.getStepsOnce(recipeId)
+
     suspend fun createBook(
         userId: String, name: String, description: String?, icon: String, colour: String,
         coverImageUrl: String? = null,
@@ -105,6 +109,112 @@ class RecipeRepository(
         recipeDao.deleteRecipe(id)
         try { api.deleteRecipe(id) } catch (e: Exception) {
             Log.e("RecipeRepository", "deleteRecipe backend sync failed", e)
+        }
+    }
+
+    suspend fun updateRecipe(
+        recipeId: String,
+        userId: String,
+        bookId: String,
+        title: String,
+        category: String,
+        cuisine: String,
+        foodType: String,
+        difficulty: String,
+        servings: Int,
+        cookTimeMinutes: Int,
+        method: String,
+        ingredients: List<Pair<String, Pair<Double, String>>>,
+        steps: List<String>,
+        allergens: List<String>,
+        isPrivate: Boolean,
+        imageUrl: String?,
+    ) {
+        val existing = recipeDao.getRecipe(recipeId)
+            ?: throw IllegalArgumentException("Recipe not found.")
+
+        if (existing.ownerId != userId) {
+            throw IllegalStateException("You cannot edit another user's recipe.")
+        }
+
+        val now = System.currentTimeMillis()
+        val updatedRecipe = existing.copy(
+            bookId = bookId,
+            title = title,
+            category = category,
+            cuisine = cuisine,
+            foodType = foodType,
+            difficulty = difficulty,
+            servings = servings,
+            cookTimeMinutes = cookTimeMinutes,
+            method = method,
+            allergensCsv = allergens.joinToString(","),
+            isPrivate = isPrivate,
+            imageUrl = imageUrl,
+            updatedAt = now,
+            lastModified = now,
+            pendingSync = true,
+        )
+
+        val updatedIngredients = ingredients.mapIndexed { index, (name, qtyUnit) ->
+            IngredientEntity(
+                id = UUID.randomUUID().toString(),
+                recipeId = recipeId,
+                name = name,
+                quantity = qtyUnit.first,
+                unit = qtyUnit.second,
+                sortOrder = index,
+            )
+        }
+
+        val updatedSteps = steps.mapIndexed { index, instruction ->
+            StepEntity(
+                id = UUID.randomUUID().toString(),
+                recipeId = recipeId,
+                order = index,
+                instruction = instruction,
+            )
+        }
+
+        recipeDao.replaceRecipeDetails(
+            recipe = updatedRecipe,
+            ingredients = updatedIngredients,
+            steps = updatedSteps,
+        )
+
+        try {
+            val response = api.updateRecipe(
+                recipeId,
+                CreateRecipeRequest(
+                    id = recipeId,
+                    bookId = bookId,
+                    title = title,
+                    category = category,
+                    cuisine = cuisine,
+                    foodType = foodType,
+                    difficulty = difficulty,
+                    servings = servings,
+                    cookTimeMinutes = cookTimeMinutes,
+                    method = method,
+                    ingredients = ingredients.map { (name, qtyUnit) ->
+                        IngredientDto(name, qtyUnit.first, qtyUnit.second)
+                    },
+                    steps = steps.mapIndexed { index, instruction ->
+                        StepDto(index, instruction)
+                    },
+                    allergens = allergens,
+                    isPrivate = isPrivate,
+                    imageUrl = imageUrl,
+                ),
+            )
+
+            if (response.isSuccessful) {
+                recipeDao.upsertRecipe(updatedRecipe.copy(pendingSync = false))
+            } else {
+                Log.e("RecipeRepository", "updateRecipe HTTP ${response.code()}")
+            }
+        } catch (exception: Exception) {
+            Log.e("RecipeRepository", "updateRecipe backend sync failed", exception)
         }
     }
 

@@ -43,6 +43,12 @@ interface ApiService {
     @GET("api/recipes/{id}")
     suspend fun getRecipe(@Path("id") id: String): Response<RecipeDto>
 
+    @PATCH("api/recipes/{id}")
+    suspend fun updateRecipe(
+        @Path("id") id: String,
+        @Body body: CreateRecipeRequest,
+    ): Response<RecipeDto>
+
     @DELETE("api/recipes/{id}")
     suspend fun deleteRecipe(@Path("id") id: String): Response<Unit>
 

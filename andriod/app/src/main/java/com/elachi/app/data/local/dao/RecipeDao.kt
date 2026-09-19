@@ -49,7 +49,27 @@ interface RecipeDao {
     suspend fun clearSteps(recipeId: String)
 
     @Query("DELETE FROM recipes WHERE id = :id")
-    suspend fun deleteRecipe(id: String)
+    suspend fun deleteRecipeRow(id: String)
+
+    @Transaction
+    suspend fun deleteRecipe(id: String) {
+        clearIngredients(id)
+        clearSteps(id)
+        deleteRecipeRow(id)
+    }
+
+    @Transaction
+    suspend fun replaceRecipeDetails(
+        recipe: RecipeEntity,
+        ingredients: List<IngredientEntity>,
+        steps: List<StepEntity>,
+    ) {
+        upsertRecipe(recipe)
+        clearIngredients(recipe.id)
+        clearSteps(recipe.id)
+        upsertIngredients(ingredients)
+        upsertSteps(steps)
+    }
 
     @Query("UPDATE recipes SET timesCooked = timesCooked + 1 WHERE id = :id")
     suspend fun incrementTimesCooked(id: String)

@@ -21,29 +21,10 @@ class AddRecipeViewModel(
     private val userId: String,
     initialBookId: String,
     private val recipeRepository: RecipeRepository,
+    private val editingRecipeId: String? = null,
 ) : ViewModel() {
 
-    val ingredientUnitOptions = listOf(
-        "No unit",
-        "g",
-        "kg",
-        "mg",
-        "ml",
-        "L",
-        "tsp",
-        "tbsp",
-        "cup",
-        "oz",
-        "lb",
-        "pinch",
-        "slice",
-        "piece",
-        "can",
-        "packet",
-        "bunch",
-        "handful",
-        "to taste",
-    )
+    val isEditMode: Boolean = editingRecipeId != null
 
     // Every recipe must belong to a Recipe Book. This is the user's full
     // book list so the form can offer a real picker (matching the demo's
@@ -70,8 +51,30 @@ class AddRecipeViewModel(
     val foodTypeOptions = listOf("Vegetarian", "Vegan", "Non-Vegetarian", "Pescatarian", "Gluten-Free")
     val difficultyOptions = listOf("Easy", "Medium", "Hard")
     val methodOptions = listOf("Stovetop", "Oven", "Grill", "Air Fryer", "Slow Cooker", "Pressure Cooker", "Microwave", "No-Cook")
-
-    val allergenOptions = mutableStateListOf("Nuts", "Dairy", "Gluten", "Soy", "Eggs", "Shellfish", "Fish", "Peanuts", "Sesame")
+    val ingredientUnitOptions = listOf(
+        "g",
+        "kg",
+        "ml",
+        "L",
+        "tsp",
+        "tbsp",
+        "cup",
+        "cups",
+        "pinch",
+        "piece",
+        "pieces",
+        "slice",
+        "slices",
+        "clove",
+        "cloves",
+        "can",
+        "packet",
+        "bunch",
+        "handful",
+        "to taste",
+        "None",
+    )
+    val allergenOptions = listOf("Nuts", "Dairy", "Gluten", "Soy", "Eggs", "Shellfish", "Fish", "Peanuts", "Sesame")
     val selectedAllergens = mutableStateListOf<String>()
 
     val ingredients = mutableStateListOf(DraftIngredient())
@@ -82,8 +85,74 @@ class AddRecipeViewModel(
     var isUploadingPhoto = mutableStateOf(false)
 
     var isSaving = mutableStateOf(false)
+    var isLoading = mutableStateOf(isEditMode)
     var savedRecipeId = mutableStateOf<String?>(null)
     var errorMessage = mutableStateOf<String?>(null)
+
+    init {
+        if (editingRecipeId != null) {
+            loadRecipeForEditing(editingRecipeId)
+        }
+    }
+
+    private fun loadRecipeForEditing(recipeId: String) {
+        viewModelScope.launch {
+            try {
+                val recipe = recipeRepository.getRecipeOnce(recipeId)
+                    ?: throw IllegalArgumentException("Recipe not found.")
+
+                if (recipe.ownerId != userId) {
+                    throw IllegalStateException("You cannot edit another user's recipe.")
+                }
+
+                val savedIngredients = recipeRepository.getIngredientsOnce(recipeId)
+                val savedSteps = recipeRepository.getStepsOnce(recipeId)
+
+                selectedBookId.value = recipe.bookId
+                title.value = recipe.title
+                category.value = recipe.category
+                cuisine.value = recipe.cuisine
+                foodType.value = recipe.foodType
+                difficulty.value = recipe.difficulty
+                servings.value = recipe.servings.toString()
+                cookTimeMinutes.value = recipe.cookTimeMinutes.toString()
+                method.value = recipe.method
+                isPrivate.value = recipe.isPrivate
+                imageUrl.value = recipe.imageUrl
+
+                selectedAllergens.clear()
+                selectedAllergens.addAll(
+                    recipe.allergensCsv
+                        .split(",")
+                        .map { it.trim() }
+                        .filter { it.isNotBlank() },
+                )
+
+                ingredients.clear()
+                ingredients.addAll(
+                    savedIngredients.map {
+                        DraftIngredient(
+                            name = it.name,
+                            quantity = it.quantity.toString(),
+                            unit = it.unit,
+                        )
+                    }.ifEmpty { listOf(DraftIngredient()) },
+                )
+
+                steps.clear()
+                steps.addAll(
+                    savedSteps
+                        .sortedBy { it.order }
+                        .map { it.instruction }
+                        .ifEmpty { listOf("") },
+                )
+            } catch (exception: Exception) {
+                errorMessage.value = exception.message ?: "The recipe could not be loaded."
+            } finally {
+                isLoading.value = false
+            }
+        }
+    }
 
     fun addIngredientRow() { ingredients.add(DraftIngredient()) }
     fun removeIngredientRow(index: Int) { if (ingredients.size > 1) ingredients.removeAt(index) }
@@ -159,75 +228,57 @@ class AddRecipeViewModel(
         errorMessage.value = null
         viewModelScope.launch {
             try {
-                val id = recipeRepository.createRecipe(
-                    userId = userId,
-                    bookId = selectedBookId.value,
-                    title = title.value.trim(),
-                    category = category.value,
-                    cuisine = cuisine.value.ifBlank { "Other" },
-                    foodType = foodType.value.ifBlank { "Other" },
-                    difficulty = difficulty.value,
-                    servings = servings.value.toIntOrNull() ?: 1,
-                    cookTimeMinutes = cookTimeMinutes.value.toIntOrNull() ?: 0,
-                    method = method.value,
-                    ingredients = cleanedIngredients.map {
-                        it.name.trim() to ((it.quantity.toDoubleOrNull() ?: 0.0) to it.unit.trim())
-                    },
-                    steps = cleanedSteps.map { it.trim() },
-                    allergens = selectedAllergens.toList(),
-                    isPrivate = isPrivate.value,
-                    imageUrl = imageUrl.value,
-                )
+                val recipeIngredients = cleanedIngredients.map {
+                    it.name.trim() to
+                            ((it.quantity.toDoubleOrNull() ?: 0.0) to it.unit.trim())
+                }
+                val recipeSteps = cleanedSteps.map { it.trim() }
+
+                val id = if (editingRecipeId == null) {
+                    recipeRepository.createRecipe(
+                        userId = userId,
+                        bookId = selectedBookId.value,
+                        title = title.value.trim(),
+                        category = category.value,
+                        cuisine = cuisine.value.ifBlank { "Other" },
+                        foodType = foodType.value.ifBlank { "Other" },
+                        difficulty = difficulty.value,
+                        servings = servings.value.toIntOrNull() ?: 1,
+                        cookTimeMinutes = cookTimeMinutes.value.toIntOrNull() ?: 0,
+                        method = method.value,
+                        ingredients = recipeIngredients,
+                        steps = recipeSteps,
+                        allergens = selectedAllergens.toList(),
+                        isPrivate = isPrivate.value,
+                        imageUrl = imageUrl.value,
+                    )
+                } else {
+                    recipeRepository.updateRecipe(
+                        recipeId = editingRecipeId,
+                        userId = userId,
+                        bookId = selectedBookId.value,
+                        title = title.value.trim(),
+                        category = category.value,
+                        cuisine = cuisine.value.ifBlank { "Other" },
+                        foodType = foodType.value.ifBlank { "Other" },
+                        difficulty = difficulty.value,
+                        servings = servings.value.toIntOrNull() ?: 1,
+                        cookTimeMinutes = cookTimeMinutes.value.toIntOrNull() ?: 0,
+                        method = method.value,
+                        ingredients = recipeIngredients,
+                        steps = recipeSteps,
+                        allergens = selectedAllergens.toList(),
+                        isPrivate = isPrivate.value,
+                        imageUrl = imageUrl.value,
+                    )
+                    editingRecipeId
+                }
                 savedRecipeId.value = id
             } catch (e: Exception) {
                 errorMessage.value = "The recipe could not be saved. Please try again."
             } finally {
                 isSaving.value = false
             }
-        }
-    }
-
-    fun addCustomAllergen(allergenName: String) {
-        val cleanedName = allergenName
-            .trim()
-            .replace(Regex("\\s+"), " ")
-
-        if (cleanedName.isBlank()) {
-            return
-        }
-
-        /*
-         * Find an existing allergy without treating uppercase and
-         * lowercase versions as different allergies.
-         */
-        val existingAllergen = allergenOptions.firstOrNull {
-            it.equals(cleanedName, ignoreCase = true)
-        }
-
-        val allergenToSelect = if (existingAllergen != null) {
-            existingAllergen
-        } else {
-            val formattedName = cleanedName.replaceFirstChar { firstCharacter ->
-                if (firstCharacter.isLowerCase()) {
-                    firstCharacter.titlecase()
-                } else {
-                    firstCharacter.toString()
-                }
-            }
-
-            allergenOptions.add(formattedName)
-            formattedName
-        }
-
-        /*
-         * Automatically select the newly created allergy for the recipe.
-         */
-        if (
-            selectedAllergens.none {
-                it.equals(allergenToSelect, ignoreCase = true)
-            }
-        ) {
-            selectedAllergens.add(allergenToSelect)
         }
     }
 }

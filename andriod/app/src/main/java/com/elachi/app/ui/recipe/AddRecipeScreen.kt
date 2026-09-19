@@ -77,7 +77,7 @@ fun AddRecipeScreen(
             ) {
                 Column {
                     Text(
-                        "Add Recipe",
+                        if (viewModel.isEditMode) "Edit Recipe" else "Add Recipe",
                         style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold),
                         color = ElachiGreen,
                     )
@@ -102,7 +102,18 @@ fun AddRecipeScreen(
 
             HorizontalDivider(color = Color(0xFFE5E2DD))
 
-            ManualForm(viewModel, modifier = Modifier.weight(1f))
+            if (viewModel.isLoading.value) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .weight(1f),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    CircularProgressIndicator()
+                }
+            } else {
+                ManualForm(viewModel, modifier = Modifier.weight(1f))
+            }
         }
     }
 }
@@ -208,43 +219,34 @@ private fun ManualForm(vm: AddRecipeViewModel, modifier: Modifier = Modifier) {
                                 placeholder = "Quantity",
                                 modifier = Modifier.weight(1f),
                                 keyboardType = KeyboardType.Decimal,
-                            ) { newQuantity ->
-                                vm.updateIngredient(
-                                    index,
-                                    ingredient.copy(
-                                        quantity = newQuantity,
-                                    ),
-                                )
+                            ) {
+                                vm.updateIngredient(index, ingredient.copy(quantity = it))
                             }
-
                             IngredientUnitDropdown(
-                                value = ingredient.unit,
-                                options = vm.ingredientUnitOptions,
+                                selectedUnit = ingredient.unit,
+                                unitOptions = vm.ingredientUnitOptions,
                                 modifier = Modifier.weight(1f),
-                                onSelect = { selectedUnit ->
+                                onUnitSelected = { selectedUnit ->
                                     vm.updateIngredient(
                                         index,
                                         ingredient.copy(
-                                            unit = selectedUnit,
+                                            unit = if (selectedUnit == "None") {
+                                                ""
+                                            } else {
+                                                selectedUnit
+                                            },
                                         ),
                                     )
                                 },
                             )
-
                             IconButton(
-                                onClick = {
-                                    vm.removeIngredientRow(index)
-                                },
+                                onClick = { vm.removeIngredientRow(index) },
                                 enabled = vm.ingredients.size > 1,
                             ) {
                                 Icon(
-                                    imageVector = Icons.Filled.Delete,
+                                    Icons.Filled.Delete,
                                     contentDescription = "Remove ingredient",
-                                    tint = if (vm.ingredients.size > 1) {
-                                        Color(0xFFBA1A1A)
-                                    } else {
-                                        Color.LightGray
-                                    },
+                                    tint = if (vm.ingredients.size > 1) Color(0xFFBA1A1A) else Color.LightGray,
                                 )
                             }
                         }
@@ -432,108 +434,6 @@ private fun OptionalDetails(
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-private fun IngredientUnitDropdown(
-    value: String,
-    options: List<String>,
-    modifier: Modifier = Modifier,
-    onSelect: (String) -> Unit,
-) {
-    var expanded by remember {
-        mutableStateOf(false)
-    }
-
-    ExposedDropdownMenuBox(
-        expanded = expanded,
-        onExpandedChange = {
-            expanded = !expanded
-        },
-        modifier = modifier,
-    ) {
-        Surface(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(51.dp)
-                .menuAnchor(),
-            color = Color.White,
-            shape = RoundedCornerShape(12.dp),
-            border = androidx.compose.foundation.BorderStroke(
-                width = 2.4.dp,
-                color = if (expanded) {
-                    ElachiGreen
-                } else {
-                    Color(0xFFC5C8BA)
-                },
-            ),
-        ) {
-            Row(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(horizontal = 12.dp),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween,
-            ) {
-                Text(
-                    text = value.ifBlank {
-                        "Unit"
-                    },
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = if (value.isBlank()) {
-                        ElachiTextSecondary
-                    } else {
-                        ElachiTextPrimary
-                    },
-                    maxLines = 1,
-                )
-
-                Icon(
-                    imageVector = Icons.Filled.KeyboardArrowDown,
-                    contentDescription = "Choose measurement unit",
-                    tint = Color(0xFF75786D),
-                )
-            }
-        }
-
-        ExposedDropdownMenu(
-            expanded = expanded,
-            onDismissRequest = {
-                expanded = false
-            },
-        ) {
-            options.forEach { option ->
-                val savedValue = if (option == "No unit") {
-                    ""
-                } else {
-                    option
-                }
-
-                DropdownMenuItem(
-                    text = {
-                        Text(option)
-                    },
-                    onClick = {
-                        onSelect(savedValue)
-                        expanded = false
-                    },
-                    trailingIcon = {
-                        if (
-                            value == savedValue ||
-                            (option == "No unit" && value.isBlank())
-                        ) {
-                            Icon(
-                                imageVector = Icons.Filled.Check,
-                                contentDescription = "Selected",
-                                tint = ElachiGreen,
-                            )
-                        }
-                    },
-                )
-            }
-        }
-    }
-}
-
 @Composable
 private fun BottomActionBar(vm: AddRecipeViewModel, onCancel: () -> Unit) {
     val canSave = vm.selectedBookId.value.isNotBlank() &&
@@ -564,7 +464,10 @@ private fun BottomActionBar(vm: AddRecipeViewModel, onCancel: () -> Unit) {
                 }
                 Button(
                     onClick = { vm.save() },
-                    enabled = canSave && !vm.isSaving.value && !vm.isUploadingPhoto.value,
+                    enabled = canSave &&
+                            !vm.isLoading.value &&
+                            !vm.isSaving.value &&
+                            !vm.isUploadingPhoto.value,
                     modifier = Modifier.weight(2f).height(48.dp),
                     colors = ButtonDefaults.buttonColors(containerColor = ElachiGreenLight),
                     shape = RoundedCornerShape(12.dp),
@@ -574,7 +477,10 @@ private fun BottomActionBar(vm: AddRecipeViewModel, onCancel: () -> Unit) {
                     } else {
                         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                             Icon(Icons.Filled.Save, contentDescription = null, modifier = Modifier.size(18.dp))
-                            Text("Save Recipe", fontWeight = FontWeight.W600)
+                            Text(
+                                if (vm.isEditMode) "Update Recipe" else "Save Recipe",
+                                fontWeight = FontWeight.W600,
+                            )
                         }
                     }
                 }
@@ -608,6 +514,66 @@ private fun RecipeBookDropdown(vm: AddRecipeViewModel) {
             }
             books.forEach { book ->
                 DropdownMenuItem(text = { Text(book.name) }, onClick = { vm.selectedBookId.value = book.id; expanded = false })
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun IngredientUnitDropdown(
+    selectedUnit: String,
+    unitOptions: List<String>,
+    modifier: Modifier = Modifier,
+    onUnitSelected: (String) -> Unit,
+) {
+    var expanded by remember {
+        mutableStateOf(false)
+    }
+
+    ExposedDropdownMenuBox(
+        expanded = expanded,
+        onExpandedChange = {
+            expanded = !expanded
+        },
+        modifier = modifier,
+    ) {
+        OutlinedTextField(
+            value = selectedUnit.ifBlank { "Unit" },
+            onValueChange = {},
+            readOnly = true,
+            singleLine = true,
+            trailingIcon = {
+                ExposedDropdownMenuDefaults.TrailingIcon(
+                    expanded = expanded,
+                )
+            },
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedBorderColor = ElachiGreen,
+                unfocusedBorderColor = Color(0xFFC5C8BA),
+            ),
+            shape = RoundedCornerShape(12.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .menuAnchor(),
+        )
+
+        ExposedDropdownMenu(
+            expanded = expanded,
+            onDismissRequest = {
+                expanded = false
+            },
+        ) {
+            unitOptions.forEach { unit ->
+                DropdownMenuItem(
+                    text = {
+                        Text(unit)
+                    },
+                    onClick = {
+                        onUnitSelected(unit)
+                        expanded = false
+                    },
+                )
             }
         }
     }
@@ -680,235 +646,28 @@ private fun ManualTextField(
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-private fun AllergenFlow(
-    vm: AddRecipeViewModel,
-) {
-    var showAddAllergenDialog by rememberSaveable {
-        mutableStateOf(false)
-    }
-
-    var customAllergenName by rememberSaveable {
-        mutableStateOf("")
-    }
-
-    var customAllergenError by rememberSaveable {
-        mutableStateOf<String?>(null)
-    }
-
-    Column(
+private fun AllergenFlow(vm: AddRecipeViewModel) {
+    FlowRow(
         modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
-        FlowRow(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp),
-        ) {
-            vm.allergenOptions.forEach { allergen ->
-                val isSelected =
-                    vm.selectedAllergens.contains(allergen)
-
-                Surface(
-                    modifier = Modifier.clickable {
-                        vm.toggleAllergen(allergen)
-                    },
-                    color = if (isSelected) {
-                        ElachiGreenLight
-                    } else {
-                        Color.White
-                    },
-                    shape = RoundedCornerShape(999.dp),
-                    border = androidx.compose.foundation.BorderStroke(
-                        width = 1.dp,
-                        color = if (isSelected) {
-                            ElachiGreenLight
-                        } else {
-                            Color(0xFFC5C8BA)
-                        },
-                    ),
-                ) {
-                    Row(
-                        modifier = Modifier.padding(
-                            horizontal = 14.dp,
-                            vertical = 8.dp,
-                        ),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement =
-                            Arrangement.spacedBy(5.dp),
-                    ) {
-                        if (isSelected) {
-                            Icon(
-                                imageVector = Icons.Filled.Check,
-                                contentDescription = null,
-                                modifier = Modifier.size(15.dp),
-                                tint = Color.White,
-                            )
-                        }
-
-                        Text(
-                            text = allergen,
-                            style =
-                                MaterialTheme.typography.bodySmall,
-                            color = if (isSelected) {
-                                Color.White
-                            } else {
-                                ElachiTextPrimary
-                            },
-                        )
-                    }
-                }
-            }
-
-            /*
-             * Button that opens the custom allergy popup.
-             */
+        vm.allergenOptions.forEach { allergen ->
+            val isSelected = vm.selectedAllergens.contains(allergen)
             Surface(
-                modifier = Modifier.clickable {
-                    customAllergenName = ""
-                    customAllergenError = null
-                    showAddAllergenDialog = true
-                },
-                color = Color(0xFFE8F2E7),
+                modifier = Modifier.clickable { vm.toggleAllergen(allergen) },
+                color = if (isSelected) ElachiGreenLight else Color.White,
                 shape = RoundedCornerShape(999.dp),
-                border = androidx.compose.foundation.BorderStroke(
-                    width = 1.dp,
-                    color = ElachiGreen,
-                ),
+                border = androidx.compose.foundation.BorderStroke(1.dp, if (isSelected) ElachiGreenLight else Color(0xFFC5C8BA)),
             ) {
-                Row(
-                    modifier = Modifier.padding(
-                        horizontal = 14.dp,
-                        vertical = 8.dp,
-                    ),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement =
-                        Arrangement.spacedBy(5.dp),
-                ) {
-                    Icon(
-                        imageVector = Icons.Filled.Add,
-                        contentDescription = null,
-                        modifier = Modifier.size(16.dp),
-                        tint = ElachiGreen,
-                    )
-
-                    Text(
-                        text = "Add allergy",
-                        style = MaterialTheme.typography.bodySmall,
-                        fontWeight = FontWeight.Medium,
-                        color = ElachiGreen,
-                    )
-                }
+                Text(
+                    allergen,
+                    modifier = Modifier.padding(horizontal = 14.dp, vertical = 7.dp),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = if (isSelected) Color.White else ElachiTextPrimary,
+                )
             }
         }
-
-        if (vm.selectedAllergens.isNotEmpty()) {
-            Spacer(modifier = Modifier.height(10.dp))
-
-            Text(
-                text = if (vm.selectedAllergens.size == 1) {
-                    "1 allergen selected"
-                } else {
-                    "${vm.selectedAllergens.size} allergens selected"
-                },
-                style = MaterialTheme.typography.labelSmall,
-                color = ElachiTextSecondary,
-            )
-        }
-    }
-
-    if (showAddAllergenDialog) {
-        AlertDialog(
-            onDismissRequest = {
-                showAddAllergenDialog = false
-                customAllergenName = ""
-                customAllergenError = null
-            },
-            icon = {
-                Icon(
-                    imageVector = Icons.Filled.Warning,
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.error,
-                )
-            },
-            title = {
-                Text("Create Allergy")
-            },
-            text = {
-                Column(
-                    verticalArrangement =
-                        Arrangement.spacedBy(8.dp),
-                ) {
-                    Text(
-                        text = "Enter the name of the allergy or allergen.",
-                        style = MaterialTheme.typography.bodyMedium,
-                    )
-
-                    OutlinedTextField(
-                        value = customAllergenName,
-                        onValueChange = { newValue ->
-                            customAllergenName = newValue
-                            customAllergenError = null
-                        },
-                        label = {
-                            Text("Allergy name")
-                        },
-                        placeholder = {
-                            Text("e.g. Mustard")
-                        },
-                        supportingText = {
-                            customAllergenError?.let { error ->
-                                Text(
-                                    text = error,
-                                    color =
-                                        MaterialTheme.colorScheme.error,
-                                )
-                            }
-                        },
-                        isError = customAllergenError != null,
-                        singleLine = true,
-                        modifier = Modifier.fillMaxWidth(),
-                    )
-
-                    Text(
-                        text = "The allergy will automatically be selected for this recipe.",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = ElachiTextSecondary,
-                    )
-                }
-            },
-            confirmButton = {
-                Button(
-                    onClick = {
-                        val cleanedName =
-                            customAllergenName.trim()
-
-                        if (cleanedName.isBlank()) {
-                            customAllergenError =
-                                "Please enter an allergy name."
-                        } else {
-                            vm.addCustomAllergen(cleanedName)
-
-                            showAddAllergenDialog = false
-                            customAllergenName = ""
-                            customAllergenError = null
-                        }
-                    },
-                    enabled = customAllergenName.isNotBlank(),
-                ) {
-                    Text("Create and Select")
-                }
-            },
-            dismissButton = {
-                TextButton(
-                    onClick = {
-                        showAddAllergenDialog = false
-                        customAllergenName = ""
-                        customAllergenError = null
-                    },
-                ) {
-                    Text("Cancel")
-                }
-            },
-        )
     }
 }
 
