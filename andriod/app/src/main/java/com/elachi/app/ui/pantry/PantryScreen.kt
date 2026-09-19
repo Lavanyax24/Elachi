@@ -101,6 +101,8 @@ fun PantryScreen(viewModel: PantryViewModel) {
             }
         }
 
+
+
         if (showAddDialog) {
             if (tab == 0) {
                 AddItemDialog(
@@ -118,6 +120,47 @@ fun PantryScreen(viewModel: PantryViewModel) {
                     onAdd = { name, qty, unit ->
                         viewModel.addShoppingItem(name, qty, unit)
                         showAddDialog = false
+                    },
+                )
+            }
+        }
+    }
+}
+
+private val UNIT_OPTIONS = listOf("g", "kg", "ml", "L", "cups", "tbsp", "tsp", "pcs", "oz", "lb")
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun UnitDropdown(
+    selected: String,
+    onSelected: (String) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    var expanded by remember { mutableStateOf(false) }
+
+    ExposedDropdownMenuBox(
+        expanded = expanded,
+        onExpandedChange = { expanded = it },
+        modifier = modifier,
+    ) {
+        OutlinedTextField(
+            value = selected,
+            onValueChange = {},
+            readOnly = true,
+            label = { Text("Unit") },
+            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
+            modifier = Modifier.menuAnchor(),
+        )
+        ExposedDropdownMenu(
+            expanded = expanded,
+            onDismissRequest = { expanded = false },
+        ) {
+            UNIT_OPTIONS.forEach { option ->
+                DropdownMenuItem(
+                    text = { Text(option) },
+                    onClick = {
+                        onSelected(option)
+                        expanded = false
                     },
                 )
             }
@@ -156,10 +199,9 @@ private fun AddItemDialog(
                     )
                     Spacer(Modifier.width(8.dp))
                     // Replaced with a dropdown in commit 5a.3
-                    OutlinedTextField(
-                        value = unit,
-                        onValueChange = { unit = it },
-                        label = { Text("Unit") },
+                    UnitDropdown(
+                        selected = unit,
+                        onSelected = { unit = it },
                         modifier = Modifier.weight(1f),
                     )
                 }
