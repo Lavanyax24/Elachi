@@ -10,17 +10,17 @@ import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.AddAPhoto
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -41,7 +41,6 @@ import com.elachi.app.ui.onboarding.IconChip
 import com.elachi.app.ui.theme.ElachiCream
 import com.elachi.app.ui.theme.ElachiGreen
 import kotlinx.coroutines.launch
-import androidx.compose.material.icons.filled.Star
 
 /**
  * Visuals matched to ElaichiDemo's CookbookScreen for the By Book grid
@@ -101,146 +100,102 @@ fun CookbookScreen(
                     }
                 }
             } else {
-                var search by remember {
-                    mutableStateOf("")
-                }
-
-                var favouritesOnly by remember {
-                    mutableStateOf(false)
-                }
+                var search by remember { mutableStateOf("") }
+                var favouritesOnly by remember { mutableStateOf(false) }
 
                 val filteredRecipes = allRecipes.filter { recipe ->
                     val matchesSearch = recipe.title.contains(
                         search,
                         ignoreCase = true,
                     )
-
-                    val matchesFavouriteFilter =
+                    val matchesFavourite =
                         !favouritesOnly || recipe.isFavourite
 
-                    matchesSearch && matchesFavouriteFilter
+                    matchesSearch && matchesFavourite
                 }
 
-                LazyColumn(
-                    contentPadding = PaddingValues(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(horizontal = 16.dp),
                 ) {
-                    item {
-                        OutlinedTextField(
-                            value = search,
-                            onValueChange = {
-                                search = it
-                            },
-                            placeholder = {
-                                Text("Search recipes...")
-                            },
-                            singleLine = true,
-                            modifier = Modifier.fillMaxWidth(),
-                        )
-                    }
+                    Spacer(modifier = Modifier.height(12.dp))
 
-                    item {
-                        FilterChip(
-                            selected = favouritesOnly,
-                            onClick = {
-                                favouritesOnly = !favouritesOnly
-                            },
-                            label = {
-                                Text(
-                                    text = if (favouritesOnly) {
-                                        "Showing favourites only"
-                                    } else {
-                                        "Favourites only"
-                                    },
-                                )
-                            },
-                            leadingIcon = {
-                                Icon(
-                                    imageVector = Icons.Filled.Star,
-                                    contentDescription = null,
-                                    modifier = Modifier.size(18.dp),
-                                    tint = if (favouritesOnly) {
-                                        Color(0xFFF5A623)
-                                    } else {
-                                        MaterialTheme.colorScheme.onSurfaceVariant
-                                    },
-                                )
-                            },
-                        )
-                    }
+                    OutlinedTextField(
+                        value = search,
+                        onValueChange = { search = it },
+                        placeholder = { Text("Search recipes...") },
+                        leadingIcon = {
+                            Icon(
+                                imageVector = Icons.Filled.Search,
+                                contentDescription = null,
+                            )
+                        },
+                        singleLine = true,
+                        shape = RoundedCornerShape(14.dp),
+                        modifier = Modifier.fillMaxWidth(),
+                    )
+
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    FilterChip(
+                        selected = favouritesOnly,
+                        onClick = { favouritesOnly = !favouritesOnly },
+                        label = { Text("Favourites") },
+                        leadingIcon = {
+                            Icon(
+                                imageVector = Icons.Filled.Star,
+                                contentDescription = null,
+                                modifier = Modifier.size(18.dp),
+                                tint = if (favouritesOnly) {
+                                    Color(0xFFF5A623)
+                                } else {
+                                    MaterialTheme.colorScheme.onSurfaceVariant
+                                },
+                            )
+                        },
+                    )
+
+                    Spacer(modifier = Modifier.height(8.dp))
 
                     if (filteredRecipes.isEmpty()) {
-                        item {
-                            Box(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(vertical = 40.dp),
-                                contentAlignment = Alignment.Center,
-                            ) {
-                                Text(
-                                    text = when {
-                                        favouritesOnly && search.isNotBlank() ->
-                                            "No favourite recipes match your search."
-
-                                        favouritesOnly ->
-                                            "You have no favourite recipes yet."
-
-                                        search.isNotBlank() ->
-                                            "No recipes match your search."
-
-                                        else ->
-                                            "No recipes have been added yet."
-                                    },
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                )
-                            }
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .weight(1f),
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            Text(
+                                text = when {
+                                    favouritesOnly && search.isNotBlank() ->
+                                        "No favourite recipes match your search."
+                                    favouritesOnly ->
+                                        "You have no favourite recipes yet."
+                                    search.isNotBlank() ->
+                                        "No recipes match your search."
+                                    else ->
+                                        "No recipes have been added yet."
+                                },
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
                         }
                     } else {
-                        items(
-                            items = filteredRecipes,
-                            key = { recipe ->
-                                recipe.id
-                            },
-                        ) { recipe ->
-                            Card(
-                                onClick = {
-                                    onOpenRecipe(recipe.id)
-                                },
-                                modifier = Modifier.fillMaxWidth(),
-                            ) {
-                                Row(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .padding(16.dp),
-                                    horizontalArrangement =
-                                        Arrangement.SpaceBetween,
-                                    verticalAlignment = Alignment.CenterVertically,
-                                ) {
-                                    Column(
-                                        modifier = Modifier.weight(1f),
-                                    ) {
-                                        Text(
-                                            text = recipe.title,
-                                            fontWeight = FontWeight.Bold,
-                                        )
-
-                                        Text(
-                                            text = "${recipe.cuisine} · " +
-                                                    "${recipe.cookTimeMinutes} min",
-                                            style =
-                                                MaterialTheme.typography.bodyMedium,
-                                        )
-                                    }
-
-                                    if (recipe.isFavourite) {
-                                        Icon(
-                                            imageVector = Icons.Filled.Star,
-                                            contentDescription = "Favourite recipe",
-                                            tint = Color(0xFFF5A623),
-                                        )
-                                    }
-                                }
+                        LazyVerticalGrid(
+                            columns = GridCells.Fixed(2),
+                            modifier = Modifier.weight(1f),
+                            contentPadding = PaddingValues(bottom = 96.dp),
+                            horizontalArrangement = Arrangement.spacedBy(12.dp),
+                            verticalArrangement = Arrangement.spacedBy(12.dp),
+                        ) {
+                            items(
+                                items = filteredRecipes,
+                                key = { recipe -> recipe.id },
+                            ) { recipe ->
+                                RecipeGridCard(
+                                    recipe = recipe,
+                                    onClick = { onOpenRecipe(recipe.id) },
+                                )
                             }
                         }
                     }

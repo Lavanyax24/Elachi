@@ -230,7 +230,7 @@ private fun ManualForm(vm: AddRecipeViewModel, modifier: Modifier = Modifier) {
                                     vm.updateIngredient(
                                         index,
                                         ingredient.copy(
-                                            unit = if (selectedUnit == "None") {
+                                            unit = if (selectedUnit == "No unit") {
                                                 ""
                                             } else {
                                                 selectedUnit
@@ -646,30 +646,238 @@ private fun ManualTextField(
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-private fun AllergenFlow(vm: AddRecipeViewModel) {
-    FlowRow(
+private fun AllergenFlow(
+    vm: AddRecipeViewModel,
+) {
+    var showAddAllergenDialog by rememberSaveable {
+        mutableStateOf(false)
+    }
+
+    var customAllergenName by rememberSaveable {
+        mutableStateOf("")
+    }
+
+    var customAllergenError by rememberSaveable {
+        mutableStateOf<String?>(null)
+    }
+
+    Column(
         modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
-        verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
-        vm.allergenOptions.forEach { allergen ->
-            val isSelected = vm.selectedAllergens.contains(allergen)
+        FlowRow(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            vm.allergenOptions.forEach { allergen ->
+                val isSelected =
+                    vm.selectedAllergens.contains(allergen)
+
+                Surface(
+                    modifier = Modifier.clickable {
+                        vm.toggleAllergen(allergen)
+                    },
+                    color = if (isSelected) {
+                        ElachiGreenLight
+                    } else {
+                        Color.White
+                    },
+                    shape = RoundedCornerShape(999.dp),
+                    border = androidx.compose.foundation.BorderStroke(
+                        width = 1.dp,
+                        color = if (isSelected) {
+                            ElachiGreenLight
+                        } else {
+                            Color(0xFFC5C8BA)
+                        },
+                    ),
+                ) {
+                    Row(
+                        modifier = Modifier.padding(
+                            horizontal = 14.dp,
+                            vertical = 8.dp,
+                        ),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement =
+                            Arrangement.spacedBy(5.dp),
+                    ) {
+                        if (isSelected) {
+                            Icon(
+                                imageVector = Icons.Filled.Check,
+                                contentDescription = null,
+                                modifier = Modifier.size(15.dp),
+                                tint = Color.White,
+                            )
+                        }
+
+                        Text(
+                            text = allergen,
+                            style =
+                                MaterialTheme.typography.bodySmall,
+                            color = if (isSelected) {
+                                Color.White
+                            } else {
+                                ElachiTextPrimary
+                            },
+                        )
+                    }
+                }
+            }
+
+            /*
+             * Button that opens the custom allergy popup.
+             */
             Surface(
-                modifier = Modifier.clickable { vm.toggleAllergen(allergen) },
-                color = if (isSelected) ElachiGreenLight else Color.White,
+                modifier = Modifier.clickable {
+                    customAllergenName = ""
+                    customAllergenError = null
+                    showAddAllergenDialog = true
+                },
+                color = Color(0xFFE8F2E7),
                 shape = RoundedCornerShape(999.dp),
-                border = androidx.compose.foundation.BorderStroke(1.dp, if (isSelected) ElachiGreenLight else Color(0xFFC5C8BA)),
+                border = androidx.compose.foundation.BorderStroke(
+                    width = 1.dp,
+                    color = ElachiGreen,
+                ),
             ) {
-                Text(
-                    allergen,
-                    modifier = Modifier.padding(horizontal = 14.dp, vertical = 7.dp),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = if (isSelected) Color.White else ElachiTextPrimary,
-                )
+                Row(
+                    modifier = Modifier.padding(
+                        horizontal = 14.dp,
+                        vertical = 8.dp,
+                    ),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement =
+                        Arrangement.spacedBy(5.dp),
+                ) {
+                    Icon(
+                        imageVector = Icons.Filled.Add,
+                        contentDescription = null,
+                        modifier = Modifier.size(16.dp),
+                        tint = ElachiGreen,
+                    )
+
+                    Text(
+                        text = "Add allergy",
+                        style = MaterialTheme.typography.bodySmall,
+                        fontWeight = FontWeight.Medium,
+                        color = ElachiGreen,
+                    )
+                }
             }
         }
+
+        if (vm.selectedAllergens.isNotEmpty()) {
+            Spacer(modifier = Modifier.height(10.dp))
+
+            Text(
+                text = if (vm.selectedAllergens.size == 1) {
+                    "1 allergen selected"
+                } else {
+                    "${vm.selectedAllergens.size} allergens selected"
+                },
+                style = MaterialTheme.typography.labelSmall,
+                color = ElachiTextSecondary,
+            )
+        }
+    }
+
+    if (showAddAllergenDialog) {
+        AlertDialog(
+            onDismissRequest = {
+                showAddAllergenDialog = false
+                customAllergenName = ""
+                customAllergenError = null
+            },
+            icon = {
+                Icon(
+                    imageVector = Icons.Filled.Warning,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.error,
+                )
+            },
+            title = {
+                Text("Create Allergy")
+            },
+            text = {
+                Column(
+                    verticalArrangement =
+                        Arrangement.spacedBy(8.dp),
+                ) {
+                    Text(
+                        text = "Enter the name of the allergy or allergen.",
+                        style = MaterialTheme.typography.bodyMedium,
+                    )
+
+                    OutlinedTextField(
+                        value = customAllergenName,
+                        onValueChange = { newValue ->
+                            customAllergenName = newValue
+                            customAllergenError = null
+                        },
+                        label = {
+                            Text("Allergy name")
+                        },
+                        placeholder = {
+                            Text("e.g. Mustard")
+                        },
+                        supportingText = {
+                            customAllergenError?.let { error ->
+                                Text(
+                                    text = error,
+                                    color =
+                                        MaterialTheme.colorScheme.error,
+                                )
+                            }
+                        },
+                        isError = customAllergenError != null,
+                        singleLine = true,
+                        modifier = Modifier.fillMaxWidth(),
+                    )
+
+                    Text(
+                        text = "The allergy will automatically be selected for this recipe.",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = ElachiTextSecondary,
+                    )
+                }
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        val cleanedName =
+                            customAllergenName.trim()
+
+                        if (cleanedName.isBlank()) {
+                            customAllergenError =
+                                "Please enter an allergy name."
+                        } else {
+                            vm.addCustomAllergen(cleanedName)
+
+                            showAddAllergenDialog = false
+                            customAllergenName = ""
+                            customAllergenError = null
+                        }
+                    },
+                    enabled = customAllergenName.isNotBlank(),
+                ) {
+                    Text("Create and Select")
+                }
+            },
+            dismissButton = {
+                TextButton(
+                    onClick = {
+                        showAddAllergenDialog = false
+                        customAllergenName = ""
+                        customAllergenError = null
+                    },
+                ) {
+                    Text("Cancel")
+                }
+            },
+        )
     }
 }
+
 
 @Composable
 private fun DashedButtonManual(label: String, onClick: () -> Unit) {

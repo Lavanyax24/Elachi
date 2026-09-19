@@ -74,7 +74,7 @@ class AddRecipeViewModel(
         "to taste",
         "None",
     )
-    val allergenOptions = listOf("Nuts", "Dairy", "Gluten", "Soy", "Eggs", "Shellfish", "Fish", "Peanuts", "Sesame")
+    val allergenOptions = mutableStateListOf("Nuts", "Dairy", "Gluten", "Soy", "Eggs", "Shellfish", "Fish", "Peanuts", "Sesame")
     val selectedAllergens = mutableStateListOf<String>()
 
     val ingredients = mutableStateListOf(DraftIngredient())
@@ -281,4 +281,49 @@ class AddRecipeViewModel(
             }
         }
     }
+
+    fun addCustomAllergen(allergenName: String) {
+        val cleanedName = allergenName
+            .trim()
+            .replace(Regex("\\s+"), " ")
+
+        if (cleanedName.isBlank()) {
+            return
+        }
+
+        /*
+         * Find an existing allergy without treating uppercase and
+         * lowercase versions as different allergies.
+         */
+        val existingAllergen = allergenOptions.firstOrNull {
+            it.equals(cleanedName, ignoreCase = true)
+        }
+
+        val allergenToSelect = if (existingAllergen != null) {
+            existingAllergen
+        } else {
+            val formattedName = cleanedName.replaceFirstChar { firstCharacter ->
+                if (firstCharacter.isLowerCase()) {
+                    firstCharacter.titlecase()
+                } else {
+                    firstCharacter.toString()
+                }
+            }
+
+            allergenOptions.add(formattedName)
+            formattedName
+        }
+
+        /*
+         * Automatically select the newly created allergy for the recipe.
+         */
+        if (
+            selectedAllergens.none {
+                it.equals(allergenToSelect, ignoreCase = true)
+            }
+        ) {
+            selectedAllergens.add(allergenToSelect)
+        }
+    }
+
 }
