@@ -268,7 +268,13 @@ fun ElachiNavGraph() {
                     if (userId != null) {
                         val vm: HomeViewModel = viewModel(
                             factory = SimpleViewModelFactory {
-                                HomeViewModel(userId, elachiApp.recipeRepository, elachiApp.pantryRepository, elachiApp.database.achievementDao())
+                                HomeViewModel(
+                                    userId,
+                                    elachiApp.recipeRepository,
+                                    elachiApp.pantryRepository,
+                                    elachiApp.database.achievementDao(),
+                                    elachiApp.profileRepository,
+                                )
                             },
                         )
                         HomeScreen(

@@ -48,6 +48,8 @@ fun HomeScreen(
     val streak by viewModel.streak.collectAsState()
     val allRecipes by viewModel.allRecipes.collectAsState()
     val pantryHealthPercent by viewModel.pantryHealthPercent.collectAsState()
+    val interests by viewModel.interests.collectAsState()
+    val interestRecipes by viewModel.interestRecipes.collectAsState()
 
     Scaffold(
         topBar = {
@@ -190,6 +192,33 @@ fun HomeScreen(
                                 }
                             }
                         }
+                    }
+                }
+                Spacer(modifier = Modifier.height(24.dp))
+            }
+
+            // ---------- Interests-based section ----------
+            if (interests.isNotEmpty() && interestRecipes.isNotEmpty()) {
+                Row(
+                    modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Text(
+                        "Because you like ${interests.take(3).joinToString(", ")}",
+                        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold, fontSize = 18.sp),
+                        color = ElachiGreen,
+                    )
+                }
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .horizontalScroll(rememberScrollState())
+                        .padding(horizontal = 16.dp, vertical = 12.dp),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                ) {
+                    interestRecipes.forEach { recipe ->
+                        ForYouRecipeCard(recipe, onClick = { onOpenRecipe(recipe.id) })
                     }
                 }
                 Spacer(modifier = Modifier.height(24.dp))
