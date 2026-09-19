@@ -60,6 +60,13 @@ import com.elachi.app.ui.discover.DiscoverScreen
 import com.elachi.app.ui.discover.DiscoverViewModel
 import com.elachi.app.ui.pantry.PantryScreen
 import com.elachi.app.ui.pantry.PantryViewModel
+import com.elachi.app.ui.achievements.AchievementsScreen
+import com.elachi.app.ui.achievements.AchievementsViewModel
+import com.elachi.app.ui.aichef.AiChefScreen
+import com.elachi.app.ui.aichef.AiChefViewModel
+import com.elachi.app.ui.streak.StreakCalendarScreen
+import com.elachi.app.ui.streak.StreakCalendarViewModel
+
 private val bottomNavRoutes = setOf(
     Screen.Home.route,
     Screen.Cookbook.route,
@@ -71,11 +78,8 @@ private val drawerEnabledRoutes = setOf(
     Screen.Home.route,
     Screen.Cookbook.route,
     Screen.Pantry.route,
-    Screen.AiChef.route,
-    Screen.Achievements.route,
     Screen.Settings.route,
     Screen.Profile.route,
-    Screen.StreakCalendar.route,
     Screen.Help.route,
     Screen.Discover.route,
 )
@@ -641,32 +645,60 @@ fun ElachiNavGraph() {
 
                 // ---------- AI Chef ----------
                 composable(Screen.AiChef.route) {
-                    ScreenShell(
-                        title = "AI Chef Assistant",
-                        route = currentRoute,
-                        navController = navController,
-                        drawerState = drawerState,
-                    ) { Placeholder("AI Chef Assistant") {} }
+                    val vm: AiChefViewModel = viewModel(
+                        factory = SimpleViewModelFactory { AiChefViewModel(elachiApp.chatRepository) },
+                    )
+                    AiChefScreen(
+                        viewModel = vm,
+                        onBack = { navController.popBackStack() },
+                    )
                 }
 
                 // ---------- Achievements ----------
                 composable(Screen.Achievements.route) {
-                    ScreenShell(
-                        title = "Achievements",
-                        route = currentRoute,
-                        navController = navController,
-                        drawerState = drawerState,
-                    ) { Placeholder("Achievements") {} }
+                    val userId = UserSession.userId
+                    if (userId != null) {
+                        val vm: AchievementsViewModel = viewModel(
+                            factory = SimpleViewModelFactory {
+                                AchievementsViewModel(
+                                    userId = userId,
+                                    achievementDao = elachiApp.database.achievementDao(),
+                                )
+                            },
+                        )
+                        AchievementsScreen(
+                            viewModel = vm,
+                            onBack = { navController.popBackStack() },
+                        )
+                    } else {
+                        Placeholder("Please sign in again") {
+                            navController.navigate(Screen.Login.route) { popUpTo(0) }
+                        }
+                    }
                 }
 
                 // ---------- Streak Calendar ----------
                 composable(Screen.StreakCalendar.route) {
-                    ScreenShell(
-                        title = "Streak Calendar",
-                        route = currentRoute,
-                        navController = navController,
-                        drawerState = drawerState,
-                    ) { Placeholder("Streak Calendar") {} }
+                    val userId = UserSession.userId
+                    if (userId != null) {
+                        val vm: StreakCalendarViewModel = viewModel(
+                            factory = SimpleViewModelFactory {
+                                StreakCalendarViewModel(
+                                    userId = userId,
+                                    achievementRepository = elachiApp.achievementRepository,
+                                    achievementDao = elachiApp.database.achievementDao(),
+                                )
+                            },
+                        )
+                        StreakCalendarScreen(
+                            viewModel = vm,
+                            onBack = { navController.popBackStack() },
+                        )
+                    } else {
+                        Placeholder("Please sign in again") {
+                            navController.navigate(Screen.Login.route) { popUpTo(0) }
+                        }
+                    }
                 }
 
                 // ---------- Help ----------
