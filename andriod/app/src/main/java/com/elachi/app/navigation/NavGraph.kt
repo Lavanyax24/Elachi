@@ -76,6 +76,8 @@ private val bottomNavRoutes = setOf(
     Screen.Cookbook.route,
     Screen.Discover.route,
     Screen.Pantry.route,
+    Screen.Profile.route,
+    Screen.Settings.route,
 )
 
 private val drawerEnabledRoutes = setOf(

@@ -28,7 +28,6 @@ import androidx.compose.material.icons.filled.Language
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Person
-import androidx.compose.material.icons.filled.Straighten
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Divider
 import androidx.compose.material3.Icon
@@ -70,7 +69,6 @@ fun SettingsScreen(
     onNavigateToEditProfile: () -> Unit = {},
 ) {
     val isDarkTheme by viewModel.isDarkTheme.collectAsState()
-    val units by viewModel.units.collectAsState()
 
     var showLogoutDialog by remember { mutableStateOf(false) }
     var showClearDataDialog by remember { mutableStateOf(false) }
@@ -103,36 +101,6 @@ fun SettingsScreen(
                                 checkedTrackColor = ElachiGreen,
                             ),
                         )
-                    },
-                )
-            }
-
-            // ---------- COOKING PREFERENCES ----------
-            SettingsSectionHeader("Cooking Preferences")
-            SettingsCard {
-                RowSetting(
-                    icon = Icons.Filled.Straighten,
-                    title = "Units",
-                    subtitle = if (units == "metric") "Metric (g / ml)" else "Imperial (oz / fl oz)",
-                    trailing = {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Text(
-                                if (units == "metric") "Metric" else "Imperial",
-                                color = ElachiGreen,
-                                fontWeight = FontWeight.SemiBold,
-                                fontSize = 14.sp,
-                            )
-                            Spacer(Modifier.width(4.dp))
-                            Icon(
-                                Icons.Filled.ChevronRight,
-                                contentDescription = null,
-                                tint = ElachiTextSecondary,
-                                modifier = Modifier.size(20.dp),
-                            )
-                        }
-                    },
-                    onClick = {
-                        viewModel.setUnits(if (units == "metric") "imperial" else "metric")
                     },
                 )
             }

@@ -15,6 +15,7 @@ import androidx.compose.material.icons.filled.EmojiEvents
 import androidx.compose.material.icons.filled.LocalFireDepartment
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -28,7 +29,6 @@ import com.elachi.app.data.local.dao.AchievementDao
 import com.elachi.app.data.local.entities.StreakRecordEntity
 import com.elachi.app.data.repository.AchievementRepository
 import com.elachi.app.ui.common.ElachiTopBar
-import com.elachi.app.ui.theme.ElachiAccent
 import com.elachi.app.ui.theme.ElachiCream
 import com.elachi.app.ui.theme.ElachiGreen
 import com.elachi.app.ui.theme.ElachiSurface
@@ -50,6 +50,8 @@ class StreakCalendarViewModel(
 
     var currentMonth = mutableStateOf(YearMonth.now())
     var cookedDates = mutableStateOf<Set<LocalDate>>(emptySet())
+    var contributionDates = mutableStateOf<Set<LocalDate>>(emptySet())
+    var allContributionDates = mutableStateOf<Set<LocalDate>>(emptySet())
 
     val streak: StateFlow<StreakRecordEntity?> = achievementDao.observeStreak(userId)
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)
@@ -66,11 +68,48 @@ class StreakCalendarViewModel(
     private fun loadMonth() {
         viewModelScope.launch {
             cookedDates.value = achievementRepository.getCookedDatesInMonth(userId, currentMonth.value)
+            contributionDates.value = achievementRepository.getContributionDatesInMonth(userId, currentMonth.value)
+            allContributionDates.value = achievementRepository.getContributionDates(userId)
         }
     }
 }
 
-private val CookedGreen = Color(0xFF2E7D32).copy(alpha = 0.75f)
+private val CookingOrange = Color(0xFFE07A2D)
+private val ContributionGreen = Color(0xFF2E7D32)
+
+private enum class StreakCalendarTab(val title: String) {
+    COOKING("Cooking"),
+    CONTRIBUTION("Contribution"),
+}
+
+private data class CalculatedStreak(val current: Int = 0, val longest: Int = 0)
+
+private fun calculateStreak(dates: Set<LocalDate>): CalculatedStreak {
+    if (dates.isEmpty()) return CalculatedStreak()
+
+    val sortedDates = dates.sorted()
+    var longest = 1
+    var running = 1
+
+    for (index in 1 until sortedDates.size) {
+        running = if (sortedDates[index] == sortedDates[index - 1].plusDays(1)) running + 1 else 1
+        longest = maxOf(longest, running)
+    }
+
+    val today = LocalDate.now(ZoneOffset.UTC)
+    val latest = sortedDates.last()
+    if (latest != today && latest != today.minusDays(1)) {
+        return CalculatedStreak(current = 0, longest = longest)
+    }
+
+    var current = 1
+    var cursor = latest
+    while (dates.contains(cursor.minusDays(1))) {
+        current++
+        cursor = cursor.minusDays(1)
+    }
+    return CalculatedStreak(current = current, longest = longest)
+}
 
 /**
  * The stored currentStreak only changes when a recipe is cooked, so if the user
@@ -87,12 +126,17 @@ private fun effectiveCurrentStreak(streak: StreakRecordEntity?): Int {
 fun StreakCalendarScreen(viewModel: StreakCalendarViewModel, onBack: () -> Unit) {
     val month by viewModel.currentMonth
     val cookedDates by viewModel.cookedDates
+    val contributionDates by viewModel.contributionDates
+    val allContributionDates by viewModel.allContributionDates
     val streak by viewModel.streak.collectAsState()
+    var selectedTab by rememberSaveable { mutableStateOf(StreakCalendarTab.COOKING) }
 
     val cookingStreak = effectiveCurrentStreak(streak)
-    // Placeholder: contribution streak mirrors the cooking streak for now
-    val contributionStreak = cookingStreak
-    val bestStreak = maxOf(streak?.longestStreak ?: 0, cookingStreak)
+    val contributionSummary = remember(allContributionDates) { calculateStreak(allContributionDates) }
+    val contributionStreak = contributionSummary.current
+    val bestStreak = maxOf(streak?.longestStreak ?: 0, contributionSummary.longest)
+    val selectedDates = if (selectedTab == StreakCalendarTab.COOKING) cookedDates else contributionDates
+    val selectedColour = if (selectedTab == StreakCalendarTab.COOKING) CookingOrange else ContributionGreen
 
     Scaffold(
         containerColor = ElachiCream,
@@ -108,7 +152,7 @@ fun StreakCalendarScreen(viewModel: StreakCalendarViewModel, onBack: () -> Unit)
                     value = cookingStreak,
                     label = "Cooking Streak",
                     icon = Icons.Filled.LocalFireDepartment,
-                    tint = ElachiAccent,
+                    tint = CookingOrange,
                     modifier = Modifier.weight(1f),
                 )
                 StreakStatCard(
@@ -127,6 +171,27 @@ fun StreakCalendarScreen(viewModel: StreakCalendarViewModel, onBack: () -> Unit)
                 )
             }
             Spacer(Modifier.height(16.dp))
+
+            TabRow(
+                selectedTabIndex = selectedTab.ordinal,
+                containerColor = ElachiCream,
+                contentColor = selectedColour,
+            ) {
+                StreakCalendarTab.entries.forEach { tab ->
+                    Tab(
+                        selected = selectedTab == tab,
+                        onClick = { selectedTab = tab },
+                        text = { Text(tab.title) },
+                        icon = {
+                            Icon(
+                                if (tab == StreakCalendarTab.COOKING) Icons.Filled.LocalFireDepartment else Icons.Filled.Bookmarks,
+                                contentDescription = null,
+                            )
+                        },
+                    )
+                }
+            }
+            Spacer(Modifier.height(12.dp))
 
             // Month switcher
             Row(
@@ -150,13 +215,16 @@ fun StreakCalendarScreen(viewModel: StreakCalendarViewModel, onBack: () -> Unit)
 
             val firstDayOffset = month.atDay(1).dayOfWeek.value % 7 // Sunday-first grid
             val daysInMonth = month.lengthOfMonth()
-            val today = LocalDate.now()
+            val today = LocalDate.now(ZoneOffset.UTC)
 
-            LazyVerticalGrid(columns = GridCells.Fixed(7), modifier = Modifier.fillMaxWidth()) {
+            LazyVerticalGrid(
+                columns = GridCells.Fixed(7),
+                modifier = Modifier.fillMaxWidth().weight(1f),
+            ) {
                 items(firstDayOffset) { Box(modifier = Modifier.aspectRatio(1f)) }
                 items(daysInMonth) { index ->
                     val date = month.atDay(index + 1)
-                    val wasCooked = cookedDates.contains(date)
+                    val wasActive = selectedDates.contains(date)
                     val isToday = date == today
                     val shape = RoundedCornerShape(6.dp)
                     Box(
@@ -164,7 +232,7 @@ fun StreakCalendarScreen(viewModel: StreakCalendarViewModel, onBack: () -> Unit)
                             .aspectRatio(1f)
                             .padding(2.dp)
                             .background(
-                                if (wasCooked) CookedGreen else Color.LightGray.copy(alpha = 0.15f),
+                                if (wasActive) selectedColour.copy(alpha = 0.85f) else Color.LightGray.copy(alpha = 0.15f),
                                 shape = shape,
                             )
                             .then(if (isToday) Modifier.border(1.5.dp, ElachiGreen, shape) else Modifier),
@@ -172,7 +240,7 @@ fun StreakCalendarScreen(viewModel: StreakCalendarViewModel, onBack: () -> Unit)
                     ) {
                         Text(
                             "${index + 1}",
-                            color = if (wasCooked) Color.White else Color(0xFF45483E),
+                            color = if (wasActive) Color.White else Color(0xFF45483E),
                             fontWeight = if (isToday) FontWeight.Bold else FontWeight.Normal,
                         )
                     }
@@ -181,12 +249,15 @@ fun StreakCalendarScreen(viewModel: StreakCalendarViewModel, onBack: () -> Unit)
 
             Spacer(Modifier.height(16.dp))
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Box(modifier = Modifier.size(12.dp).background(CookedGreen, RoundedCornerShape(3.dp)))
+                Box(modifier = Modifier.size(12.dp).background(selectedColour, RoundedCornerShape(3.dp)))
                 Spacer(Modifier.width(6.dp))
-                Text("Cooked something that day", style = MaterialTheme.typography.bodySmall)
+                Text(
+                    if (selectedTab == StreakCalendarTab.COOKING) "Cooked something that day" else "Added a recipe that day",
+                    style = MaterialTheme.typography.bodySmall,
+                )
                 Spacer(Modifier.weight(1f))
                 Text(
-                    "${cookedDates.size} day${if (cookedDates.size == 1) "" else "s"} this month",
+                    "${selectedDates.size} day${if (selectedDates.size == 1) "" else "s"} this month",
                     style = MaterialTheme.typography.bodySmall,
                     fontWeight = FontWeight.Medium,
                 )

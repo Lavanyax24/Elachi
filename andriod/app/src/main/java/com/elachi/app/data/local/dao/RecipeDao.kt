@@ -12,6 +12,9 @@ interface RecipeDao {
     @Query("SELECT * FROM recipes WHERE ownerId = :userId ORDER BY createdAt DESC")
     fun observeAllRecipes(userId: String): Flow<List<RecipeEntity>>
 
+    @Query("SELECT createdAt FROM recipes WHERE ownerId = :userId")
+    suspend fun getRecipeCreationTimestamps(userId: String): List<Long>
+
     @Query("SELECT * FROM recipes WHERE bookId = :bookId ORDER BY createdAt DESC")
     fun observeRecipesInBook(bookId: String): Flow<List<RecipeEntity>>
 

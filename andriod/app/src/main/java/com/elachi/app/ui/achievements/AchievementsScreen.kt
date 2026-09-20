@@ -70,12 +70,14 @@ private val LockedGrey = Color(0xFF9A9C93)
 /** One icon per badge id, falling back to a trophy for anything new. */
 private fun iconFor(achievementId: String): ImageVector = when (achievementId) {
     "first_cook" -> Icons.Filled.Restaurant
-    "streak_starter" -> Icons.Filled.LocalFireDepartment
-    "recipe_hoarder" -> Icons.Filled.Bookmarks
-    "community_star" -> Icons.Filled.Star
+    "home_cook", "kitchen_regular", "master_cook", "cooking_legend" -> Icons.Filled.Restaurant
+    "streak_spark", "streak_starter", "streak_champion" -> Icons.Filled.LocalFireDepartment
+    "first_recipe", "recipe_collector", "recipe_hoarder", "recipe_archivist" -> Icons.Filled.Bookmarks
+    "community_star", "rising_star", "crowd_favourite" -> Icons.Filled.Star
     "fork_master" -> Icons.Filled.ContentCopy
-    "pantry_pro" -> Icons.Filled.Kitchen
-    "social_butterfly" -> Icons.Filled.Group
+    "pantry_starter", "pantry_pro", "pantry_master" -> Icons.Filled.Kitchen
+    "welcome_wagon", "social_butterfly", "community_connector", "community_builder", "community_legend" -> Icons.Filled.Group
+    "recipe_explorer", "chef_extraordinaire", "culinary_icon" -> Icons.Filled.Restaurant
     else -> Icons.Filled.EmojiEvents
 }
 
