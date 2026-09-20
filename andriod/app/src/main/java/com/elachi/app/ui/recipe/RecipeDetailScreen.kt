@@ -1,20 +1,26 @@
 package com.elachi.app.ui.recipe
 
 import android.widget.Toast
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
+import com.elachi.app.data.repository.MissingIngredient
 import com.elachi.app.ui.common.ElachiTopBar
 import com.elachi.app.util.RecipePdfExporter
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -31,11 +37,25 @@ fun RecipeDetailScreen(
     val steps by viewModel.steps.collectAsState()
     var servingMultiplier by remember { mutableIntStateOf(1) }
     var showDeleteDialog by remember { mutableStateOf(false) }
+    var exportingPdf by remember { mutableStateOf(false) }
+    val scope = rememberCoroutineScope()
+    val snackbarHostState = remember { SnackbarHostState() }
+    val missingIngredients = viewModel.missingIngredients.value
+    val shoppingMessage = viewModel.shoppingMessage.value
+
+    // Confirmation / error message after adding to the shopping list
+    LaunchedEffect(shoppingMessage) {
+        if (shoppingMessage != null) {
+            snackbarHostState.showSnackbar(shoppingMessage)
+            viewModel.clearShoppingMessage()
+        }
+    }
 
     val baseServings = recipe?.servings ?: 1
     val currentServings = baseServings * servingMultiplier
 
     Scaffold(
+        snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             ElachiTopBar(
                 title = recipe?.title.orEmpty(),
@@ -118,16 +138,22 @@ fun RecipeDetailScreen(
 
                         OutlinedButton(
                             onClick = {
-                                try {
-                                    val file = RecipePdfExporter.export(context, r, ingredients, steps, currentServings)
-                                    RecipePdfExporter.share(context, file)
-                                } catch (e: Exception) {
-                                    android.util.Log.e("RecipeDetail", "PDF export failed", e)
-                                    Toast.makeText(context, "Couldn't create the PDF.", Toast.LENGTH_SHORT).show()
+                                scope.launch {
+                                    exportingPdf = true
+                                    try {
+                                        val file = RecipePdfExporter.export(context, r, ingredients, steps, currentServings)
+                                        RecipePdfExporter.share(context, file)
+                                    } catch (e: Exception) {
+                                        android.util.Log.e("RecipeDetail", "PDF export failed", e)
+                                        Toast.makeText(context, "Couldn't create the PDF.", Toast.LENGTH_SHORT).show()
+                                    } finally {
+                                        exportingPdf = false
+                                    }
                                 }
                             },
+                            enabled = !exportingPdf,
                             modifier = Modifier.weight(1f),
-                        ) { Text("PDF") }
+                        ) { Text(if (exportingPdf) "Creating…" else "PDF") }
 
                         Button(
                             onClick = onStartCookMode,
@@ -148,7 +174,7 @@ fun RecipeDetailScreen(
                     Row(verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
                         Text("Ingredients", style = MaterialTheme.typography.titleLarge)
                         Spacer(Modifier.weight(1f))
-                        TextButton(onClick = { viewModel.addMissingIngredientsToShoppingList() }) {
+                        TextButton(onClick = { viewModel.loadMissingIngredients(baseServings, currentServings) }) {
                             Text("Add missing to list")
                         }
                     }
@@ -173,6 +199,14 @@ fun RecipeDetailScreen(
         } ?: Box(modifier = Modifier.padding(padding).fillMaxSize(), contentAlignment = androidx.compose.ui.Alignment.Center) {
             CircularProgressIndicator()
         }
+    }
+
+    missingIngredients?.let { items ->
+        MissingIngredientsDialog(
+            items = items,
+            onConfirm = { selected -> viewModel.addSelectedToShoppingList(selected) },
+            onDismiss = { viewModel.dismissMissingIngredients() },
+        )
     }
 
     if (showDeleteDialog) {
@@ -225,4 +259,103 @@ fun RecipeDetailScreen(
             },
         )
     }
+}
+
+private fun formatQty(q: Double): String =
+    if (q % 1.0 == 0.0) q.toInt().toString() else q.toString()
+
+@Composable
+private fun MissingIngredientsDialog(
+    items: List<MissingIngredient>,
+    onConfirm: (List<MissingIngredient>) -> Unit,
+    onDismiss: () -> Unit,
+) {
+    if (items.isEmpty()) {
+        AlertDialog(
+            onDismissRequest = onDismiss,
+            title = { Text("You're all set!") },
+            text = { Text("Your pantry already has everything this recipe needs.") },
+            confirmButton = { TextButton(onClick = onDismiss) { Text("OK") } },
+        )
+        return
+    }
+
+    // Everything is ticked by default, except items that are already on the list.
+    val checked = remember(items) {
+        mutableStateListOf<Boolean>().apply { addAll(items.map { !it.alreadyOnList }) }
+    }
+    val selectedCount = checked.count { it }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Add to shopping list") },
+        text = {
+            Column {
+                Text(
+                    "Tick the ingredients you want to add. Anything already in your pantry is left out.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+                Spacer(Modifier.height(8.dp))
+
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable {
+                            val newValue = selectedCount != items.size
+                            for (i in checked.indices) checked[i] = newValue
+                        },
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Checkbox(
+                        checked = selectedCount == items.size,
+                        onCheckedChange = { all -> for (i in checked.indices) checked[i] = all },
+                    )
+                    Text("Select all", style = MaterialTheme.typography.titleSmall)
+                }
+                HorizontalDivider()
+
+                Column(
+                    modifier = Modifier
+                        .heightIn(max = 300.dp)
+                        .verticalScroll(rememberScrollState()),
+                ) {
+                    items.forEachIndexed { index, item ->
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable { checked[index] = !checked[index] },
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            Checkbox(
+                                checked = checked[index],
+                                onCheckedChange = { checked[index] = it },
+                            )
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(item.name)
+                                if (item.alreadyOnList) {
+                                    Text(
+                                        "Already on your list · quantity will be added",
+                                        style = MaterialTheme.typography.labelSmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    )
+                                }
+                            }
+                            Text(
+                                "${formatQty(item.quantity)} ${item.unit}".trim(),
+                                style = MaterialTheme.typography.bodyMedium,
+                            )
+                        }
+                    }
+                }
+            }
+        },
+        confirmButton = {
+            TextButton(
+                enabled = selectedCount > 0,
+                onClick = { onConfirm(items.filterIndexed { index, _ -> checked[index] }) },
+            ) { Text(if (selectedCount == 0) "Add to list" else "Add $selectedCount to list") }
+        },
+        dismissButton = { TextButton(onClick = onDismiss) { Text("Cancel") } },
+    )
 }

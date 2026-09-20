@@ -11,8 +11,10 @@ import com.elachi.app.data.local.entities.StepEntity
 import com.elachi.app.data.remote.ApiService
 import com.elachi.app.data.remote.dto.CookSessionRequest
 import com.elachi.app.data.repository.AchievementRepository
+import com.elachi.app.data.repository.MissingIngredient
 import com.elachi.app.data.repository.PantryRepository
 import com.elachi.app.data.repository.RecipeRepository
+import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn
@@ -68,13 +70,43 @@ class RecipeDetailViewModel(
         }
     }
 
-    fun addMissingIngredientsToShoppingList() {
+    /** null = dialog closed, empty list = user already has everything. */
+    val missingIngredients = mutableStateOf<List<MissingIngredient>?>(null)
+    val shoppingMessage = mutableStateOf<String?>(null)
+
+    fun loadMissingIngredients(baseServings: Int, currentServings: Int) {
         viewModelScope.launch {
-            pantryRepository.generateShoppingListFromRecipe(
-                userId,
-                recipeId,
-            )
+            missingIngredients.value = try {
+                pantryRepository.getMissingIngredients(userId, recipeId, baseServings, currentServings)
+            } catch (exception: Exception) {
+                Log.e("RecipeDetailVM", "loadMissingIngredients failed", exception)
+                shoppingMessage.value = "Couldn't check your pantry. Please try again."
+                null
+            }
         }
+    }
+
+    fun dismissMissingIngredients() {
+        missingIngredients.value = null
+    }
+
+    fun addSelectedToShoppingList(selected: List<MissingIngredient>) {
+        viewModelScope.launch {
+            try {
+                pantryRepository.addShoppingItems(userId, selected)
+                shoppingMessage.value =
+                    if (selected.size == 1) "Added 1 item to your shopping list"
+                    else "Added ${selected.size} items to your shopping list"
+            } catch (exception: Exception) {
+                Log.e("RecipeDetailVM", "addSelectedToShoppingList failed", exception)
+                shoppingMessage.value = "Couldn't add to your shopping list. Please try again."
+            }
+            missingIngredients.value = null
+        }
+    }
+
+    fun clearShoppingMessage() {
+        shoppingMessage.value = null
     }
 
     fun deleteRecipe(onDeleted: () -> Unit) {
@@ -100,6 +132,7 @@ class RecipeDetailViewModel(
         onUnlocked: (List<String>) -> Unit,
     ) {
         viewModelScope.launch {
+            // Local work only (fast), so the screen can close straight away.
             recipeRepository.markCooked(recipeId)
 
             val unlocked =
@@ -108,19 +141,16 @@ class RecipeDetailViewModel(
                     recipeId,
                 )
 
-            try {
-                api.logCookSession(
-                    CookSessionRequest(
-                        recipeId,
-                        java.time.Instant.now().toString(),
-                    ),
-                )
-            } catch (exception: Exception) {
-                Log.e(
-                    "RecipeDetailVM",
-                    "logCookSession failed",
-                    exception,
-                )
+            // Sync with the server in the background. NonCancellable is needed
+            // because leaving the screen clears this ViewModel, which would
+            // otherwise cancel the request before it is sent.
+            val completedAt = java.time.Instant.now().toString()
+            viewModelScope.launch(NonCancellable) {
+                try {
+                    api.logCookSession(CookSessionRequest(recipeId, completedAt))
+                } catch (exception: Exception) {
+                    Log.e("RecipeDetailVM", "logCookSession failed", exception)
+                }
             }
 
             onUnlocked(unlocked)

@@ -46,7 +46,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.elachi.app.ui.theme.ElachiGreen
 import com.elachi.app.ui.theme.ElachiTextPrimary
-import com.elachi.app.ui.theme.ElachiTextSecondary
+import androidx.compose.ui.graphics.Brush
+import com.elachi.app.ui.theme.ElachiGreenLight
 
 private data class DrawerItem(val label: String, val icon: ImageVector, val route: String)
 
@@ -82,12 +83,21 @@ fun AppDrawerContent(
         drawerTonalElevation = 0.dp,
     ) {
         Column(modifier = Modifier.fillMaxSize()) {
-            Box(modifier = Modifier.fillMaxWidth().padding(24.dp)) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(
+                        Brush.verticalGradient(
+                            colors = listOf(ElachiGreen, ElachiGreenLight)
+                        )
+                    )
+                    .padding(24.dp)
+            ) {
                 Column {
                     Box(
                         modifier = Modifier.size(64.dp).clip(CircleShape)
-                            .background(ElachiGreen.copy(alpha = 0.1f))
-                            .border(1.dp, ElachiGreen.copy(alpha = 0.2f), CircleShape),
+                            .background(Color.White.copy(alpha = 0.2f))
+                            .border(1.5.dp, Color.White.copy(alpha = 0.6f), CircleShape),
                         contentAlignment = Alignment.Center,
                     ) {
                         Text("\uD83D\uDC64", fontSize = 32.sp)
@@ -96,9 +106,13 @@ fun AppDrawerContent(
                     Text(
                         userDisplayName.ifBlank { "Chef" },
                         style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
-                        color = ElachiTextPrimary,
+                        color = Color.White,
                     )
-                    Text(userEmail, style = MaterialTheme.typography.bodyMedium, color = ElachiTextSecondary)
+                    Text(
+                        userEmail,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = Color.White.copy(alpha = 0.8f),
+                    )
                 }
             }
 
