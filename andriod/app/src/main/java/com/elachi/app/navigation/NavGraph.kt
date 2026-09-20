@@ -33,10 +33,14 @@ import com.elachi.app.ui.common.ElachiBottomNavBar
 import com.elachi.app.ui.common.ElachiTopBar
 import com.elachi.app.ui.cookbook.CookbookViewModel
 import com.elachi.app.ui.help.HelpScreen
+import com.elachi.app.ui.home.HomeScreen
+import com.elachi.app.ui.home.HomeViewModel
 import com.elachi.app.ui.onboarding.CompleteProfileScreen
 import com.elachi.app.ui.onboarding.CompleteProfileViewModel
 import com.elachi.app.ui.onboarding.CreateFirstBookScreen
 import com.elachi.app.ui.onboarding.OnboardingScreen
+import com.elachi.app.ui.profile.ProfileScreen
+import com.elachi.app.ui.profile.ProfileViewModel
 import com.elachi.app.ui.recipe.AddRecipeScreen
 import com.elachi.app.ui.recipe.AddRecipeViewModel
 import com.elachi.app.ui.recipe.CameraCaptureScreen
@@ -112,14 +116,41 @@ fun ElachiNavGraph() {
     val scope = rememberCoroutineScope()
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
 
+    // ---------- Drawer header data ----------
+    // Scoped to NavGraph so the drawer has access to real profile data.
+    // Only constructed when a user is signed in.
+    val currentUserId = UserSession.userId
+    val profileVm: ProfileViewModel? = if (currentUserId != null) {
+        viewModel(
+            factory = SimpleViewModelFactory {
+                ProfileViewModel(
+                    currentUserId,
+                    elachiApp.profileRepository,
+                    elachiApp.recipeRepository,
+                    elachiApp.database.achievementDao(),
+                )
+            },
+        )
+    } else null
+
+    // Real display name from the profile fetch; falls back to "Chef" while
+    // the request is in flight or if the profile has a blank name.
+    val drawerDisplayName = profileVm?.profile?.value?.displayName
+        ?.takeIf { it.isNotBlank() }
+        ?: "Chef"
+
+    // UserProfileDto has no email field, and the drawer gracefully handles an
+    // empty subtitle. Left blank rather than faking a value.
+    val drawerEmail = ""
+
     ModalNavigationDrawer(
         drawerState = drawerState,
         gesturesEnabled = showDrawer,
         drawerContent = {
             AppDrawerContent(
                 currentRoute = currentRoute,
-                userDisplayName = "Chef",
-                userEmail = "",
+                userDisplayName = drawerDisplayName,
+                userEmail = drawerEmail,
                 onNavigate = { route ->
                     scope.launch { drawerState.close() }
                     navController.navigate(route) {
@@ -239,11 +270,11 @@ fun ElachiNavGraph() {
                 composable(Screen.CreateFirstBook.route) {
                     CreateFirstBookScreen(
                         onCreated = { name, description, coverImageUrl, icon, colour ->
-                            val userId = UserSession.userId
-                            if (userId != null) {
+                            val uid = UserSession.userId
+                            if (uid != null) {
                                 scope.launch {
                                     elachiApp.recipeRepository.createBook(
-                                        userId = userId,
+                                        userId = uid,
                                         name = name,
                                         description = description,
                                         icon = icon,
@@ -262,21 +293,41 @@ fun ElachiNavGraph() {
 
                 // ---------- Home ----------
                 composable(Screen.Home.route) {
-                    ScreenShell(
-                        title = "Elachi",
-                        route = currentRoute,
-                        navController = navController,
-                        drawerState = drawerState,
-                    ) { Placeholder("Home") {} }
+                    val uid = UserSession.userId
+                    if (uid != null) {
+                        val vm: HomeViewModel = viewModel(
+                            factory = SimpleViewModelFactory {
+                                HomeViewModel(
+                                    uid,
+                                    elachiApp.recipeRepository,
+                                    elachiApp.pantryRepository,
+                                    elachiApp.database.achievementDao(),
+                                    elachiApp.profileRepository,
+                                )
+                            },
+                        )
+                        HomeScreen(
+                            viewModel = vm,
+                            onOpenRecipe = { id -> navController.navigate(Screen.RecipeDetail.createRoute(id)) },
+                            onOpenAiChef = { navController.navigate(Screen.AiChef.route) },
+                            onOpenAchievements = { navController.navigate(Screen.Achievements.route) },
+                            onOpenSettings = { navController.navigate(Screen.Settings.route) },
+                            onOpenDrawer = { scope.launch { drawerState.open() } },
+                        )
+                    } else {
+                        Placeholder("Please sign in again") {
+                            navController.navigate(Screen.Login.route) { popUpTo(0) }
+                        }
+                    }
                 }
 
                 // ---------- Cookbook ----------
                 composable(Screen.Cookbook.route) {
-                    val userId = UserSession.userId
-                    if (userId != null) {
+                    val uid = UserSession.userId
+                    if (uid != null) {
                         val vm: CookbookViewModel = viewModel(
                             factory = SimpleViewModelFactory {
-                                CookbookViewModel(userId, elachiApp.recipeRepository)
+                                CookbookViewModel(uid, elachiApp.recipeRepository)
                             },
                         )
                         ScreenShell(
@@ -333,14 +384,14 @@ fun ElachiNavGraph() {
 
                 // ---------- Add Recipe ----------
                 composable(Screen.AddRecipe.route) { backStackEntry ->
-                    val userId = UserSession.userId
+                    val uid = UserSession.userId
                     val bookId = backStackEntry.arguments?.getString("bookId").orEmpty()
 
-                    if (userId != null) {
+                    if (uid != null) {
                         val vm: AddRecipeViewModel = viewModel(
                             factory = SimpleViewModelFactory {
                                 AddRecipeViewModel(
-                                    userId = userId,
+                                    userId = uid,
                                     initialBookId = bookId,
                                     recipeRepository = elachiApp.recipeRepository,
                                 )
@@ -368,16 +419,16 @@ fun ElachiNavGraph() {
 
                 // ---------- Edit Recipe ----------
                 composable(Screen.EditRecipe.route) { backStackEntry ->
-                    val userId = UserSession.userId
+                    val uid = UserSession.userId
                     val recipeId = backStackEntry.arguments
                         ?.getString("recipeId")
                         .orEmpty()
 
-                    if (userId != null) {
+                    if (uid != null) {
                         val vm: AddRecipeViewModel = viewModel(
                             factory = SimpleViewModelFactory {
                                 AddRecipeViewModel(
-                                    userId = userId,
+                                    userId = uid,
                                     initialBookId = "",
                                     recipeRepository = elachiApp.recipeRepository,
                                     editingRecipeId = recipeId,
@@ -410,18 +461,18 @@ fun ElachiNavGraph() {
 
                 // ---------- Camera and Screenshot OCR ----------
                 composable(Screen.CameraCapture.route) { backStackEntry ->
-                    val userId = UserSession.userId
+                    val uid = UserSession.userId
                     val bookId = backStackEntry.arguments?.getString("bookId").orEmpty()
                     val addRecipeEntry = remember(backStackEntry) {
                         navController.previousBackStackEntry
                     }
 
-                    if (userId != null && addRecipeEntry != null) {
+                    if (uid != null && addRecipeEntry != null) {
                         val addRecipeVm: AddRecipeViewModel = viewModel(
                             viewModelStoreOwner = addRecipeEntry,
                             factory = SimpleViewModelFactory {
                                 AddRecipeViewModel(
-                                    userId = userId,
+                                    userId = uid,
                                     initialBookId = bookId,
                                     recipeRepository = elachiApp.recipeRepository,
                                 )
@@ -457,14 +508,14 @@ fun ElachiNavGraph() {
 
                 // ---------- Recipe Detail ----------
                 composable(Screen.RecipeDetail.route) { backStackEntry ->
-                    val userId = UserSession.userId
+                    val uid = UserSession.userId
                     val recipeId = backStackEntry.arguments?.getString("recipeId").orEmpty()
 
-                    if (userId != null) {
+                    if (uid != null) {
                         val vm: RecipeDetailViewModel = viewModel(
                             factory = SimpleViewModelFactory {
                                 RecipeDetailViewModel(
-                                    userId = userId,
+                                    userId = uid,
                                     recipeId = recipeId,
                                     recipeRepository = elachiApp.recipeRepository,
                                     pantryRepository = elachiApp.pantryRepository,
@@ -498,14 +549,14 @@ fun ElachiNavGraph() {
 
                 // ---------- Cook Mode ----------
                 composable(Screen.CookMode.route) { backStackEntry ->
-                    val userId = UserSession.userId
+                    val uid = UserSession.userId
                     val recipeId = backStackEntry.arguments?.getString("recipeId").orEmpty()
 
-                    if (userId != null) {
+                    if (uid != null) {
                         val vm: RecipeDetailViewModel = viewModel(
                             factory = SimpleViewModelFactory {
                                 RecipeDetailViewModel(
-                                    userId = userId,
+                                    userId = uid,
                                     recipeId = recipeId,
                                     recipeRepository = elachiApp.recipeRepository,
                                     pantryRepository = elachiApp.pantryRepository,
@@ -564,12 +615,12 @@ fun ElachiNavGraph() {
 
                 // ---------- Pantry ----------
                 composable(Screen.Pantry.route) {
-                    val userId = UserSession.userId
-                    if (userId != null) {
+                    val uid = UserSession.userId
+                    if (uid != null) {
                         val vm: PantryViewModel = viewModel(
                             factory = SimpleViewModelFactory {
                                 PantryViewModel(
-                                    userId = userId,
+                                    userId = uid,
                                     pantryRepository = elachiApp.pantryRepository,
                                     achievementRepository = elachiApp.achievementRepository,
                                 )
@@ -594,14 +645,58 @@ fun ElachiNavGraph() {
                         }
                     }
                 }
+
                 // ---------- Profile ----------
                 composable(Screen.Profile.route) {
-                    ScreenShell(
-                        title = "My Profile",
-                        route = currentRoute,
-                        navController = navController,
-                        drawerState = drawerState,
-                    ) { Placeholder("Profile") {} }
+                    val uid = UserSession.userId
+                    if (uid != null) {
+                        val vm: ProfileViewModel = viewModel(
+                            factory = SimpleViewModelFactory {
+                                ProfileViewModel(
+                                    uid,
+                                    elachiApp.profileRepository,
+                                    elachiApp.recipeRepository,
+                                    elachiApp.database.achievementDao(),
+                                )
+                            },
+                        )
+                        ScreenShell(
+                            title = "My Profile",
+                            route = currentRoute,
+                            navController = navController,
+                            drawerState = drawerState,
+                        ) {
+                            ProfileScreen(
+                                viewModel = vm,
+                                onEdit = { navController.navigate(Screen.EditProfile.route) },
+                            )
+                        }
+                    } else {
+                        ScreenShell(
+                            title = "My Profile",
+                            route = currentRoute,
+                            navController = navController,
+                            drawerState = drawerState,
+                        ) {
+                            Placeholder("Please sign in again") {
+                                navController.navigate(Screen.Login.route) { popUpTo(0) }
+                            }
+                        }
+                    }
+                }
+
+                // ---------- Edit Profile ----------
+                composable(Screen.EditProfile.route) {
+                    val vm: CompleteProfileViewModel = viewModel(
+                        factory = SimpleViewModelFactory {
+                            CompleteProfileViewModel(elachiApp.profileRepository)
+                        },
+                    )
+                    CompleteProfileScreen(
+                        viewModel = vm,
+                        isEditMode = true,
+                        onDone = { navController.popBackStack() },
+                    )
                 }
 
                 // ---------- Settings ----------
@@ -625,7 +720,9 @@ fun ElachiNavGraph() {
                         onNavigateToTerms = {
                             navController.navigate(Screen.TermsOfService.route)
                         },
-                        onNavigateToEditProfile = { /* Profile edit screen is Phase 7 follow-up */ },
+                        onNavigateToEditProfile = {
+                            navController.navigate(Screen.EditProfile.route)
+                        },
                     )
                 }
 
@@ -656,12 +753,12 @@ fun ElachiNavGraph() {
 
                 // ---------- Achievements ----------
                 composable(Screen.Achievements.route) {
-                    val userId = UserSession.userId
-                    if (userId != null) {
+                    val uid = UserSession.userId
+                    if (uid != null) {
                         val vm: AchievementsViewModel = viewModel(
                             factory = SimpleViewModelFactory {
                                 AchievementsViewModel(
-                                    userId = userId,
+                                    userId = uid,
                                     achievementDao = elachiApp.database.achievementDao(),
                                 )
                             },
@@ -679,12 +776,12 @@ fun ElachiNavGraph() {
 
                 // ---------- Streak Calendar ----------
                 composable(Screen.StreakCalendar.route) {
-                    val userId = UserSession.userId
-                    if (userId != null) {
+                    val uid = UserSession.userId
+                    if (uid != null) {
                         val vm: StreakCalendarViewModel = viewModel(
                             factory = SimpleViewModelFactory {
                                 StreakCalendarViewModel(
-                                    userId = userId,
+                                    userId = uid,
                                     achievementRepository = elachiApp.achievementRepository,
                                     achievementDao = elachiApp.database.achievementDao(),
                                 )
