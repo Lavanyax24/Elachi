@@ -83,6 +83,16 @@ class AuthViewModel(private val authRepository: AuthRepository) : ViewModel() {
         }
     }
 
+    fun signUpWithGoogleToken(idToken: String) {
+        _uiState.value = AuthUiState.Loading
+        viewModelScope.launch {
+            when (val result = authRepository.signUpWithGoogle(idToken)) {
+                is AuthResult.Success -> _uiState.value = AuthUiState.Success(result.isNewUser)
+                is AuthResult.Error -> _uiState.value = AuthUiState.Error(result.message)
+            }
+        }
+    }
+
     fun setError(message: String) {
         _uiState.value = AuthUiState.Error(message)
     }

@@ -73,12 +73,46 @@ class AuthRepository(
             val user = result.user ?: return AuthResult.Error("Google sign-in failed.")
             val isNewUser = result.additionalUserInfo?.isNewUser == true
 
+            if (isNewUser) {
+                try {
+                    user.delete().await()
+                } catch (e: Exception) {
+                    Log.e("AuthRepository", "Failed to delete user created during Google sign-in for unregistered user", e)
+                }
+                auth.signOut()
+                return AuthResult.Error("Account not registered. Please register first.")
+            }
+
             val (first, last) = splitDisplayName(user.displayName)
             syncProfileWithBackend(user, firstName = first, surname = last)
 
-            AuthResult.Success(user, isNewUser = isNewUser)
+            AuthResult.Success(user, isNewUser = false)
         } catch (e: Exception) {
             AuthResult.Error(e.localizedMessage ?: "Google sign-in failed.")
+        }
+    }
+
+    suspend fun signUpWithGoogle(idToken: String): AuthResult {
+        val auth = firebaseAuth ?: return AuthResult.Error("Firebase not initialized correctly.")
+        return try {
+            val credential = GoogleAuthProvider.getCredential(idToken, null)
+            val result = auth.signInWithCredential(credential).await()
+            val user = result.user ?: return AuthResult.Error("Google sign-up failed.")
+            val isNewUser = result.additionalUserInfo?.isNewUser == true
+
+            if (!isNewUser) {
+                return AuthResult.Error("Account already registered. Please log in.")
+            }
+
+            val (first, last) = splitDisplayName(user.displayName)
+            syncProfileWithBackend(user, firstName = first, surname = last)
+
+            AuthResult.Success(user, isNewUser = true)
+        } catch (e: Exception) {
+            if (e is com.google.firebase.auth.FirebaseAuthUserCollisionException) {
+                return AuthResult.Error("Account already registered. Please log in.")
+            }
+            AuthResult.Error(e.localizedMessage ?: "Google sign-up failed.")
         }
     }
 

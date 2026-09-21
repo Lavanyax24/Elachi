@@ -67,12 +67,14 @@ fun SignUpScreen(
             val account = GoogleSignIn.getSignedInAccountFromIntent(result.data).getResult(ApiException::class.java)
             val idToken = account.idToken
             if (idToken != null) {
-                viewModel.signInWithGoogleToken(idToken)
+                viewModel.signUpWithGoogleToken(idToken)
             } else {
                 viewModel.setError("Google Sign-up failed: ID Token missing")
             }
         } catch (e: ApiException) {
-            viewModel.setError("Google Sign-up failed: ${e.localizedMessage}")
+            if (e.statusCode != com.google.android.gms.common.api.CommonStatusCodes.CANCELED && e.statusCode != 12501) {
+                viewModel.setError("Google Sign-up failed: ${e.localizedMessage}")
+            }
         }
     }
 
@@ -158,7 +160,11 @@ fun SignUpScreen(
                     Spacer(modifier = Modifier.height(20.dp))
 
                     Button(
-                        onClick = { launcher.launch(googleSignInClient.signInIntent) },
+                        onClick = {
+                            googleSignInClient.signOut().addOnCompleteListener {
+                                launcher.launch(googleSignInClient.signInIntent)
+                            }
+                        },
                         modifier = Modifier.fillMaxWidth().height(50.dp),
                         shape = RoundedCornerShape(12.dp),
                         colors = ButtonDefaults.buttonColors(

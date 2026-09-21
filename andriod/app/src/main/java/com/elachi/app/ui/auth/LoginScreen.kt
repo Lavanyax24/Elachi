@@ -69,7 +69,9 @@ fun LoginScreen(
                 viewModel.setError("Google Sign-in failed: ID Token missing")
             }
         } catch (e: ApiException) {
-            viewModel.setError("Google Sign-in failed: ${e.localizedMessage}")
+            if (e.statusCode != com.google.android.gms.common.api.CommonStatusCodes.CANCELED && e.statusCode != 12501) {
+                viewModel.setError("Google Sign-in failed: ${e.localizedMessage}")
+            }
         }
     }
 
@@ -151,7 +153,11 @@ fun LoginScreen(
                     Spacer(modifier = Modifier.height(20.dp))
 
                     Button(
-                        onClick = { launcher.launch(googleSignInClient.signInIntent) },
+                        onClick = {
+                            googleSignInClient.signOut().addOnCompleteListener {
+                                launcher.launch(googleSignInClient.signInIntent)
+                            }
+                        },
                         modifier = Modifier.fillMaxWidth().height(50.dp),
                         shape = RoundedCornerShape(12.dp),
                         colors = ButtonDefaults.buttonColors(
