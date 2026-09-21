@@ -1,4 +1,7 @@
+<a id="top"></a>
+
 # 🍳 Elachi Backend
+ **Mouth Full Of Flavour**
 
 > **The engine behind Elachi.**
 >
@@ -6,6 +9,7 @@
 
 ---
 
+<a id="table-of-contents"></a>
 ## 📑 Table of Contents
 
 - [About](#about)
@@ -14,17 +18,30 @@
 - [Features](#features)
 - [Architecture](#architecture)
 - [API Endpoints](#api-endpoints)
+  - [Health](#endpoints-health)
+  - [Users](#endpoints-users)
+  - [Books](#endpoints-books)
+  - [Recipes](#endpoints-recipes)
+  - [Pantry](#endpoints-pantry)
+  - [AI and Parsing](#endpoints-ai-and-parsing)
+  - [Progress](#endpoints-progress)
 - [Project Structure](#project-structure)
 - [Setup](#setup)
+  - [1. Clone the Repository](#1-clone-the-repository)
+  - [2. Install Dependencies](#2-install-dependencies)
+  - [3. Configure Environment Variables](#3-configure-environment-variables)
+- [Database Setup](#database-setup)
 - [Running the Backend](#running-the-backend)
 - [Testing](#testing)
 - [Database](#database)
 - [Security](#security)
 - [Deployment](#deployment)
+- [Development Workflow](#development-workflow)
 - [Code Attribution](#code-attribution)
 
 ---
 
+<a id="about"></a>
 ## 📖 About
 
 The Elachi Backend provides the server-side functionality for the Elachi Android recipe management application.
@@ -33,8 +50,11 @@ It handles authentication, recipes, recipe books, pantry items, shopping lists, 
 
 The backend is built with **Node.js and Express**, uses **PostgreSQL through Supabase**, and is deployed using **Render**.
 
+[⬆ Back to top](#top)
+
 ---
 
+<a id="team"></a>
 ## 👥 Team
 
 | Team Member | Student Number |
@@ -44,8 +64,11 @@ The backend is built with **Node.js and Express**, uses **PostgreSQL through Sup
 | **Saa'diyah Mansoor** | **ST10439057** |
 | **Jarrud Frederick Cochrane** | **ST10266083** |
 
+[⬆ Back to top](#top)
+
 ---
 
+<a id="technology-stack"></a>
 ## 🛠️ Technology Stack
 
 | Technology | Purpose |
@@ -61,8 +84,11 @@ The backend is built with **Node.js and Express**, uses **PostgreSQL through Sup
 | 🧪 **Jest + Supertest** | Backend testing |
 | ☁️ **Render** | Backend hosting |
 
+[⬆ Back to top](#top)
+
 ---
 
+<a id="features"></a>
 ## ✨ Features
 
 - 🔐 Firebase authentication and user synchronisation
@@ -81,8 +107,11 @@ The backend is built with **Node.js and Express**, uses **PostgreSQL through Sup
 - 🔔 Notification management
 - ❤️ API health checks
 
+[⬆ Back to top](#top)
+
 ---
 
+<a id="architecture"></a>
 ## 🏗️ Architecture
 
 ```text
@@ -118,10 +147,14 @@ The backend is built with **Node.js and Express**, uses **PostgreSQL through Sup
 └─────────────────┘
 ```
 
+[⬆ Back to top](#top)
+
 ---
 
+<a id="api-endpoints"></a>
 ## 🌐 API Endpoints
 
+<a id="endpoints-health"></a>
 ### ❤️ Health
 
 | Method | Endpoint | Auth |
@@ -129,6 +162,7 @@ The backend is built with **Node.js and Express**, uses **PostgreSQL through Sup
 | `GET` | `/` | No |
 | `GET` | `/health` | No |
 
+<a id="endpoints-users"></a>
 ### 👤 Users
 
 | Method | Endpoint | Auth |
@@ -138,6 +172,7 @@ The backend is built with **Node.js and Express**, uses **PostgreSQL through Sup
 | `PATCH` | `/api/users/me` | Yes |
 | `DELETE` | `/api/users/me` | Yes |
 
+<a id="endpoints-books"></a>
 ### 📚 Books
 
 | Method | Endpoint | Auth |
@@ -147,6 +182,7 @@ The backend is built with **Node.js and Express**, uses **PostgreSQL through Sup
 | `PATCH` | `/api/books/:id` | Yes |
 | `DELETE` | `/api/books/:id` | Yes |
 
+<a id="endpoints-recipes"></a>
 ### 🍳 Recipes
 
 | Method | Endpoint | Auth |
@@ -159,6 +195,7 @@ The backend is built with **Node.js and Express**, uses **PostgreSQL through Sup
 | `PATCH` | `/api/recipes/:id` | Yes |
 | `DELETE` | `/api/recipes/:id` | Yes |
 
+<a id="endpoints-pantry"></a>
 ### 🥫 Pantry
 
 | Method | Endpoint | Auth |
@@ -167,6 +204,7 @@ The backend is built with **Node.js and Express**, uses **PostgreSQL through Sup
 | `POST` | `/api/pantry` | Yes |
 | `DELETE` | `/api/pantry/:id` | Yes |
 
+<a id="endpoints-ai-and-parsing"></a>
 ### 🤖 AI and Parsing
 
 | Method | Endpoint | Auth |
@@ -174,6 +212,7 @@ The backend is built with **Node.js and Express**, uses **PostgreSQL through Sup
 | `POST` | `/api/chat` | Yes |
 | `POST` | `/api/recipes/parse-text` | Yes |
 
+<a id="endpoints-progress"></a>
 ### 🏆 Progress
 
 | Method | Endpoint | Auth |
@@ -182,8 +221,11 @@ The backend is built with **Node.js and Express**, uses **PostgreSQL through Sup
 | `GET` | `/api/achievements` | Yes |
 | `GET` | `/api/streaks` | Yes |
 
+[⬆ Back to top](#top)
+
 ---
 
+<a id="project-structure"></a>
 ## 📁 Project Structure
 
 ```text
@@ -231,10 +273,14 @@ backend/
 └── README.md
 ```
 
+[⬆ Back to top](#top)
+
 ---
 
+<a id="setup"></a>
 ## ⚙️ Setup
 
+<a id="1-clone-the-repository"></a>
 ### 1. Clone the Repository
 
 ```bash
@@ -242,12 +288,14 @@ git clone <YOUR-GITHUB-REPOSITORY-URL>
 cd <YOUR-REPOSITORY>/backend
 ```
 
+<a id="2-install-dependencies"></a>
 ### 2. Install Dependencies
 
 ```bash
 npm install
 ```
 
+<a id="3-configure-environment-variables"></a>
 ### 3. Configure Environment Variables
 
 Create a `.env` file using `.env.example` as a template.
@@ -261,8 +309,11 @@ PORT=3000
 
 > 🔒 **Never commit `.env` or real credentials to GitHub.**
 
+[⬆ Back to top](#top)
+
 ---
 
+<a id="database-setup"></a>
 ## 🗄️ Database Setup
 
 Initialise the PostgreSQL database using:
@@ -277,8 +328,11 @@ The database schema is located at:
 src/db/schema.sql
 ```
 
+[⬆ Back to top](#top)
+
 ---
 
+<a id="running-the-backend"></a>
 ## ▶️ Running the Backend
 
 Development mode:
@@ -305,8 +359,11 @@ Check that it is running:
 http://localhost:3000/health
 ```
 
+[⬆ Back to top](#top)
+
 ---
 
+<a id="testing"></a>
 ## 🧪 Testing
 
 Run the automated backend tests:
@@ -335,8 +392,11 @@ Manual endpoint testing documentation is available in:
 tests/endpoints.md
 ```
 
+[⬆ Back to top](#top)
+
 ---
 
+<a id="database"></a>
 ## 🗄️ Database
 
 Elachi uses **PostgreSQL through Supabase**.
@@ -364,8 +424,11 @@ Database configuration is provided through:
 DATABASE_URL
 ```
 
+[⬆ Back to top](#top)
+
 ---
 
+<a id="security"></a>
 ## 🔐 Security
 
 The backend includes several security measures:
@@ -396,8 +459,11 @@ Never commit or expose:
 
 The Cohere API key remains on the backend and is not embedded in the Android application.
 
+[⬆ Back to top](#top)
+
 ---
 
+<a id="deployment"></a>
 ## ☁️ Deployment
 
 The backend is deployed using **Render**.
@@ -415,8 +481,11 @@ PORT
 
 Production credentials should never be stored directly in the GitHub repository.
 
+[⬆ Back to top](#top)
+
 ---
 
+<a id="development-workflow"></a>
 ## 👨‍💻 Development Workflow
 
 ```text
@@ -445,9 +514,12 @@ git status
 
 Make sure no `.env` files, credentials, API keys, or tokens are staged.
 
+[⬆ Back to top](#top)
+
 ---
 
-## 🙏 Code Attribution
+<a id="code-attribution"></a>
+## 📚 Code Attribution
 
 This backend was developed collaboratively by the Elachi team.
 
@@ -467,6 +539,7 @@ Third-party libraries, frameworks, APIs, documentation, and other external resou
 
 - Supabase, [s.a.]. JavaScript client library reference. [online] Available at: <https://supabase.com/docs/reference/javascript/introduction> [Accessed 21 September 2026].
 
+[⬆ Back to top](#top)
 
 ---
 
