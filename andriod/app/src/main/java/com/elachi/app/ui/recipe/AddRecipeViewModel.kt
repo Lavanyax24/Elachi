@@ -27,10 +27,6 @@ class AddRecipeViewModel(
 
     val isEditMode: Boolean = editingRecipeId != null
 
-    // Every recipe must belong to a Recipe Book. This is the user's full
-    // book list so the form can offer a real picker (matching the demo's
-    // "Recipe Book" dropdown) instead of being locked to whichever book the
-    // Add button happened to be tapped from.
     val availableBooks: StateFlow<List<RecipeBookEntity>> = recipeRepository.observeBooks(userId)
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
@@ -46,7 +42,6 @@ class AddRecipeViewModel(
     var method = mutableStateOf("Stovetop")
     var isPrivate = mutableStateOf(true)
 
-    // Preset option lists backing the optional-detail dropdowns.
     val categoryOptions = listOf("Breakfast", "Lunch", "Dinner", "Dessert", "Snack", "Appetizer")
     val cuisineOptions = listOf("Italian", "Indian", "Mexican", "Asian", "Mediterranean", "American", "Moroccan")
     val foodTypeOptions = listOf("Vegetarian", "Vegan", "Non-Vegetarian", "Pescatarian", "Gluten-Free")
@@ -182,10 +177,6 @@ class AddRecipeViewModel(
         if (selectedAllergens.contains(allergen)) selectedAllergens.remove(allergen) else selectedAllergens.add(allergen)
     }
 
-    /** Called by the OCR/screenshot flow to pre-fill the form before the user
-     * reviews it (FR-2.2 / FR-2.3). method/servings/cookTimeMinutes come from
-     * the AI-powered parser and are blank when the local fallback parser was
-     * used instead, in which case the form just keeps its existing defaults. */
     fun prefillFromParsedRecipe(
         parsedTitle: String,
         parsedIngredients: List<DraftIngredient>,
@@ -334,10 +325,6 @@ class AddRecipeViewModel(
             return
         }
 
-        /*
-         * Find an existing allergy without treating uppercase and
-         * lowercase versions as different allergies.
-         */
         val existingAllergen = allergenOptions.firstOrNull {
             it.equals(cleanedName, ignoreCase = true)
         }
@@ -357,9 +344,6 @@ class AddRecipeViewModel(
             formattedName
         }
 
-        /*
-         * Automatically select the newly created allergy for the recipe.
-         */
         if (
             selectedAllergens.none {
                 it.equals(allergenToSelect, ignoreCase = true)

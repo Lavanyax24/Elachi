@@ -13,6 +13,7 @@ import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
@@ -23,8 +24,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.elachi.app.ui.theme.ElachiCream
-import com.elachi.app.ui.theme.ElachiGreen
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -42,16 +41,24 @@ fun ElachiTopBar(
             Text(
                 title,
                 fontWeight = FontWeight.Bold,
-                color = ElachiGreen,
+                color = MaterialTheme.colorScheme.primary,
             )
         },
         navigationIcon = {
             when {
                 onMenuClick != null -> IconButton(onClick = onMenuClick) {
-                    Icon(Icons.Filled.Menu, contentDescription = "Menu")
+                    Icon(
+                        Icons.Filled.Menu,
+                        contentDescription = "Menu",
+                        tint = MaterialTheme.colorScheme.onSurface,
+                    )
                 }
                 onBackClick != null -> IconButton(onClick = onBackClick) {
-                    Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                    Icon(
+                        Icons.AutoMirrored.Filled.ArrowBack,
+                        contentDescription = "Back",
+                        tint = MaterialTheme.colorScheme.onSurface,
+                    )
                 }
             }
         },
@@ -59,7 +66,7 @@ fun ElachiTopBar(
             if (showStreakChip) {
                 Surface(
                     shape = RoundedCornerShape(16.dp),
-                    color = ElachiGreen.copy(alpha = 0.1f),
+                    color = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f),
                 ) {
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
@@ -70,7 +77,7 @@ fun ElachiTopBar(
                         Text(
                             streakCount.toString(),
                             fontWeight = FontWeight.Bold,
-                            color = ElachiGreen,
+                            color = MaterialTheme.colorScheme.primary,
                         )
                     }
                 }
@@ -78,10 +85,18 @@ fun ElachiTopBar(
             actions()
             if (onSettingsClick != null) {
                 IconButton(onClick = onSettingsClick) {
-                    Icon(Icons.Filled.Settings, contentDescription = "Settings")
+                    Icon(
+                        Icons.Filled.Settings,
+                        contentDescription = "Settings",
+                        tint = MaterialTheme.colorScheme.onSurface,
+                    )
                 }
             }
         },
-        colors = TopAppBarDefaults.topAppBarColors(containerColor = ElachiCream),
+        colors = TopAppBarDefaults.topAppBarColors(
+            containerColor = MaterialTheme.colorScheme.background,
+            titleContentColor = MaterialTheme.colorScheme.primary,
+            actionIconContentColor = MaterialTheme.colorScheme.onSurface,
+        ),
     )
 }

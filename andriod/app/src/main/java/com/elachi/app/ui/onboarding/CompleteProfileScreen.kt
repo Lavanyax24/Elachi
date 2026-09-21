@@ -3,6 +3,7 @@ package com.elachi.app.ui.onboarding
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -15,6 +16,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -22,25 +24,14 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Person
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FilterChip
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBar
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.mutableStateListOf
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
@@ -50,11 +41,7 @@ import androidx.lifecycle.viewModelScope
 import coil.compose.AsyncImage
 import com.elachi.app.data.remote.SupabaseStorageClient
 import com.elachi.app.data.repository.ProfileRepository
-import com.elachi.app.ui.theme.ElachiGreen
-import com.elachi.app.ui.theme.ElachiGreenLight
 import kotlinx.coroutines.launch
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.setValue
 
 class CompleteProfileViewModel(private val profileRepository: ProfileRepository) : ViewModel() {
     var displayName = mutableStateOf("")
@@ -108,7 +95,6 @@ class CompleteProfileViewModel(private val profileRepository: ProfileRepository)
         }
     }
 
-    /** Loads existing values when opened for editing. */
     fun loadExisting() {
         viewModelScope.launch {
             profileRepository.getMyProfile().onSuccess { profile ->
@@ -142,12 +128,7 @@ class CompleteProfileViewModel(private val profileRepository: ProfileRepository)
     }
 }
 
-/**
- * Used both for onboarding's "Complete Your Profile" step and for editing
- * from Profile later — isEditMode controls the small differences (top bar,
- * loading existing data first, button label).
- */
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, androidx.compose.foundation.layout.ExperimentalLayoutApi::class)
 @Composable
 fun CompleteProfileScreen(
     viewModel: CompleteProfileViewModel,
@@ -165,72 +146,83 @@ fun CompleteProfileScreen(
     }
 
     Scaffold(
-        topBar = { if (isEditMode) TopAppBar(title = { Text("Edit Profile") }) },
+        topBar = {
+            if (isEditMode) {
+                TopAppBar(
+                    title = { Text("Edit Profile") },
+                    navigationIcon = {
+                        IconButton(onClick = onDone) {
+                            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                        }
+                    },
+                    colors = TopAppBarDefaults.topAppBarColors(
+                        containerColor = MaterialTheme.colorScheme.background,
+                        titleContentColor = MaterialTheme.colorScheme.primary,
+                        navigationIconContentColor = MaterialTheme.colorScheme.onSurface
+                    )
+                )
+            }
+        },
+        containerColor = MaterialTheme.colorScheme.background
     ) { padding ->
         Column(
             modifier = Modifier
                 .padding(padding)
                 .padding(24.dp)
                 .fillMaxSize()
-                .verticalScroll(rememberScrollState()),
+                .verticalScroll(rememberScrollState())
+                .imePadding(),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             if (!isEditMode) {
                 Text(
                     "Complete Your Profile",
                     style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.Bold),
-                    color = ElachiGreen,
+                    color = MaterialTheme.colorScheme.primary,
                 )
-                Text("Tell us a bit about yourself", style = MaterialTheme.typography.bodyMedium)
+                Text(
+                    "Tell us a bit about yourself",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
                 Spacer(Modifier.height(24.dp))
             }
 
-            // Avatar upload
             Box(
                 modifier = Modifier
                     .size(96.dp)
                     .clip(CircleShape)
-                    .clickable {
-                        photoPicker.launch(
-                            PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly),
-                        )
-                    },
+                    .background(MaterialTheme.colorScheme.surfaceVariant)
+                    .clickable { photoPicker.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)) },
                 contentAlignment = Alignment.Center,
             ) {
                 when {
                     viewModel.isUploadingPhoto.value -> CircularProgressIndicator()
-                    viewModel.avatarUrl.value != null -> AsyncImage(
-                        model = viewModel.avatarUrl.value,
-                        contentDescription = "Avatar",
-                        contentScale = ContentScale.Crop,
-                        modifier = Modifier.fillMaxSize(),
-                    )
-                    else -> androidx.compose.foundation.Image(
-                        imageVector = Icons.Filled.Person,
-                        contentDescription = "Add photo",
-                        modifier = Modifier.size(48.dp),
-                    )
+                    viewModel.avatarUrl.value != null -> AsyncImage(model = viewModel.avatarUrl.value, contentDescription = "Avatar", contentScale = ContentScale.Crop, modifier = Modifier.fillMaxSize())
+                    else -> Icon(imageVector = Icons.Filled.Person, contentDescription = "Add photo", modifier = Modifier.size(48.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
             }
             Text(
                 "Add Photo",
                 style = MaterialTheme.typography.labelLarge,
-                color = ElachiGreen,
+                color = MaterialTheme.colorScheme.primary,
                 modifier = Modifier.padding(top = 4.dp),
             )
             Spacer(Modifier.height(20.dp))
 
-            // Display name
             OutlinedTextField(
                 value = viewModel.displayName.value,
                 onValueChange = { viewModel.displayName.value = it },
                 label = { Text("Display Name") },
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(12.dp),
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = MaterialTheme.colorScheme.primary,
+                    unfocusedBorderColor = MaterialTheme.colorScheme.outline
+                )
             )
             Spacer(Modifier.height(12.dp))
 
-            // Bio
             OutlinedTextField(
                 value = viewModel.bio.value,
                 onValueChange = { viewModel.bio.value = it },
@@ -239,18 +231,21 @@ fun CompleteProfileScreen(
                 modifier = Modifier.fillMaxWidth(),
                 minLines = 2,
                 shape = RoundedCornerShape(12.dp),
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = MaterialTheme.colorScheme.primary,
+                    unfocusedBorderColor = MaterialTheme.colorScheme.outline
+                )
             )
             Spacer(Modifier.height(20.dp))
 
-            // Cooking interests
             Text(
                 "Cooking Interests",
                 style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.onSurface,
                 modifier = Modifier.align(Alignment.Start),
             )
             Spacer(Modifier.height(8.dp))
 
-            // Preset chips
             viewModel.cookingInterestOptions.chunked(3).forEach { row ->
                 Row(
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -261,12 +256,15 @@ fun CompleteProfileScreen(
                             selected = viewModel.selectedInterests.contains(option),
                             onClick = { viewModel.toggleInterest(option) },
                             label = { Text(option) },
+                            colors = FilterChipDefaults.filterChipColors(
+                                selectedContainerColor = MaterialTheme.colorScheme.primary,
+                                selectedLabelColor = Color.White
+                            )
                         )
                     }
                 }
             }
 
-            // Custom interest input
             var customInterest by remember { mutableStateOf("") }
             Row(
                 modifier = Modifier.fillMaxWidth().padding(top = 4.dp),
@@ -275,48 +273,51 @@ fun CompleteProfileScreen(
                 OutlinedTextField(
                     value = customInterest,
                     onValueChange = { customInterest = it },
-                    placeholder = { Text("Add your own (e.g. Persian, BBQ...)") },
+                    placeholder = { Text("Add your own...") },
                     modifier = Modifier.weight(1f),
                     shape = RoundedCornerShape(12.dp),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = MaterialTheme.colorScheme.primary,
+                        unfocusedBorderColor = MaterialTheme.colorScheme.outline
+                    )
                 )
                 Spacer(Modifier.width(8.dp))
                 Button(
-                    onClick = {
-                        viewModel.addCustomInterest(customInterest)
-                        customInterest = ""
-                    },
-                    colors = ButtonDefaults.buttonColors(containerColor = ElachiGreenLight),
+                    onClick = { viewModel.addCustomInterest(customInterest); customInterest = "" },
+                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.secondary),
                     modifier = Modifier.height(52.dp),
+                    shape = RoundedCornerShape(12.dp)
                 ) {
-                    androidx.compose.material3.Icon(Icons.Filled.Add, contentDescription = "Add")
+                    Icon(Icons.Filled.Add, contentDescription = "Add", tint = Color.White)
                 }
             }
 
-            // Show any custom interests that were added
             if (viewModel.selectedInterests.any { it !in viewModel.cookingInterestOptions }) {
                 Spacer(Modifier.height(8.dp))
-                Row(
+                androidx.compose.foundation.layout.FlowRow(
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                     modifier = Modifier.fillMaxWidth(),
                 ) {
-                    viewModel.selectedInterests
-                        .filter { it !in viewModel.cookingInterestOptions }
-                        .forEach { custom ->
-                            FilterChip(
-                                selected = true,
-                                onClick = { viewModel.toggleInterest(custom) },
-                                label = { Text(custom) },
+                    viewModel.selectedInterests.filter { it !in viewModel.cookingInterestOptions }.forEach { custom ->
+                        FilterChip(
+                            selected = true,
+                            onClick = { viewModel.toggleInterest(custom) },
+                            label = { Text(custom) },
+                            colors = FilterChipDefaults.filterChipColors(
+                                selectedContainerColor = MaterialTheme.colorScheme.primary,
+                                selectedLabelColor = Color.White
                             )
-                        }
+                        )
+                    }
                 }
             }
 
             Spacer(Modifier.height(20.dp))
 
-            // Dietary restrictions
             Text(
                 "Dietary Restrictions & Allergies",
                 style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.onSurface,
                 modifier = Modifier.align(Alignment.Start),
             )
             Spacer(Modifier.height(8.dp))
@@ -331,12 +332,15 @@ fun CompleteProfileScreen(
                             selected = viewModel.selectedDietary.contains(option),
                             onClick = { viewModel.toggleDietary(option) },
                             label = { Text(option) },
+                            colors = FilterChipDefaults.filterChipColors(
+                                selectedContainerColor = MaterialTheme.colorScheme.primary,
+                                selectedLabelColor = Color.White
+                            )
                         )
                     }
                 }
             }
 
-            // Custom dietary input
             var customDietary by remember { mutableStateOf("") }
             Row(
                 modifier = Modifier.fillMaxWidth().padding(top = 4.dp),
@@ -348,17 +352,39 @@ fun CompleteProfileScreen(
                     placeholder = { Text("Add your own...") },
                     modifier = Modifier.weight(1f),
                     shape = RoundedCornerShape(12.dp),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = MaterialTheme.colorScheme.primary,
+                        unfocusedBorderColor = MaterialTheme.colorScheme.outline
+                    )
                 )
                 Spacer(modifier = Modifier.width(8.dp))
                 Button(
-                    onClick = {
-                        viewModel.addCustomDietary(customDietary)
-                        customDietary = ""
-                    },
-                    colors = ButtonDefaults.buttonColors(containerColor = ElachiGreenLight),
+                    onClick = { viewModel.addCustomDietary(customDietary); customDietary = "" },
+                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.secondary),
                     modifier = Modifier.height(52.dp),
+                    shape = RoundedCornerShape(12.dp)
                 ) {
-                    androidx.compose.material3.Icon(Icons.Filled.Add, contentDescription = "Add")
+                    Icon(Icons.Filled.Add, contentDescription = "Add", tint = Color.White)
+                }
+            }
+
+            if (viewModel.selectedDietary.any { it !in viewModel.dietaryOptions }) {
+                Spacer(Modifier.height(8.dp))
+                androidx.compose.foundation.layout.FlowRow(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    modifier = Modifier.fillMaxWidth(),
+                ) {
+                    viewModel.selectedDietary.filter { it !in viewModel.dietaryOptions }.forEach { custom ->
+                        FilterChip(
+                            selected = true,
+                            onClick = { viewModel.toggleDietary(custom) },
+                            label = { Text(custom) },
+                            colors = FilterChipDefaults.filterChipColors(
+                                selectedContainerColor = MaterialTheme.colorScheme.primary,
+                                selectedLabelColor = Color.White
+                            )
+                        )
+                    }
                 }
             }
 
@@ -369,27 +395,37 @@ fun CompleteProfileScreen(
 
             Spacer(Modifier.height(24.dp))
 
-            // Save
             Button(
                 onClick = { viewModel.save() },
                 enabled = !viewModel.isSaving.value,
                 modifier = Modifier.fillMaxWidth().height(50.dp),
                 shape = RoundedCornerShape(12.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = ElachiGreen),
+                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
             ) {
                 if (viewModel.isSaving.value) {
-                    CircularProgressIndicator(modifier = Modifier.size(20.dp), color = MaterialTheme.colorScheme.onPrimary)
+                    CircularProgressIndicator(modifier = Modifier.size(20.dp), color = Color.White)
                 } else {
-                    Text(
-                        if (isEditMode) "Save" else "Continue",
-                        fontWeight = FontWeight.Bold,
-                    )
+                    Text(if (isEditMode) "Save Changes" else "Continue", fontWeight = FontWeight.Bold, color = Color.White)
+                }
+            }
+
+            if (isEditMode) {
+                Spacer(Modifier.height(12.dp))
+                OutlinedButton(
+                    onClick = onDone,
+                    modifier = Modifier.fillMaxWidth().height(50.dp),
+                    shape = RoundedCornerShape(12.dp),
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary),
+                ) {
+                    Text("Cancel", color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold)
                 }
             }
 
             if (!isEditMode) {
                 Spacer(Modifier.height(8.dp))
-                TextButton(onClick = onDone) { Text("Skip for now") }
+                TextButton(onClick = onDone) {
+                    Text("Skip for now", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                }
             }
 
             Spacer(Modifier.height(24.dp))

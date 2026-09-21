@@ -23,12 +23,8 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.elachi.app.ui.common.ElachiTopBar
-import com.elachi.app.ui.theme.ElachiCream
-import com.elachi.app.ui.theme.ElachiTextPrimary
-import com.elachi.app.ui.theme.ElachiTextSecondary
 
 private val PRIVACY_SECTIONS = listOf(
     PolicySection(
@@ -77,7 +73,7 @@ private val PRIVACY_SECTIONS = listOf(
 fun PrivacyPolicyScreen(onBack: () -> Unit) {
     Scaffold(
         topBar = { ElachiTopBar(title = "Privacy Policy", onBackClick = onBack) },
-        containerColor = ElachiCream,
+        containerColor = MaterialTheme.colorScheme.background,
     ) { padding ->
         Column(
             modifier = Modifier
@@ -94,9 +90,9 @@ fun PrivacyPolicyScreen(onBack: () -> Unit) {
             )
 
             Surface(
-                color = Color.White,
+                color = MaterialTheme.colorScheme.surface,
                 shape = RoundedCornerShape(14.dp),
-                border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFE5E2DD)),
+                border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outline),
                 modifier = Modifier.fillMaxWidth(),
             ) {
                 Text(
@@ -104,7 +100,7 @@ fun PrivacyPolicyScreen(onBack: () -> Unit) {
                             "module (PROG7314). This policy explains what information the " +
                             "app collects, how it is used, and how you can remove it.",
                     style = MaterialTheme.typography.bodyMedium,
-                    color = ElachiTextPrimary,
+                    color = MaterialTheme.colorScheme.onSurface,
                     modifier = Modifier.padding(16.dp),
                 )
             }
@@ -117,7 +113,7 @@ fun PrivacyPolicyScreen(onBack: () -> Unit) {
                 text = "This policy may be updated as the project develops. " +
                         "Any changes will be reflected in the app.",
                 style = MaterialTheme.typography.bodySmall,
-                color = ElachiTextSecondary,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.padding(horizontal = 4.dp, vertical = 4.dp),
             )
 

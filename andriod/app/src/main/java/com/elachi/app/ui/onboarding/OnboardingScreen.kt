@@ -4,18 +4,7 @@ import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.CircleShape
@@ -23,14 +12,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
+import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
@@ -116,12 +98,6 @@ val ONBOARDING_SLIDES = listOf(
     ),
 )
 
-/**
- * @param tutorialMode when true, the carousel is being shown from Help &
- *   Support. The Skip button and final "Finish" label change to match, and
- *   the caller is expected to popBackStack rather than continue into the
- *   Complete Profile flow.
- */
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun OnboardingScreen(
@@ -131,7 +107,7 @@ fun OnboardingScreen(
     val pagerState = rememberPagerState(pageCount = { ONBOARDING_SLIDES.size })
     val scope = rememberCoroutineScope()
 
-    Column(modifier = Modifier.fillMaxSize().background(Color(0xFFFCF9F4))) {
+    Column(modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
         HorizontalPager(state = pagerState, modifier = Modifier.weight(1f), userScrollEnabled = true) { page ->
             val slide = ONBOARDING_SLIDES[page]
             OnboardingContent(
@@ -144,10 +120,10 @@ fun OnboardingScreen(
         }
 
         Column(
-            modifier = Modifier.fillMaxWidth().background(Color(0xFFFCF9F4)).padding(start = 24.dp, end = 24.dp, top = 16.dp, bottom = 32.dp),
+            modifier = Modifier.fillMaxWidth().background(MaterialTheme.colorScheme.background).padding(start = 24.dp, end = 24.dp, top = 16.dp, bottom = 32.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
-            HorizontalDivider(color = Color(0xFFF0EDE9), thickness = 1.dp)
+            HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.1f), thickness = 1.dp)
             Spacer(modifier = Modifier.height(16.dp))
 
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center, verticalAlignment = Alignment.CenterVertically) {
@@ -155,7 +131,7 @@ fun OnboardingScreen(
                     val width by animateDpAsState(targetValue = if (pagerState.currentPage == i) 24.dp else 8.dp, label = "")
                     Box(
                         modifier = Modifier.padding(horizontal = 3.dp).size(width = width, height = 8.dp).clip(CircleShape)
-                            .background(if (pagerState.currentPage == i) ONBOARDING_SLIDES[i].color else Color(0xFFC5C8BA)),
+                            .background(if (pagerState.currentPage == i) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.3f)),
                     )
                 }
             }
@@ -166,9 +142,9 @@ fun OnboardingScreen(
                 if (pagerState.currentPage > 0) {
                     IconButton(
                         onClick = { scope.launch { pagerState.animateScrollToPage(pagerState.currentPage - 1) } },
-                        modifier = Modifier.size(50.dp).background(Color(0xFFF0EDE9), RoundedCornerShape(12.dp)),
+                        modifier = Modifier.size(50.dp).background(MaterialTheme.colorScheme.surfaceVariant, RoundedCornerShape(12.dp)),
                     ) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = null, tint = Color(0xFF425529))
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
                     }
                 }
 
@@ -189,7 +165,7 @@ fun OnboardingScreen(
                     },
                     modifier = Modifier.weight(1f).height(50.dp),
                     shape = RoundedCornerShape(12.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = ONBOARDING_SLIDES[pagerState.currentPage].color),
+                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
                     elevation = ButtonDefaults.buttonElevation(defaultElevation = 4.dp),
                 ) {
                     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.Center) {
@@ -264,9 +240,9 @@ private fun OnboardingContent(
         }
 
         Column(modifier = Modifier.fillMaxWidth().padding(top = 260.dp).padding(24.dp)) {
-            Text(text = slide.title, style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.ExtraBold), color = Color(0xFF1C1C19))
+            Text(text = slide.title, style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.ExtraBold), color = MaterialTheme.colorScheme.onSurface)
             Spacer(modifier = Modifier.height(10.dp))
-            Text(text = slide.subtitle, style = MaterialTheme.typography.bodyMedium, color = Color(0xFF45483E), lineHeight = 23.sp)
+            Text(text = slide.subtitle, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, lineHeight = 23.sp)
             Spacer(modifier = Modifier.height(20.dp))
             Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                 slide.features.forEachIndexed { index, feature -> FeatureItem(feature, slide.color, index) }
@@ -279,13 +255,13 @@ private fun OnboardingContent(
 private fun FeatureItem(text: String, color: Color, index: Int) {
     val icons = listOf("\u2705", "\uD83C\uDFAF", "\u26A1")
     Row(
-        modifier = Modifier.fillMaxWidth().background(Color.White, RoundedCornerShape(12.dp))
-            .border(1.dp, Color(0xFFE5E2DD), RoundedCornerShape(12.dp)).padding(11.dp, 14.dp),
+        modifier = Modifier.fillMaxWidth().background(MaterialTheme.colorScheme.surface, RoundedCornerShape(12.dp))
+            .border(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.1f), RoundedCornerShape(12.dp)).padding(11.dp, 14.dp),
         verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp),
     ) {
-        Box(modifier = Modifier.size(28.dp).background(color.copy(alpha = 0.09f), RoundedCornerShape(8.dp)), contentAlignment = Alignment.Center) {
+        Box(modifier = Modifier.size(28.dp).background(color.copy(alpha = 0.15f), RoundedCornerShape(8.dp)), contentAlignment = Alignment.Center) {
             Text(icons[index % icons.size], fontSize = 14.sp)
         }
-        Text(text = text, style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Medium), color = Color(0xFF1C1C19))
+        Text(text = text, style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Medium), color = MaterialTheme.colorScheme.onSurface)
     }
 }

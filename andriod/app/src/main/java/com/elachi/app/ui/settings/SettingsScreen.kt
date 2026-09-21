@@ -28,7 +28,6 @@ import androidx.compose.material.icons.filled.Language
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Person
-import androidx.compose.material.icons.filled.Straighten
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Divider
 import androidx.compose.material3.Icon
@@ -57,28 +56,26 @@ import com.elachi.app.ui.theme.ElachiGreen
 import com.elachi.app.ui.theme.ElachiTextPrimary
 import com.elachi.app.ui.theme.ElachiTextSecondary
 
-/**
- * Redesigned Settings screen — grouped sections with icon-led rows
- * and a proper Account block at the bottom.
- */
 @Composable
 fun SettingsScreen(
     viewModel: SettingsViewModel,
     onLoggedOut: () -> Unit,
+    onBack: () -> Unit,
     onNavigateToPrivacyPolicy: () -> Unit = {},
     onNavigateToTerms: () -> Unit = {},
     onNavigateToEditProfile: () -> Unit = {},
 ) {
+    val context = androidx.compose.ui.platform.LocalContext.current
+    val app = remember(context) { context.applicationContext as com.elachi.app.ElachiApp }
     val isDarkTheme by viewModel.isDarkTheme.collectAsState()
-    val units by viewModel.units.collectAsState()
 
     var showLogoutDialog by remember { mutableStateOf(false) }
     var showClearDataDialog by remember { mutableStateOf(false) }
     var showDeleteAccountDialog by remember { mutableStateOf(false) }
 
     Scaffold(
-        topBar = { ElachiTopBar(title = "Settings") },
-        containerColor = ElachiCream,
+        topBar = { ElachiTopBar(title = "Settings", onBackClick = onBack) },
+        containerColor = MaterialTheme.colorScheme.background,
     ) { padding ->
         Column(
             modifier = Modifier
@@ -100,39 +97,13 @@ fun SettingsScreen(
                             onCheckedChange = { viewModel.setDarkTheme(it) },
                             colors = SwitchDefaults.colors(
                                 checkedThumbColor = Color.White,
-                                checkedTrackColor = ElachiGreen,
+                                checkedTrackColor = MaterialTheme.colorScheme.primary,
+                                uncheckedThumbColor = Color.White,
+                                uncheckedTrackColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.38f),
+                                uncheckedBorderColor = Color.Transparent,
+                                uncheckedIconColor = Color.Transparent
                             ),
                         )
-                    },
-                )
-            }
-
-            // ---------- COOKING PREFERENCES ----------
-            SettingsSectionHeader("Cooking Preferences")
-            SettingsCard {
-                RowSetting(
-                    icon = Icons.Filled.Straighten,
-                    title = "Units",
-                    subtitle = if (units == "metric") "Metric (g / ml)" else "Imperial (oz / fl oz)",
-                    trailing = {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Text(
-                                if (units == "metric") "Metric" else "Imperial",
-                                color = ElachiGreen,
-                                fontWeight = FontWeight.SemiBold,
-                                fontSize = 14.sp,
-                            )
-                            Spacer(Modifier.width(4.dp))
-                            Icon(
-                                Icons.Filled.ChevronRight,
-                                contentDescription = null,
-                                tint = ElachiTextSecondary,
-                                modifier = Modifier.size(20.dp),
-                            )
-                        }
-                    },
-                    onClick = {
-                        viewModel.setUnits(if (units == "metric") "imperial" else "metric")
                     },
                 )
             }
@@ -147,7 +118,7 @@ fun SettingsScreen(
                     trailing = {
                         Text(
                             "Coming soon",
-                            color = ElachiTextSecondary,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
                             fontSize = 12.sp,
                         )
                     },
@@ -211,14 +182,14 @@ fun SettingsScreen(
                     icon = Icons.Filled.Delete,
                     title = "Delete Account",
                     subtitle = "Permanently removes your account and data",
-                    tint = Color(0xFFBA1A1A),
+                    tint = MaterialTheme.colorScheme.error,
                     onClick = { showDeleteAccountDialog = true },
                 )
                 CardDivider()
                 RowSetting(
                     icon = Icons.AutoMirrored.Filled.Logout,
                     title = "Logout",
-                    tint = Color(0xFFBA1A1A),
+                    tint = MaterialTheme.colorScheme.error,
                     onClick = { showLogoutDialog = true },
                 )
             }
@@ -230,7 +201,7 @@ fun SettingsScreen(
                     icon = Icons.Filled.Info,
                     title = "App Version",
                     trailing = {
-                        Text("v1.0.0-part2", color = ElachiTextSecondary, fontSize = 13.sp)
+                        Text("v1.0.0-part2", color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 13.sp)
                     },
                     enabled = false,
                 )
@@ -282,7 +253,10 @@ fun SettingsScreen(
             message = "This permanently deletes your account and all your recipes. This cannot be undone.",
             confirmLabel = "Delete",
             confirmColor = Color(0xFFBA1A1A),
-            onConfirm = { showDeleteAccountDialog = false },
+            onConfirm = {
+                showDeleteAccountDialog = false
+                viewModel.deleteAccount(app.api, onLoggedOut)
+            },
             onDismiss = { showDeleteAccountDialog = false },
         )
     }
@@ -299,7 +273,7 @@ private fun SettingsSectionHeader(text: String) {
             letterSpacing = 1.sp,
             fontSize = 11.sp,
         ),
-        color = ElachiTextSecondary,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
         modifier = Modifier.padding(start = 4.dp, top = 20.dp, bottom = 8.dp),
     )
 }
@@ -307,9 +281,9 @@ private fun SettingsSectionHeader(text: String) {
 @Composable
 private fun SettingsCard(content: @Composable () -> Unit) {
     androidx.compose.material3.Surface(
-        color = Color.White,
+        color = MaterialTheme.colorScheme.surface,
         shape = RoundedCornerShape(14.dp),
-        border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFE5E2DD)),
+        border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outline),
         modifier = Modifier.fillMaxWidth(),
     ) {
         Column { content() }
@@ -319,7 +293,7 @@ private fun SettingsCard(content: @Composable () -> Unit) {
 @Composable
 private fun CardDivider() {
     Divider(
-        color = Color(0xFFE5E2DD),
+        color = MaterialTheme.colorScheme.outline,
         modifier = Modifier.padding(start = 56.dp),
     )
 }
@@ -329,7 +303,7 @@ private fun RowSetting(
     icon: ImageVector,
     title: String,
     subtitle: String? = null,
-    tint: Color = ElachiGreen,
+    tint: Color = MaterialTheme.colorScheme.primary,
     trailing: (@Composable () -> Unit)? = null,
     enabled: Boolean = true,
     onClick: (() -> Unit)? = null,
@@ -349,7 +323,7 @@ private fun RowSetting(
             Icon(
                 icon,
                 contentDescription = null,
-                tint = if (enabled) tint else ElachiTextSecondary.copy(alpha = 0.5f),
+                tint = if (enabled) tint else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f),
                 modifier = Modifier.size(22.dp),
             )
         }
@@ -358,13 +332,13 @@ private fun RowSetting(
             Text(
                 title,
                 style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Medium),
-                color = if (enabled) ElachiTextPrimary else ElachiTextSecondary,
+                color = if (enabled) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurfaceVariant,
             )
             if (subtitle != null) {
                 Text(
                     subtitle,
                     style = MaterialTheme.typography.bodySmall,
-                    color = ElachiTextSecondary,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
         }
@@ -374,7 +348,7 @@ private fun RowSetting(
             Icon(
                 Icons.Filled.ChevronRight,
                 contentDescription = null,
-                tint = ElachiTextSecondary,
+                tint = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.size(20.dp),
             )
         }
@@ -386,12 +360,15 @@ private fun ConfirmDialog(
     title: String,
     message: String,
     confirmLabel: String,
-    confirmColor: Color = ElachiGreen,
+    confirmColor: Color = MaterialTheme.colorScheme.primary,
     onConfirm: () -> Unit,
     onDismiss: () -> Unit,
 ) {
     AlertDialog(
         onDismissRequest = onDismiss,
+        containerColor = MaterialTheme.colorScheme.surface,
+        titleContentColor = MaterialTheme.colorScheme.onSurface,
+        textContentColor = MaterialTheme.colorScheme.onSurfaceVariant,
         title = { Text(title, fontWeight = FontWeight.Bold) },
         text = { Text(message) },
         confirmButton = {
@@ -401,7 +378,7 @@ private fun ConfirmDialog(
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text("Cancel", color = ElachiTextSecondary)
+                Text("Cancel", color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
         },
     )

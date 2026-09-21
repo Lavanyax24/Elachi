@@ -44,9 +44,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.elachi.app.ui.theme.ElachiGreen
-import com.elachi.app.ui.theme.ElachiTextPrimary
-import com.elachi.app.ui.theme.ElachiTextSecondary
+import androidx.compose.ui.graphics.Brush
 
 private data class DrawerItem(val label: String, val icon: ImageVector, val route: String)
 
@@ -74,52 +72,78 @@ fun AppDrawerContent(
     currentRoute: String?,
     userDisplayName: String,
     userEmail: String,
+    userAvatarUrl: String? = null,
     onNavigate: (String) -> Unit,
     onLogout: () -> Unit,
 ) {
     ModalDrawerSheet(
-        drawerContainerColor = Color(0xFFFCF9F4),
+        drawerContainerColor = MaterialTheme.colorScheme.background,
         drawerTonalElevation = 0.dp,
     ) {
         Column(modifier = Modifier.fillMaxSize()) {
-            Box(modifier = Modifier.fillMaxWidth().padding(24.dp)) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(
+                        Brush.verticalGradient(
+                            colors = listOf(
+                                MaterialTheme.colorScheme.primary,
+                                MaterialTheme.colorScheme.primary.copy(alpha = 0.8f)
+                            )
+                        )
+                    )
+                    .padding(24.dp)
+            ) {
                 Column {
                     Box(
                         modifier = Modifier.size(64.dp).clip(CircleShape)
-                            .background(ElachiGreen.copy(alpha = 0.1f))
-                            .border(1.dp, ElachiGreen.copy(alpha = 0.2f), CircleShape),
+                            .background(Color.White.copy(alpha = 0.2f))
+                            .border(1.5.dp, Color.White.copy(alpha = 0.6f), CircleShape),
                         contentAlignment = Alignment.Center,
                     ) {
-                        Text("\uD83D\uDC64", fontSize = 32.sp)
+                        if (!userAvatarUrl.isNullOrBlank()) {
+                            coil.compose.AsyncImage(
+                                model = userAvatarUrl,
+                                contentDescription = "Avatar",
+                                contentScale = androidx.compose.ui.layout.ContentScale.Crop,
+                                modifier = Modifier.fillMaxSize(),
+                            )
+                        } else {
+                            Text("\uD83D\uDC64", fontSize = 32.sp)
+                        }
                     }
                     Spacer(modifier = Modifier.height(12.dp))
                     Text(
                         userDisplayName.ifBlank { "Chef" },
                         style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
-                        color = ElachiTextPrimary,
+                        color = Color.White,
                     )
-                    Text(userEmail, style = MaterialTheme.typography.bodyMedium, color = ElachiTextSecondary)
+                    Text(
+                        userEmail,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = Color.White.copy(alpha = 0.8f),
+                    )
                 }
             }
 
-            HorizontalDivider(modifier = Modifier.padding(horizontal = 24.dp), color = Color(0xFFE5E2DD))
+            HorizontalDivider(modifier = Modifier.padding(horizontal = 24.dp), color = MaterialTheme.colorScheme.outline)
             Spacer(modifier = Modifier.height(8.dp))
 
             Column(modifier = Modifier.weight(1f).verticalScroll(rememberScrollState())) {
                 mainItems.forEach { DrawerRow(it, currentRoute, onNavigate) }
                 HorizontalDivider(
                     modifier = Modifier.padding(horizontal = 24.dp, vertical = 8.dp),
-                    color = Color(0xFFE5E2DD).copy(alpha = 0.5f),
+                    color = MaterialTheme.colorScheme.outline,
                 )
                 extraItems.forEach { DrawerRow(it, currentRoute, onNavigate) }
                 HorizontalDivider(
                     modifier = Modifier.padding(horizontal = 24.dp, vertical = 8.dp),
-                    color = Color(0xFFE5E2DD).copy(alpha = 0.5f),
+                    color = MaterialTheme.colorScheme.outline,
                 )
                 systemItems.forEach { DrawerRow(it, currentRoute, onNavigate) }
             }
 
-            HorizontalDivider(modifier = Modifier.padding(horizontal = 24.dp), color = Color(0xFFE5E2DD))
+            HorizontalDivider(modifier = Modifier.padding(horizontal = 24.dp), color = MaterialTheme.colorScheme.outline)
             Surface(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -136,13 +160,13 @@ fun AppDrawerContent(
                         Icons.AutoMirrored.Filled.Logout,
                         contentDescription = "Logout",
                         modifier = Modifier.size(22.dp),
-                        tint = Color(0xFFBA1A1A),
+                        tint = MaterialTheme.colorScheme.error,
                     )
                     Spacer(modifier = Modifier.width(16.dp))
                     Text(
                         "Logout",
                         style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Medium),
-                        color = Color(0xFFBA1A1A),
+                        color = MaterialTheme.colorScheme.error,
                     )
                 }
             }
@@ -154,8 +178,8 @@ fun AppDrawerContent(
 @Composable
 private fun DrawerRow(item: DrawerItem, currentRoute: String?, onNavigate: (String) -> Unit) {
     val isSelected = item.route == currentRoute
-    val contentColor = if (isSelected) ElachiGreen else ElachiTextPrimary
-    val backgroundColor = if (isSelected) ElachiGreen.copy(alpha = 0.1f) else Color.Transparent
+    val contentColor = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
+    val backgroundColor = if (isSelected) MaterialTheme.colorScheme.primary.copy(alpha = 0.1f) else Color.Transparent
 
     Surface(
         modifier = Modifier

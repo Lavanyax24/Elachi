@@ -52,7 +52,20 @@ class AuthViewModel(private val authRepository: AuthRepository) : ViewModel() {
         viewModelScope.launch {
             when (val result = authRepository.signInWithEmail(email, password)) {
                 is AuthResult.Success -> _uiState.value = AuthUiState.Success(result.isNewUser)
-                is AuthResult.Error -> _uiState.value = AuthUiState.Error(result.message)
+                is AuthResult.Error -> {
+                    val customMessage = if (result.message.contains("password", ignoreCase = true) ||
+                        result.message.contains("email", ignoreCase = true) ||
+                        result.message.contains("invalid", ignoreCase = true) ||
+                        result.message.contains("credential", ignoreCase = true) ||
+                        result.message.contains("incorrect", ignoreCase = true) ||
+                        result.message.contains("user-not-found", ignoreCase = true) ||
+                        result.message.contains("wrong-password", ignoreCase = true)) {
+                        "Incorrect email or password"
+                    } else {
+                        result.message
+                    }
+                    _uiState.value = AuthUiState.Error(customMessage)
+                }
             }
         }
     }

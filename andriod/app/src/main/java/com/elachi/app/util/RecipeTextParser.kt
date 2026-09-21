@@ -17,7 +17,6 @@ data class ParsedRecipe(
     val cookTimeMinutes: String = "",
 )
 
-/** Converts ML Kit OCR text into fields used by AddRecipeScreen. */
 object RecipeTextParser {
 
     private const val QUANTITY_PATTERN =
@@ -68,8 +67,6 @@ object RecipeTextParser {
     )
     private val listMarkerRegex = Regex("^\\s*(?:[-•*‣▪◦]|\\d+[.)])\\s+")
     private val standaloneStepNumberRegex = Regex("^\\s*\\d+[.)]?\\s*$")
-    // Require a marker for inline numbers so an instruction such as
-    // "180 C for 20 minutes" is not mistaken for step 180.
     private val numberedStepRegex = Regex("^\\s*\\d+[.)]\\s*(.+)$")
     private val bulletStepRegex = Regex("^\\s*[-•*‣▪◦]\\s+(.+)$")
 
@@ -163,8 +160,6 @@ object RecipeTextParser {
                 return@forEachIndexed
             }
 
-            // Preserve step markers here. normalizeSteps() needs them to tell
-            // where one OCR paragraph ends and the next numbered step begins.
             val cleanedLine = if (mode == Mode.STEPS) {
                 line.trim()
             } else {
@@ -206,7 +201,6 @@ object RecipeTextParser {
         )
     }
 
-    /** Returns a value that exactly matches the unit dropdown. */
     fun normalizeUnit(rawUnit: String): String {
         val unit = rawUnit
             .trim()
@@ -243,7 +237,6 @@ object RecipeTextParser {
         }
     }
 
-    /** Maps OCR/backend wording to one of the method dropdown values. */
     fun normalizeMethod(rawMethod: String): String {
         val value = rawMethod.lowercase(Locale.ROOT)
 
@@ -262,18 +255,6 @@ object RecipeTextParser {
         }
     }
 
-    /**
-     * Removes OCR step numbers and joins wrapped lines into their correct step.
-     *
-     * Example input:
-     * 1
-     * Gather all ingredients.
-     * 2
-     * Sift flour, baking powder,
-     * sugar and salt together.
-     *
-     * becomes two complete steps without the standalone 1 and 2 values.
-     */
     fun normalizeSteps(
         rawSteps: List<String>,
         mergeUnnumberedParagraph: Boolean = false,
@@ -313,7 +294,6 @@ object RecipeTextParser {
         lines.forEach { line ->
             when {
                 standaloneStepNumberRegex.matches(line) -> {
-                    // A standalone number is a boundary, not instruction text.
                     finishCurrentStep()
                 }
 
@@ -344,7 +324,6 @@ object RecipeTextParser {
                 }
 
                 else -> {
-                    // This is another visual line belonging to the same step.
                     currentStepLines += line
                 }
             }

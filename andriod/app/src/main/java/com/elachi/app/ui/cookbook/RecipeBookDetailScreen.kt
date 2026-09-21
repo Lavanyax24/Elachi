@@ -67,6 +67,7 @@ fun RecipeBookDetailScreen(
                 Icon(Icons.Filled.Add, contentDescription = "Add recipe")
             }
         },
+        containerColor = MaterialTheme.colorScheme.background
     ) { padding ->
         when {
             book == null -> {
@@ -90,8 +91,8 @@ fun RecipeBookDetailScreen(
                         modifier = Modifier.size(52.dp),
                     )
                     Spacer(Modifier.height(12.dp))
-                    Text("No recipes in this book yet", style = MaterialTheme.typography.titleMedium)
-                    Text("Tap + to add your first recipe.")
+                    Text("No recipes in this book yet", style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onSurface)
+                    Text("Tap + to add your first recipe.", color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
             }
 
@@ -100,7 +101,7 @@ fun RecipeBookDetailScreen(
                     modifier = Modifier
                         .padding(padding)
                         .fillMaxSize()
-                        .background(ElachiCream),
+                        .background(MaterialTheme.colorScheme.background),
                 ) {
                     book?.description
                         ?.takeIf { it.isNotBlank() }
@@ -108,6 +109,7 @@ fun RecipeBookDetailScreen(
                             Text(
                                 text = description,
                                 style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurface,
                                 modifier = Modifier.padding(
                                     start = 16.dp,
                                     end = 16.dp,

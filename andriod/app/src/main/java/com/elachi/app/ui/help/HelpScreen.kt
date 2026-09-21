@@ -22,12 +22,7 @@ import androidx.compose.material.icons.filled.ExpandLess
 import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.PrivacyTip
-import androidx.compose.material3.Divider
-import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
+import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -41,57 +36,16 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.elachi.app.ui.common.ElachiTopBar
-import com.elachi.app.ui.theme.ElachiCream
-import com.elachi.app.ui.theme.ElachiGreen
-import com.elachi.app.ui.theme.ElachiTextPrimary
-import com.elachi.app.ui.theme.ElachiTextSecondary
 
 private data class Faq(val question: String, val answer: String)
 
 private val FAQS = listOf(
-    Faq(
-        "How do I add a recipe?",
-        "From My Cookbook, tap the + button, then choose Manual, Camera, or " +
-                "Screenshot. Camera and Screenshot use on-device text recognition " +
-                "plus an AI service to fill in the recipe form automatically, which " +
-                "you can review and edit before saving.",
-    ),
-    Faq(
-        "How does the OCR import work?",
-        "When you photograph a recipe card or import a screenshot, the app " +
-                "reads the text on-device, then sends it to a cooking-specific AI " +
-                "service that organises it into a title, ingredients, steps, method, " +
-                "servings, and cook time. You always get to review and edit before " +
-                "saving.",
-    ),
-    Faq(
-        "How do I use the serving scaler?",
-        "On Recipe Detail, use the plus and minus buttons next to Servings, " +
-                "and every ingredient quantity recalculates automatically. Perfect " +
-                "for cooking for a different number of people than the recipe was " +
-                "written for.",
-    ),
-    Faq(
-        "What are streaks and achievements?",
-        "Every time you finish Cook Mode for a recipe, it counts toward your " +
-                "daily cooking streak and toward achievement badges. Check the " +
-                "Streak Calendar to see which days you've cooked on and track your " +
-                "progress over time.",
-    ),
-    Faq(
-        "What can the AI Chef Assistant do?",
-        "Ask it anything cooking-related - substitutions, recipe ideas from " +
-                "leftovers, nutritional information, or general cooking tips. It " +
-                "also knows what's in your pantry and can suggest meals based on " +
-                "what you already have at home.",
-    ),
-    Faq(
-        "How does the pantry match work?",
-        "The app compares each of your recipes against what you've added to " +
-                "your pantry. Recipes where you already have most of the " +
-                "ingredients are shown as suggestions on the Home screen, so you " +
-                "can decide what to cook based on what's in your kitchen.",
-    ),
+    Faq("How do I add a recipe?", "From My Cookbook, tap the + button, then choose Manual, Camera, or Screenshot. Camera and Screenshot use on-device text recognition plus an AI service to fill in the recipe form automatically."),
+    Faq("How does the OCR import work?", "When you photograph a recipe card, the app reads the text on-device, then sends it to a cooking-specific AI service that organises it into a recipe format for you to review."),
+    Faq("How do I use the serving scaler?", "On Recipe Detail, use the plus and minus buttons next to Servings, and every ingredient quantity recalculates automatically."),
+    Faq("What are streaks and achievements?", "Every time you finish Cook Mode, it counts toward your daily cooking streak and achievement badges. Track your progress in the Streak Calendar."),
+    Faq("What can the AI Chef Assistant do?", "Ask it anything cooking-related - substitutions, leftovers ideas, or general tips. It also knows what's in your pantry!"),
+    Faq("How does the pantry match work?", "The app compares your recipes against your pantry. High matches are shown as suggestions on the Home screen.")
 )
 
 @Composable
@@ -103,127 +57,70 @@ fun HelpScreen(
 ) {
     Scaffold(
         topBar = { ElachiTopBar(title = "Help & Support", onBackClick = onBack) },
-        containerColor = ElachiCream,
+        containerColor = MaterialTheme.colorScheme.background,
     ) { padding ->
         Column(
-            modifier = Modifier
-                .padding(padding)
-                .fillMaxSize()
-                .verticalScroll(rememberScrollState())
-                .padding(horizontal = 16.dp, vertical = 12.dp),
+            modifier = Modifier.padding(padding).fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = 16.dp, vertical = 12.dp),
         ) {
-            // ---------- Getting Started CTA ----------
             Surface(
-                color = ElachiGreen,
+                color = MaterialTheme.colorScheme.primary,
                 shape = RoundedCornerShape(16.dp),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clickable(onClick = onOpenGettingStarted),
+                modifier = Modifier.fillMaxWidth().clickable(onClick = onOpenGettingStarted),
             ) {
-                Row(
-                    modifier = Modifier.padding(16.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    Icon(
-                        Icons.Filled.AutoStories,
-                        contentDescription = null,
-                        tint = Color.White,
-                        modifier = Modifier.size(32.dp),
-                    )
+                Row(modifier = Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
+                    Icon(Icons.Filled.AutoStories, contentDescription = null, tint = Color.White, modifier = Modifier.size(32.dp))
                     Spacer(Modifier.width(12.dp))
                     Column(modifier = Modifier.weight(1f)) {
-                        Text(
-                            "Getting Started",
-                            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-                            color = Color.White,
-                        )
-                        Text(
-                            "Revisit the Elachi introduction slides",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = Color.White.copy(alpha = 0.8f),
-                        )
+                        Text("Getting Started", style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold), color = Color.White)
+                        Text("Revisit the Elachi introduction slides", style = MaterialTheme.typography.bodySmall, color = Color.White.copy(alpha = 0.8f))
                     }
-                    Icon(
-                        Icons.Filled.ChevronRight,
-                        contentDescription = null,
-                        tint = Color.White,
-                        modifier = Modifier.size(24.dp),
-                    )
+                    Icon(Icons.Filled.ChevronRight, contentDescription = null, tint = Color.White, modifier = Modifier.size(24.dp))
                 }
             }
-
             Spacer(Modifier.height(20.dp))
-
-            // ---------- FAQs ----------
             SectionHeader("Frequently Asked Questions")
             Surface(
-                color = Color.White,
+                color = MaterialTheme.colorScheme.surface,
                 shape = RoundedCornerShape(14.dp),
-                border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFE5E2DD)),
+                border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.1f)),
                 modifier = Modifier.fillMaxWidth(),
             ) {
                 Column {
                     FAQS.forEachIndexed { index, faq ->
                         FaqRow(faq)
                         if (index < FAQS.lastIndex) {
-                            Divider(
-                                color = Color(0xFFE5E2DD),
-                                modifier = Modifier.padding(horizontal = 16.dp),
-                            )
+                            HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.1f), modifier = Modifier.padding(horizontal = 16.dp))
                         }
                     }
                 }
             }
-
             Spacer(Modifier.height(20.dp))
-
-            // ---------- About ----------
             SectionHeader("About")
             Surface(
-                color = Color.White,
+                color = MaterialTheme.colorScheme.surface,
                 shape = RoundedCornerShape(14.dp),
-                border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFE5E2DD)),
+                border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.1f)),
                 modifier = Modifier.fillMaxWidth(),
             ) {
                 Column {
-                    IconRow(
-                        icon = Icons.Filled.Info,
-                        title = "App Version",
-                        subtitle = "v1.0.0-part2",
-                        onClick = null,
-                    )
-                    Divider(color = Color(0xFFE5E2DD), modifier = Modifier.padding(start = 56.dp))
-                    IconRow(
-                        icon = Icons.Filled.PrivacyTip,
-                        title = "Privacy Policy",
-                        onClick = onNavigateToPrivacyPolicy,
-                    )
-                    Divider(color = Color(0xFFE5E2DD), modifier = Modifier.padding(start = 56.dp))
-                    IconRow(
-                        icon = Icons.Filled.Description,
-                        title = "Terms of Service",
-                        onClick = onNavigateToTerms,
-                    )
+                    IconRow(icon = Icons.Filled.Info, title = "App Version", subtitle = "v1.0.0-part2", onClick = null)
+                    HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.1f), modifier = Modifier.padding(start = 56.dp))
+                    IconRow(icon = Icons.Filled.PrivacyTip, title = "Privacy Policy", onClick = onNavigateToPrivacyPolicy)
+                    HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.1f), modifier = Modifier.padding(start = 56.dp))
+                    IconRow(icon = Icons.Filled.Description, title = "Terms of Service", onClick = onNavigateToTerms)
                 }
             }
-
             Spacer(Modifier.height(32.dp))
         }
     }
 }
 
-// ---------- Building blocks ----------
-
 @Composable
 private fun SectionHeader(text: String) {
     Text(
         text = text.uppercase(),
-        style = MaterialTheme.typography.labelSmall.copy(
-            fontWeight = FontWeight.Bold,
-            letterSpacing = 1.sp,
-            fontSize = 11.sp,
-        ),
-        color = ElachiTextSecondary,
+        style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold, letterSpacing = 1.sp, fontSize = 11.sp),
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
         modifier = Modifier.padding(start = 4.dp, bottom = 8.dp),
     )
 }
@@ -231,84 +128,34 @@ private fun SectionHeader(text: String) {
 @Composable
 private fun FaqRow(faq: Faq) {
     var expanded by remember { mutableStateOf(false) }
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable { expanded = !expanded }
-            .padding(16.dp),
-    ) {
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.fillMaxWidth(),
-        ) {
-            Text(
-                faq.question,
-                style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold),
-                color = ElachiTextPrimary,
-                modifier = Modifier.weight(1f),
-            )
-            Icon(
-                if (expanded) Icons.Filled.ExpandLess else Icons.Filled.ExpandMore,
-                contentDescription = null,
-                tint = ElachiTextSecondary,
-                modifier = Modifier.size(20.dp),
-            )
+    Column(modifier = Modifier.fillMaxWidth().clickable { expanded = !expanded }.padding(16.dp)) {
+        Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
+            Text(faq.question, style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold), color = MaterialTheme.colorScheme.onSurface, modifier = Modifier.weight(1f))
+            Icon(if (expanded) Icons.Filled.ExpandLess else Icons.Filled.ExpandMore, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(20.dp))
         }
         if (expanded) {
             Spacer(Modifier.height(8.dp))
-            Text(
-                faq.answer,
-                style = MaterialTheme.typography.bodyMedium,
-                color = ElachiTextSecondary,
-                lineHeight = 21.sp,
-            )
+            Text(faq.answer, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, lineHeight = 21.sp)
         }
     }
 }
 
 @Composable
-private fun IconRow(
-    icon: ImageVector,
-    title: String,
-    subtitle: String? = null,
-    onClick: (() -> Unit)?,
-) {
-    val modifier = Modifier
-        .fillMaxWidth()
-        .then(if (onClick != null) Modifier.clickable(onClick = onClick) else Modifier)
-
-    Row(
-        modifier = modifier.padding(horizontal = 16.dp, vertical = 14.dp),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        Box(
-            modifier = Modifier.size(32.dp),
-            contentAlignment = Alignment.Center,
-        ) {
-            Icon(icon, contentDescription = null, tint = ElachiGreen, modifier = Modifier.size(20.dp))
+private fun IconRow(icon: ImageVector, title: String, subtitle: String? = null, onClick: (() -> Unit)?) {
+    val modifier = Modifier.fillMaxWidth().then(if (onClick != null) Modifier.clickable(onClick = onClick) else Modifier)
+    Row(modifier = modifier.padding(horizontal = 16.dp, vertical = 14.dp), verticalAlignment = Alignment.CenterVertically) {
+        Box(modifier = Modifier.size(32.dp), contentAlignment = Alignment.Center) {
+            Icon(icon, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(20.dp))
         }
         Spacer(Modifier.width(12.dp))
         Column(modifier = Modifier.weight(1f)) {
-            Text(
-                title,
-                style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Medium),
-                color = ElachiTextPrimary,
-            )
+            Text(title, style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Medium), color = MaterialTheme.colorScheme.onSurface)
             if (subtitle != null) {
-                Text(
-                    subtitle,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = ElachiTextSecondary,
-                )
+                Text(subtitle, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
         }
         if (onClick != null) {
-            Icon(
-                Icons.Filled.ChevronRight,
-                contentDescription = null,
-                tint = ElachiTextSecondary,
-                modifier = Modifier.size(20.dp),
-            )
+            Icon(Icons.Filled.ChevronRight, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(20.dp))
         }
     }
 }

@@ -176,7 +176,7 @@ class RecipeRepository(
             )
         }
 
-        recipeDao.replaceRecipeDetails(
+        recipeDao.upsertRecipeWithDetails(
             recipe = updatedRecipe,
             ingredients = updatedIngredients,
             steps = updatedSteps,
@@ -218,16 +218,61 @@ class RecipeRepository(
         }
     }
 
-    suspend fun toggleFavourite(id: String, favourite: Boolean) = recipeDao.setFavourite(id, favourite)
     suspend fun markCooked(id: String) = recipeDao.incrementTimesCooked(id)
 
-    suspend fun updateBook(bookId: String, userId: String, name: String, description: String?, icon: String, colour: String, coverImageUrl: String?) {
+    suspend fun toggleFavourite(id: String, favourite: Boolean) = recipeDao.setFavourite(id, favourite)
+
+    suspend fun updateRecipeVisibility(recipeId: String, isPrivate: Boolean) {
+        recipeDao.setPrivate(recipeId, isPrivate)
+        try {
+            val response = api.patchRecipe(recipeId, com.elachi.app.data.remote.dto.UpdateRecipeRequest(isPrivate = isPrivate))
+            if (response.isSuccessful && response.body() != null) {
+                upsertRecipeFromServer(UserSession.requireUserId(), response.body()!!)
+            } else {
+                Log.e("RecipeRepository", "updateRecipeVisibility failed: HTTP ${response.code()} — ${response.errorBody()?.string()}")
+            }
+        } catch (e: Exception) {
+            Log.e("RecipeRepository", "updateRecipeVisibility threw", e)
+        }
+    }
+
+    suspend fun updateBook(bookId: String, name: String, description: String?, icon: String, colour: String, coverImageUrl: String?) {
         val existing = bookDao.getBook(bookId) ?: return
         bookDao.upsert(existing.copy(name = name, description = description, icon = icon, colour = colour, coverImageUrl = coverImageUrl))
         try {
             api.updateBook(bookId, CreateRecipeBookRequest(name = name, description = description, coverImageUrl = coverImageUrl, icon = icon, colour = colour))
-        } catch (e: Exception) {
+        } catch (_: Exception) {}
+    }
 
+    suspend fun retryPendingSyncs() {
+        val pending = recipeDao.getPendingRecipes()
+        pending.forEach { recipe ->
+            try {
+                val ingredients = recipeDao.getIngredientsOnce(recipe.id)
+                val steps = recipeDao.getStepsOnce(recipe.id)
+                
+                api.updateRecipe(
+                    recipe.id,
+                    CreateRecipeRequest(
+                        id = recipe.id,
+                        bookId = recipe.bookId,
+                        title = recipe.title,
+                        category = recipe.category,
+                        cuisine = recipe.cuisine,
+                        foodType = recipe.foodType,
+                        difficulty = recipe.difficulty,
+                        servings = recipe.servings,
+                        cookTimeMinutes = recipe.cookTimeMinutes,
+                        method = recipe.method,
+                        ingredients = ingredients.map { IngredientDto(it.name, it.quantity, it.unit) },
+                        steps = steps.map { StepDto(it.order, it.instruction) },
+                        allergens = recipe.allergensCsv.split(",").filter { it.isNotBlank() },
+                        isPrivate = recipe.isPrivate,
+                        imageUrl = recipe.imageUrl,
+                    ),
+                )
+                recipeDao.upsertRecipe(recipe.copy(pendingSync = false))
+            } catch (_: Exception) {}
         }
     }
 
@@ -251,48 +296,45 @@ class RecipeRepository(
                 },
             )
         } catch (e: Exception) {
-            // Same note as updateBook above.
         }
     }
 
     suspend fun parseRecipeTextViaAi(rawText: String): Result<com.elachi.app.data.remote.dto.ParsedRecipeAiDto> = try {
         val response = api.parseRecipeText(com.elachi.app.data.remote.dto.ParseRecipeTextRequest(rawText))
-        if (response.isSuccessful && response.body() != null) {
+        if (response.isSuccessful && (response.body() != null)) {
             Result.success(response.body()!!)
         } else {
             Result.failure(Exception("AI recipe parsing failed (HTTP ${response.code()})."))
         }
-    } catch (e: Exception) {
+    } catch (_: Exception) {
         Result.failure(Exception("Couldn't reach the AI recipe parser."))
     }
 
     suspend fun upsertRecipeFromServer(ownerId: String, dto: com.elachi.app.data.remote.dto.RecipeDto) {
         val now = System.currentTimeMillis()
-
         val existing = recipeDao.getRecipe(dto.id)
-        recipeDao.clearIngredients(dto.id)
-        recipeDao.clearSteps(dto.id)
+        if (existing?.pendingSync == true) return
 
-        recipeDao.upsertRecipe(
-            RecipeEntity(
-                id = dto.id, ownerId = ownerId, bookId = dto.bookId, title = dto.title,
-                category = dto.category, cuisine = dto.cuisine, foodType = dto.foodType,
-                difficulty = dto.difficulty, servings = dto.servings, cookTimeMinutes = dto.cookTimeMinutes,
-                method = dto.method, allergensCsv = dto.allergens.joinToString(","),
-                isPrivate = dto.isPrivate, forkedFromRecipeId = dto.forkedFromRecipeId,
-                timesCooked = dto.timesCooked, imageUrl = dto.imageUrl, createdAt = now, updatedAt = now,
-            ),
+        val recipe = RecipeEntity(
+            id = dto.id, ownerId = ownerId, bookId = dto.bookId, title = dto.title,
+            category = dto.category, cuisine = dto.cuisine, foodType = dto.foodType,
+            difficulty = dto.difficulty, servings = dto.servings, cookTimeMinutes = dto.cookTimeMinutes,
+            method = dto.method, allergensCsv = dto.allergens.joinToString(","),
+            isPrivate = dto.isPrivate, isFavourite = existing?.isFavourite ?: false,
+            forkedFromRecipeId = dto.forkedFromRecipeId, forkCount = existing?.forkCount ?: 0,
+            timesCooked = dto.timesCooked, imageUrl = dto.imageUrl, 
+            createdAt = existing?.createdAt ?: now, updatedAt = now, pendingSync = false
         )
-        recipeDao.upsertIngredients(
-            dto.ingredients.mapIndexed { index, ing ->
-                IngredientEntity(id = UUID.randomUUID().toString(), recipeId = dto.id, name = ing.name, quantity = ing.quantity, unit = ing.unit, sortOrder = index)
-            },
-        )
-        recipeDao.upsertSteps(
-            dto.steps.map { step ->
-                StepEntity(id = UUID.randomUUID().toString(), recipeId = dto.id, order = step.order, instruction = step.instruction, timerSeconds = step.timerSeconds)
-            },
-        )
+
+        val ingredients = dto.ingredients.mapIndexed { index, ing ->
+            IngredientEntity(id = UUID.randomUUID().toString(), recipeId = dto.id, name = ing.name, quantity = ing.quantity, unit = ing.unit, sortOrder = index)
+        }
+
+        val steps = dto.steps.map { step ->
+            StepEntity(id = UUID.randomUUID().toString(), recipeId = dto.id, order = step.order, instruction = step.instruction, timerSeconds = step.timerSeconds)
+        }
+
+        recipeDao.upsertRecipeWithDetails(recipe, ingredients, steps)
     }
 
     suspend fun refreshRecipesFromNetwork(userId: String) {
@@ -303,128 +345,8 @@ class RecipeRepository(
                 return
             }
             response.body().orEmpty().forEach { upsertRecipeFromServer(userId, it) }
-        } catch (e: Exception) {
-            Log.e("RecipeRepository", "refreshRecipesFromNetwork failed", e)
-        }
-    }
-
-    suspend fun syncRecipeToBackend(
-        recipeId: String,
-        currentUserId: String,
-    ): Result<Unit> {
-        return try {
-            val recipe = recipeDao.getRecipe(recipeId)
-                ?: return Result.failure(
-                    IllegalStateException("Recipe was not found on this device."),
-                )
-
-            if (recipe.ownerId != currentUserId) {
-                return Result.failure(
-                    IllegalStateException("This recipe belongs to another user."),
-                )
-            }
-
-            // Check whether the recipe already exists on the backend.
-            val existingRecipeResponse = api.getRecipe(recipeId)
-
-            if (existingRecipeResponse.isSuccessful) {
-                return Result.success(Unit)
-            }
-
-            if (existingRecipeResponse.code() != 404) {
-                return Result.failure(
-                    IllegalStateException(
-                        "Could not check recipe synchronization. " +
-                                "HTTP ${existingRecipeResponse.code()}",
-                    ),
-                )
-            }
-
-            val book = bookDao.getBook(recipe.bookId)
-                ?: return Result.failure(
-                    IllegalStateException("The recipe book was not found."),
-                )
-
-            /*
-             * Make sure the book exists remotely before creating its recipe.
-             * HTTP 409 means that it already exists, which is acceptable.
-             */
-            val bookResponse = api.createBook(
-                CreateRecipeBookRequest(
-                    id = book.id,
-                    name = book.name,
-                    description = book.description,
-                    coverImageUrl = book.coverImageUrl,
-                    icon = book.icon,
-                    colour = book.colour,
-                ),
-            )
-
-            if (!bookResponse.isSuccessful && bookResponse.code() != 409) {
-                return Result.failure(
-                    IllegalStateException(
-                        "The recipe book could not be synchronized. " +
-                                "HTTP ${bookResponse.code()}",
-                    ),
-                )
-            }
-
-            val ingredients = recipeDao.getIngredientsOnce(recipeId)
-            val steps = recipeDao.getStepsOnce(recipeId)
-
-            val recipeResponse = api.createRecipe(
-                CreateRecipeRequest(
-                    id = recipe.id,
-                    bookId = recipe.bookId,
-                    title = recipe.title,
-                    category = recipe.category,
-                    cuisine = recipe.cuisine,
-                    foodType = recipe.foodType,
-                    difficulty = recipe.difficulty,
-                    servings = recipe.servings,
-                    cookTimeMinutes = recipe.cookTimeMinutes,
-                    method = recipe.method,
-                    ingredients = ingredients.map { ingredient ->
-                        IngredientDto(
-                            name = ingredient.name,
-                            quantity = ingredient.quantity,
-                            unit = ingredient.unit,
-                        )
-                    },
-                    steps = steps.map { step ->
-                        StepDto(
-                            order = step.order,
-                            instruction = step.instruction,
-                            timerSeconds = step.timerSeconds,
-                        )
-                    },
-                    allergens = recipe.allergensCsv
-                        .split(",")
-                        .map { it.trim() }
-                        .filter { it.isNotBlank() },
-                    isPrivate = recipe.isPrivate,
-                    imageUrl = recipe.imageUrl,
-                ),
-            )
-
-            if (recipeResponse.isSuccessful || recipeResponse.code() == 409) {
-                Result.success(Unit)
-            } else {
-                Result.failure(
-                    IllegalStateException(
-                        "The recipe could not be synchronized. " +
-                                "HTTP ${recipeResponse.code()}",
-                    ),
-                )
-            }
-        } catch (exception: Exception) {
-            Log.e(
-                "RecipeRepository",
-                "syncRecipeToBackend failed",
-                exception,
-            )
-
-            Result.failure(exception)
+        } catch (_: Exception) {
+            Log.e("RecipeRepository", "refreshRecipesFromNetwork failed")
         }
     }
 }

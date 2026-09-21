@@ -25,7 +25,6 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
@@ -49,7 +48,6 @@ fun SignUpScreen(
     var password by remember { mutableStateOf("") }
     var showPw by remember { mutableStateOf(false) }
     val uiState by viewModel.uiState.collectAsState()
-
 
     val googleSignInClient = remember {
         val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
@@ -92,7 +90,7 @@ fun SignUpScreen(
                 brush = Brush.verticalGradient(
                     0.0367f to Color(0xFF3D2E13),
                     0.4073f to Color(0xFF5A3A10),
-                    0.9633f to Color(0xFFF0EDE9),
+                    0.9633f to MaterialTheme.colorScheme.background,
                 ),
             ),
     ) {
@@ -139,19 +137,19 @@ fun SignUpScreen(
             Surface(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp),
-                color = Color.White,
+                color = MaterialTheme.colorScheme.surface,
                 shadowElevation = 40.dp,
             ) {
                 Column(modifier = Modifier.padding(horizontal = 24.dp, vertical = 28.dp)) {
                     Text(
                         text = "Create Account",
                         style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold),
-                        color = Color(0xFF1C1C19),
+                        color = MaterialTheme.colorScheme.onSurface,
                     )
                     Text(
                         text = "Sign up to start your culinary journey",
                         style = MaterialTheme.typography.bodyMedium,
-                        color = Color(0xFF75786D),
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
 
                     Spacer(modifier = Modifier.height(20.dp))
@@ -160,78 +158,101 @@ fun SignUpScreen(
                         onClick = { launcher.launch(googleSignInClient.signInIntent) },
                         modifier = Modifier.fillMaxWidth().height(50.dp),
                         shape = RoundedCornerShape(12.dp),
-                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFF6F3EE)),
-                        border = BorderStroke(1.dp, Color(0xFFE5E2DD)),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = MaterialTheme.colorScheme.surfaceVariant,
+                            contentColor = MaterialTheme.colorScheme.onSurfaceVariant
+                        ),
+                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline),
                     ) {
                         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.Center) {
                             Text("G", fontWeight = FontWeight.Bold, color = Color(0xFF4285F4))
                             Spacer(modifier = Modifier.width(10.dp))
-                            Text("Sign up with Google", color = Color(0xFF1C1C19), fontWeight = FontWeight.SemiBold)
+                            Text("Sign up with Google", color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.SemiBold)
                         }
                     }
 
                     Spacer(modifier = Modifier.height(16.dp))
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        HorizontalDivider(modifier = Modifier.weight(1f), color = Color(0xFFE5E2DD))
-                        Text("OR", modifier = Modifier.padding(horizontal = 12.dp), style = MaterialTheme.typography.labelSmall.copy(letterSpacing = 0.88.sp), color = Color(0xFF75786D))
-                        HorizontalDivider(modifier = Modifier.weight(1f), color = Color(0xFFE5E2DD))
+                        HorizontalDivider(modifier = Modifier.weight(1f), color = MaterialTheme.colorScheme.outline)
+                        Text("OR", modifier = Modifier.padding(horizontal = 12.dp), style = MaterialTheme.typography.labelSmall.copy(letterSpacing = 0.88.sp), color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        HorizontalDivider(modifier = Modifier.weight(1f), color = MaterialTheme.colorScheme.outline)
                     }
                     Spacer(modifier = Modifier.height(16.dp))
 
                     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         Column(modifier = Modifier.weight(1f)) {
-                            Text("First Name", style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold), color = Color(0xFF425529), modifier = Modifier.padding(bottom = 6.dp))
+                            Text("First Name", style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold), color = MaterialTheme.colorScheme.primary, modifier = Modifier.padding(bottom = 6.dp))
                             OutlinedTextField(
                                 value = firstNameValue,
                                 onValueChange = { firstNameValue = it },
                                 modifier = Modifier.fillMaxWidth(),
                                 placeholder = { Text("Chef") },
-                                leadingIcon = { Icon(Icons.Default.Person, contentDescription = null, tint = Color(0xFF75786D)) },
+                                leadingIcon = { Icon(Icons.Default.Person, contentDescription = null) },
                                 shape = RoundedCornerShape(12.dp),
-                                colors = OutlinedTextFieldDefaults.colors(unfocusedBorderColor = Color(0xFFC5C8BA), focusedBorderColor = Color(0xFF425529)),
+                                colors = OutlinedTextFieldDefaults.colors(
+                                    unfocusedBorderColor = MaterialTheme.colorScheme.outline, 
+                                    focusedBorderColor = MaterialTheme.colorScheme.primary,
+                                    unfocusedLeadingIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    focusedLeadingIconColor = MaterialTheme.colorScheme.primary
+                                ),
                             )
                         }
                         Column(modifier = Modifier.weight(1f)) {
-                            Text("Surname", style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold), color = Color(0xFF425529), modifier = Modifier.padding(bottom = 6.dp))
+                            Text("Surname", style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold), color = MaterialTheme.colorScheme.primary, modifier = Modifier.padding(bottom = 6.dp))
                             OutlinedTextField(
                                 value = surnameValue,
                                 onValueChange = { surnameValue = it },
                                 modifier = Modifier.fillMaxWidth(),
                                 placeholder = { Text("Elachi") },
                                 shape = RoundedCornerShape(12.dp),
-                                colors = OutlinedTextFieldDefaults.colors(unfocusedBorderColor = Color(0xFFC5C8BA), focusedBorderColor = Color(0xFF425529)),
+                                colors = OutlinedTextFieldDefaults.colors(
+                                    unfocusedBorderColor = MaterialTheme.colorScheme.outline, 
+                                    focusedBorderColor = MaterialTheme.colorScheme.primary
+                                ),
                             )
                         }
                     }
 
                     Spacer(modifier = Modifier.height(14.dp))
-                    Text("Email Address", style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold), color = Color(0xFF425529), modifier = Modifier.padding(bottom = 6.dp))
+                    Text("Email Address", style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold), color = MaterialTheme.colorScheme.primary, modifier = Modifier.padding(bottom = 6.dp))
                     OutlinedTextField(
                         value = email,
                         onValueChange = { email = it },
                         modifier = Modifier.fillMaxWidth(),
                         placeholder = { Text("hello@elachi.com") },
-                        leadingIcon = { Icon(Icons.Default.Mail, contentDescription = null, tint = Color(0xFF75786D)) },
+                        leadingIcon = { Icon(Icons.Default.Mail, contentDescription = null) },
                         shape = RoundedCornerShape(12.dp),
-                        colors = OutlinedTextFieldDefaults.colors(unfocusedBorderColor = Color(0xFFC5C8BA), focusedBorderColor = Color(0xFF425529)),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            unfocusedBorderColor = MaterialTheme.colorScheme.outline, 
+                            focusedBorderColor = MaterialTheme.colorScheme.primary,
+                            unfocusedLeadingIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                            focusedLeadingIconColor = MaterialTheme.colorScheme.primary
+                        ),
                     )
 
                     Spacer(modifier = Modifier.height(14.dp))
-                    Text("Password", style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold), color = Color(0xFF425529), modifier = Modifier.padding(bottom = 6.dp))
+                    Text("Password", style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold), color = MaterialTheme.colorScheme.primary, modifier = Modifier.padding(bottom = 6.dp))
                     OutlinedTextField(
                         value = password,
                         onValueChange = { password = it },
                         modifier = Modifier.fillMaxWidth(),
                         placeholder = { Text("••••••••") },
-                        leadingIcon = { Icon(Icons.Default.Lock, contentDescription = null, tint = Color(0xFF75786D)) },
+                        leadingIcon = { Icon(Icons.Default.Lock, contentDescription = null) },
                         trailingIcon = {
                             IconButton(onClick = { showPw = !showPw }) {
-                                Icon(imageVector = if (showPw) Icons.Default.Visibility else Icons.Default.VisibilityOff, contentDescription = null, tint = Color(0xFF75786D))
+                                Icon(imageVector = if (showPw) Icons.Default.Visibility else Icons.Default.VisibilityOff, contentDescription = null)
                             }
                         },
                         visualTransformation = if (showPw) VisualTransformation.None else PasswordVisualTransformation(),
                         shape = RoundedCornerShape(12.dp),
-                        colors = OutlinedTextFieldDefaults.colors(unfocusedBorderColor = Color(0xFFC5C8BA), focusedBorderColor = Color(0xFF425529)),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            unfocusedBorderColor = MaterialTheme.colorScheme.outline, 
+                            focusedBorderColor = MaterialTheme.colorScheme.primary,
+                            unfocusedLeadingIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                            focusedLeadingIconColor = MaterialTheme.colorScheme.primary,
+                            unfocusedTrailingIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                            focusedTrailingIconColor = MaterialTheme.colorScheme.primary
+                        ),
                     )
 
                     if (uiState is AuthUiState.Error) {
@@ -245,25 +266,25 @@ fun SignUpScreen(
                         enabled = uiState !is AuthUiState.Loading,
                         modifier = Modifier.fillMaxWidth().height(50.dp),
                         shape = RoundedCornerShape(12.dp),
-                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF5A6E3F)),
+                        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
                     ) {
                         if (uiState is AuthUiState.Loading) {
                             CircularProgressIndicator(modifier = Modifier.size(20.dp), color = Color.White)
                         } else {
                             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.Center) {
-                                Text("Create Account", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                                Text("Create Account", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = Color.White)
                                 Spacer(modifier = Modifier.width(8.dp))
-                                Icon(Icons.AutoMirrored.Filled.ArrowForward, contentDescription = null, modifier = Modifier.size(18.dp))
+                                Icon(Icons.AutoMirrored.Filled.ArrowForward, contentDescription = null, modifier = Modifier.size(18.dp), tint = Color.White)
                             }
                         }
                     }
 
                     Spacer(modifier = Modifier.height(24.dp))
                     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
-                        Text("Already have an account? ", color = Color(0xFF75786D))
+                        Text("Already have an account? ", color = MaterialTheme.colorScheme.onSurfaceVariant)
                         Text(
                             text = "Login",
-                            color = Color(0xFF425529),
+                            color = MaterialTheme.colorScheme.primary,
                             fontWeight = FontWeight.Bold,
                             modifier = Modifier.clickable { onNavigateToLogin() },
                         )

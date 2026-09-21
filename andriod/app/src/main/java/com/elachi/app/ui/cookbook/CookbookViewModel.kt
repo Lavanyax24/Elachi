@@ -36,7 +36,7 @@ class CookbookViewModel(
 
     fun updateBook(book: RecipeBookEntity, name: String, description: String?, icon: String, colour: String, coverImageUrl: String? = null) {
         viewModelScope.launch {
-            recipeRepository.updateBook(book.id, userId, name, description, icon, colour, coverImageUrl ?: book.coverImageUrl)
+            recipeRepository.updateBook(book.id, name, description, icon, colour, coverImageUrl ?: book.coverImageUrl)
         }
     }
 

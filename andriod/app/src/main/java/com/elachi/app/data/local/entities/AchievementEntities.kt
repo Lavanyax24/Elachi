@@ -3,7 +3,6 @@ package com.elachi.app.data.local.entities
 import androidx.room.Entity
 import androidx.room.PrimaryKey
 
-/** Static catalogue of every badge in the app — see AchievementRepository.seed(). */
 @Entity(tableName = "achievement_definitions")
 data class AchievementDefinitionEntity(
     @PrimaryKey val id: String,

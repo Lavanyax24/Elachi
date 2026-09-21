@@ -20,8 +20,17 @@ interface PantryDao {
     @Query("DELETE FROM pantry_items WHERE id = :id")
     suspend fun delete(id: String)
 
+    @Query("SELECT * FROM pantry_items WHERE userId = :userId AND pendingSync = 1")
+    suspend fun getPendingPantryItems(userId: String): List<PantryItemEntity>
+
+    @Query("UPDATE pantry_items SET pendingSync = :pending WHERE id = :id")
+    suspend fun setPantryPendingSync(id: String, pending: Boolean)
+
     @Query("SELECT * FROM shopping_list_items WHERE userId = :userId ORDER BY createdAt DESC")
     fun observeShoppingList(userId: String): Flow<List<ShoppingListItemEntity>>
+
+    @Query("SELECT * FROM shopping_list_items WHERE userId = :userId")
+    suspend fun getShoppingListOnce(userId: String): List<ShoppingListItemEntity>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun upsertShoppingItem(item: ShoppingListItemEntity)
@@ -31,6 +40,12 @@ interface PantryDao {
 
     @Query("DELETE FROM shopping_list_items WHERE id = :id")
     suspend fun deleteShoppingItem(id: String)
+
+    @Query("DELETE FROM shopping_list_items WHERE userId = :userId AND isBought = 1")
+    suspend fun clearBoughtShoppingItems(userId: String)
+
+    @Query("DELETE FROM shopping_list_items WHERE userId = :userId")
+    suspend fun clearShoppingList(userId: String)
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertCookSession(session: CookSessionEntity)
