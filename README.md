@@ -1835,11 +1835,35 @@ Potential future improvements include:
 
 ---
 
-# 🙏 Code Attribution
+# 🙏 Code Attribution 
 
 > **Code Attribution**
 
-> `[INSERT ATTRIBUTION DETAILS HERE]`
+## 📚 References
+
+- Axios, [s.a.]. Axios documentation. [online] Available at: <https://axios-http.com/docs/intro> [Accessed 21 September 2026].
+
+- Cohere, [s.a.]. Chat API. [online] Available at: <https://docs.cohere.com/reference/chat> [Accessed 21 September 2026].
+
+- Express.js, [s.a.]. Express.js routing. [online] Available at: <https://expressjs.com/en/guide/routing/> [Accessed 21 September 2026].
+
+- Firebase, [s.a.]. Add the Firebase Admin SDK to your server. [online] Available at: <https://firebase.google.com/docs/admin/setup> [Accessed 21 September 2026].
+
+- Microsoft, [s.a.]. Playwright documentation. [online] Available at: <https://playwright.dev/docs/intro> [Accessed 21 September 2026].
+
+- Node.js, [s.a.]. Environment variables. [online] Available at: <https://nodejs.org/api/environment_variables.html> [Accessed 21 September 2026].
+
+- React, [s.a.]. React documentation. [online] Available at: <https://react.dev/learn> [Accessed 21 September 2026].
+
+- Render, [s.a.]. Deploy a Node Express app on Render. [online] Available at: <https://render.com/docs/deploy-node-express-app> [Accessed 21 September 2026].
+
+- Supabase, [s.a.]. JavaScript client library reference. [online] Available at: <https://supabase.com/docs/reference/javascript/introduction> [Accessed 21 September 2026].
+
+- Testing Library, [s.a.]. React Testing Library. [online] Available at: <https://testing-library.com/docs/react-testing-library/intro/> [Accessed 21 September 2026].
+
+- Vite, [s.a.]. Getting Started. [online] Available at: <https://vite.dev/guide/> [Accessed 21 September 2026].
+
+- Vitest, [s.a.]. Getting Started. [online] Available at: <https://vitest.dev/guide/> [Accessed 21 September 2026].
 
 ---
 
