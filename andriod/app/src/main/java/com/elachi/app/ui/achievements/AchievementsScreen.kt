@@ -28,6 +28,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.elachi.app.data.local.dao.AchievementDao
@@ -35,10 +36,6 @@ import com.elachi.app.data.local.entities.AchievementDefinitionEntity
 import com.elachi.app.data.local.entities.StreakRecordEntity
 import com.elachi.app.data.local.entities.UserAchievementProgressEntity
 import com.elachi.app.ui.common.ElachiTopBar
-import com.elachi.app.ui.theme.ElachiCream
-import com.elachi.app.ui.theme.ElachiGreen
-import com.elachi.app.ui.theme.ElachiTextPrimary
-import com.elachi.app.ui.theme.ElachiTextSecondary
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn
@@ -47,37 +44,22 @@ class AchievementsViewModel(
     private val userId: String,
     private val achievementDao: AchievementDao,
 ) : ViewModel() {
-
     val definitions: StateFlow<List<AchievementDefinitionEntity>> =
-        achievementDao.observeDefinitions()
-            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
-
+        achievementDao.observeDefinitions().stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
     val progress: StateFlow<List<UserAchievementProgressEntity>> =
-        achievementDao.observeProgress()
-            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
-
+        achievementDao.observeProgress().stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
     val streak: StateFlow<StreakRecordEntity?> =
-        achievementDao.observeStreak(userId)
-            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)
+        achievementDao.observeStreak(userId).stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)
 }
 
-// Badge colours
-private val UnlockedBackground = Color(0xFFDDE8C8)
-private val LockedBackground = Color(0xFFEDEBE6)
-private val LockedIconCircle = Color(0xFFD5D2CB)
-private val LockedGrey = Color(0xFF9A9C93)
-
-/** One icon per badge id, falling back to a trophy for anything new. */
 private fun iconFor(achievementId: String): ImageVector = when (achievementId) {
-    "first_cook" -> Icons.Filled.Restaurant
-    "home_cook", "kitchen_regular", "master_cook", "cooking_legend" -> Icons.Filled.Restaurant
+    "first_cook", "home_cook", "kitchen_regular", "master_cook", "cooking_legend" -> Icons.Filled.Restaurant
     "streak_spark", "streak_starter", "streak_champion" -> Icons.Filled.LocalFireDepartment
     "first_recipe", "recipe_collector", "recipe_hoarder", "recipe_archivist" -> Icons.Filled.Bookmarks
     "community_star", "rising_star", "crowd_favourite" -> Icons.Filled.Star
     "fork_master" -> Icons.Filled.ContentCopy
     "pantry_starter", "pantry_pro", "pantry_master" -> Icons.Filled.Kitchen
     "welcome_wagon", "social_butterfly", "community_connector", "community_builder", "community_legend" -> Icons.Filled.Group
-    "recipe_explorer", "chef_extraordinaire", "culinary_icon" -> Icons.Filled.Restaurant
     else -> Icons.Filled.EmojiEvents
 }
 
@@ -88,45 +70,38 @@ fun AchievementsScreen(viewModel: AchievementsViewModel, onBack: () -> Unit) {
     val streak by viewModel.streak.collectAsState()
     var tab by remember { mutableIntStateOf(0) }
     val categories = listOf("Cooking", "Contribution", "Community")
-
     val progressById = remember(progress) { progress.associateBy { it.achievementId } }
 
     Scaffold(
-        containerColor = ElachiCream,
+        containerColor = MaterialTheme.colorScheme.background,
         topBar = { ElachiTopBar(title = "Achievements", onBackClick = onBack) },
     ) { padding ->
         Column(modifier = Modifier.padding(padding).fillMaxSize()) {
             streak?.let {
-                Row(
-                    modifier = Modifier.fillMaxWidth().padding(16.dp),
-                    horizontalArrangement = Arrangement.SpaceEvenly,
-                ) {
+                Row(modifier = Modifier.fillMaxWidth().padding(16.dp), horizontalArrangement = Arrangement.SpaceEvenly) {
                     StreakStat("${it.currentStreak}", "Day Streak")
                     StreakStat("${it.longestStreak}", "Longest Streak")
                 }
             }
-
-            TabRow(selectedTabIndex = tab, containerColor = ElachiCream) {
+            TabRow(
+                selectedTabIndex = tab, 
+                containerColor = MaterialTheme.colorScheme.surface,
+                contentColor = MaterialTheme.colorScheme.primary
+            ) {
                 categories.forEachIndexed { i, cat ->
                     Tab(selected = tab == i, onClick = { tab = i }, text = { Text(cat) })
                 }
             }
-
             val categoryDefs = definitions.filter { it.category == categories[tab] }
             LazyVerticalGrid(
                 columns = GridCells.Fixed(2),
-                modifier = Modifier.fillMaxSize(),
+                modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background),
                 contentPadding = PaddingValues(16.dp),
                 horizontalArrangement = Arrangement.spacedBy(12.dp),
                 verticalArrangement = Arrangement.spacedBy(12.dp),
             ) {
                 items(categoryDefs, key = { it.id }) { def ->
-                    val userProgress = progressById[def.id]
-                    BadgeCard(
-                        def = def,
-                        progressValue = userProgress?.progress ?: 0,
-                        unlocked = userProgress?.unlocked == true,
-                    )
+                    BadgeCard(def = def, progressValue = progressById[def.id]?.progress ?: 0, unlocked = progressById[def.id]?.unlocked == true)
                 }
             }
         }
@@ -137,82 +112,41 @@ fun AchievementsScreen(viewModel: AchievementsViewModel, onBack: () -> Unit) {
 private fun BadgeCard(def: AchievementDefinitionEntity, progressValue: Int, unlocked: Boolean) {
     val threshold = def.thresholdValue.coerceAtLeast(1)
     val fraction = (progressValue.toFloat() / threshold).coerceIn(0f, 1f)
-
     Card(
         modifier = Modifier.fillMaxWidth().heightIn(min = 220.dp),
         shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = if (unlocked) UnlockedBackground else LockedBackground),
-        border = if (unlocked) BorderStroke(1.dp, ElachiGreen.copy(alpha = 0.4f)) else null,
+        colors = CardDefaults.cardColors(
+            containerColor = if (unlocked) MaterialTheme.colorScheme.primary.copy(alpha = 0.15f) else MaterialTheme.colorScheme.surfaceVariant
+        ),
+        border = if (unlocked) BorderStroke(1.2.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.5f)) else BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.1f)),
     ) {
-        Column(
-            modifier = Modifier.padding(14.dp).fillMaxWidth(),
-            horizontalAlignment = Alignment.CenterHorizontally,
-        ) {
-            // Icon
+        Column(modifier = Modifier.padding(14.dp).fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
             Box(
-                modifier = Modifier.size(48.dp).clip(CircleShape)
-                    .background(if (unlocked) ElachiGreen else LockedIconCircle),
+                modifier = Modifier.size(48.dp).clip(CircleShape).background(if (unlocked) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.2f)),
                 contentAlignment = Alignment.Center,
             ) {
-                Icon(
-                    iconFor(def.id),
-                    contentDescription = null,
-                    tint = if (unlocked) Color.White else LockedGrey,
-                    modifier = Modifier.size(26.dp),
-                )
+                Icon(iconFor(def.id), contentDescription = null, tint = if (unlocked) Color.White else MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(26.dp))
             }
             Spacer(Modifier.height(10.dp))
-
-            // Name + description
-            Text(
-                def.name,
-                fontWeight = FontWeight.Bold,
-                textAlign = TextAlign.Center,
-                color = if (unlocked) ElachiTextPrimary else ElachiTextSecondary,
-            )
+            Text(def.name, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center, color = MaterialTheme.colorScheme.onSurface)
             Spacer(Modifier.height(4.dp))
-            Text(
-                def.description,
-                style = MaterialTheme.typography.bodySmall,
-                textAlign = TextAlign.Center,
-                color = if (unlocked) ElachiTextPrimary else LockedGrey,
-            )
-
-            Spacer(Modifier.weight(1f, fill = true))
-            Spacer(Modifier.height(10.dp))
-
-            // Progress bar
+            Text(def.description, style = MaterialTheme.typography.bodySmall, textAlign = TextAlign.Center, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Spacer(Modifier.weight(1f))
             LinearProgressIndicator(
                 progress = { fraction },
                 modifier = Modifier.fillMaxWidth().height(8.dp).clip(RoundedCornerShape(4.dp)),
-                color = if (unlocked) ElachiGreen else LockedGrey,
-                trackColor = if (unlocked) Color.White.copy(alpha = 0.7f) else Color(0xFFDDDAD3),
+                color = MaterialTheme.colorScheme.primary,
+                trackColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.1f),
             )
             Spacer(Modifier.height(6.dp))
-
-            // Unlocked label or count
             if (unlocked) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(
-                        Icons.Filled.CheckCircle,
-                        contentDescription = null,
-                        tint = ElachiGreen,
-                        modifier = Modifier.size(16.dp),
-                    )
+                    Icon(Icons.Filled.CheckCircle, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(16.dp))
                     Spacer(Modifier.width(4.dp))
-                    Text(
-                        "Unlocked",
-                        style = MaterialTheme.typography.labelMedium,
-                        fontWeight = FontWeight.Bold,
-                        color = ElachiGreen,
-                    )
+                    Text("Unlocked", style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
                 }
             } else {
-                Text(
-                    "${progressValue.coerceAtMost(threshold)}/${def.thresholdValue}",
-                    style = MaterialTheme.typography.labelMedium,
-                    color = LockedGrey,
-                )
+                Text("${progressValue.coerceAtMost(threshold)}/${def.thresholdValue}", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
         }
     }
@@ -221,7 +155,7 @@ private fun BadgeCard(def: AchievementDefinitionEntity, progressValue: Int, unlo
 @Composable
 private fun StreakStat(value: String, label: String) {
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
-        Text(value, style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Bold, color = ElachiGreen)
-        Text(label, style = MaterialTheme.typography.bodyMedium)
+        Text(value, style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
+        Text(label, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurface)
     }
 }

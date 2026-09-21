@@ -124,6 +124,7 @@ fun ElachiNavGraph() {
     val currentUserId = UserSession.userId
     val profileVm: ProfileViewModel? = if (currentUserId != null) {
         viewModel(
+            key = currentUserId,
             factory = SimpleViewModelFactory {
                 ProfileViewModel(
                     currentUserId,
@@ -153,6 +154,7 @@ fun ElachiNavGraph() {
                 currentRoute = currentRoute,
                 userDisplayName = drawerDisplayName,
                 userEmail = drawerEmail,
+                userAvatarUrl = profileVm?.profile?.value?.avatarUrl,
                 onNavigate = { route ->
                     scope.launch { drawerState.close() }
                     navController.navigate(route) {
@@ -194,6 +196,7 @@ fun ElachiNavGraph() {
                 // ---------- Splash ----------
                 composable(Screen.Splash.route) {
                     SplashScreen(
+                        authRepository = elachiApp.authRepository,
                         onNavigateToHome = {
                             navController.navigate(Screen.Home.route) {
                                 popUpTo(Screen.Splash.route) { inclusive = true }
@@ -671,6 +674,7 @@ fun ElachiNavGraph() {
                             ProfileScreen(
                                 viewModel = vm,
                                 onEdit = { navController.navigate(Screen.EditProfile.route) },
+                                onRecipeClick = { recipeId -> navController.navigate(Screen.RecipeDetail.createRoute(recipeId)) },
                             )
                         }
                     } else {
@@ -716,6 +720,7 @@ fun ElachiNavGraph() {
                         onLoggedOut = {
                             navController.navigate(Screen.Login.route) { popUpTo(0) }
                         },
+                        onBack = { navController.popBackStack() },
                         onNavigateToPrivacyPolicy = {
                             navController.navigate(Screen.PrivacyPolicy.route)
                         },

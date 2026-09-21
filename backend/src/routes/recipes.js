@@ -178,6 +178,91 @@ router.post('/', async (req, res) => {
   }
 });
 
+// PATCH /api/recipes/:id — partial update. Any subset of fields may be
+// supplied; only the fields present in the body are changed. If `ingredients`
+// or `steps` are supplied, they replace the entire existing list for that
+// recipe (simplest, matches how the Add Recipe form submits a complete list).
+router.patch('/:id', async (req, res) => {
+  const {
+    title, category, cuisine, foodType, difficulty, servings,
+    cookTimeMinutes, method, allergens, isPrivate, imageUrl, bookId,
+    ingredients, steps,
+  } = req.body;
+
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
+
+    // Verify the recipe exists and belongs to the caller before touching it.
+    const existing = await client.query(
+      'SELECT id FROM recipes WHERE id = $1 AND owner_id = $2',
+      [req.params.id, req.user.id],
+    );
+    if (existing.rows.length === 0) {
+      await client.query('ROLLBACK');
+      return res.status(404).json({ error: 'Recipe not found.' });
+    }
+
+    // Update the recipe row. COALESCE leaves untouched fields at their
+    // current values, so a request that only sends { "isPrivate": false }
+    // flips visibility without wiping out title/cuisine/etc.
+    await client.query(
+      'UPDATE recipes SET '
+      + 'title = COALESCE($1, title), '
+      + 'category = COALESCE($2, category), '
+      + 'cuisine = COALESCE($3, cuisine), '
+      + 'food_type = COALESCE($4, food_type), '
+      + 'difficulty = COALESCE($5, difficulty), '
+      + 'servings = COALESCE($6, servings), '
+      + 'cook_time_minutes = COALESCE($7, cook_time_minutes), '
+      + 'method = COALESCE($8, method), '
+      + 'allergens = COALESCE($9, allergens), '
+      + 'is_private = COALESCE($10, is_private), '
+      + 'image_url = COALESCE($11, image_url), '
+      + 'book_id = COALESCE($12, book_id), '
+      + 'updated_at = now() '
+      + 'WHERE id = $13 AND owner_id = $14',
+      [
+        title, category, cuisine, foodType, difficulty, servings,
+        cookTimeMinutes, method, allergens, isPrivate, imageUrl, bookId,
+        req.params.id, req.user.id,
+      ],
+    );
+
+    // If the caller supplied a full ingredient list, replace the old one.
+    if (Array.isArray(ingredients)) {
+      await client.query('DELETE FROM ingredients WHERE recipe_id = $1', [req.params.id]);
+      for (let i = 0; i < ingredients.length; i++) {
+        const ing = ingredients[i];
+        await client.query(
+          'INSERT INTO ingredients (recipe_id, name, quantity, unit, sort_order) VALUES ($1,$2,$3,$4,$5)',
+          [req.params.id, ing.name, ing.quantity, ing.unit, i],
+        );
+      }
+    }
+
+    // Same for steps.
+    if (Array.isArray(steps)) {
+      await client.query('DELETE FROM steps WHERE recipe_id = $1', [req.params.id]);
+      for (const step of steps) {
+        await client.query(
+          'INSERT INTO steps (recipe_id, "order", instruction, timer_seconds) VALUES ($1,$2,$3,$4)',
+          [req.params.id, step.order, step.instruction, step.timerSeconds || null],
+        );
+      }
+    }
+
+    await client.query('COMMIT');
+    res.json(await loadFullRecipe(req.params.id));
+  } catch (e) {
+    await client.query('ROLLBACK');
+    console.error(e);
+    res.status(500).json({ error: 'Failed to update recipe.' });
+  } finally {
+    client.release();
+  }
+});
+
 router.delete('/:id', async (req, res) => {
   await pool.query('DELETE FROM recipes WHERE id = $1 AND owner_id = $2', [req.params.id, req.user.id]);
   res.status(204).send();

@@ -18,20 +18,22 @@ private val Context.dataStore by preferencesDataStore(name = "elachi_settings")
 class SettingsRepository(private val context: Context) {
 
     private object Keys {
-        val DARK_THEME = booleanPreferencesKey("dark_theme")
+        fun darkThemeKey(userId: String?) = booleanPreferencesKey("dark_theme_${userId ?: "guest"}")
         val UNITS = stringPreferencesKey("units") // "metric" | "imperial"
         val SEEN_ONBOARDING = booleanPreferencesKey("seen_onboarding")
         val ASKED_NOTIF_PERMISSION = booleanPreferencesKey("asked_notif_permission")
     }
 
-    val isDarkTheme: Flow<Boolean> = context.dataStore.data.map { it[Keys.DARK_THEME] ?: false }
+    fun isDarkTheme(userId: String?): Flow<Boolean> =
+        context.dataStore.data.map { it[Keys.darkThemeKey(userId)] ?: false }
+
     val units: Flow<String> = context.dataStore.data.map { it[Keys.UNITS] ?: "metric" }
     val hasSeenOnboarding: Flow<Boolean> = context.dataStore.data.map { it[Keys.SEEN_ONBOARDING] ?: false }
     val hasAskedNotificationPermission: Flow<Boolean> =
         context.dataStore.data.map { it[Keys.ASKED_NOTIF_PERMISSION] ?: false }
 
-    suspend fun setDarkTheme(enabled: Boolean) {
-        context.dataStore.edit { it[Keys.DARK_THEME] = enabled }
+    suspend fun setDarkTheme(userId: String?, enabled: Boolean) {
+        context.dataStore.edit { it[Keys.darkThemeKey(userId)] = enabled }
     }
 
     suspend fun setUnits(units: String) {

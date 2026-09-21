@@ -62,21 +62,27 @@ interface RecipeDao {
     }
 
     @Transaction
-    suspend fun replaceRecipeDetails(
+    suspend fun upsertRecipeWithDetails(
         recipe: RecipeEntity,
         ingredients: List<IngredientEntity>,
         steps: List<StepEntity>,
     ) {
-        upsertRecipe(recipe)
         clearIngredients(recipe.id)
         clearSteps(recipe.id)
+        upsertRecipe(recipe)
         upsertIngredients(ingredients)
         upsertSteps(steps)
     }
+
+    @Query("SELECT * FROM recipes WHERE pendingSync = 1")
+    suspend fun getPendingRecipes(): List<RecipeEntity>
 
     @Query("UPDATE recipes SET timesCooked = timesCooked + 1 WHERE id = :id")
     suspend fun incrementTimesCooked(id: String)
 
     @Query("UPDATE recipes SET isFavourite = :favourite WHERE id = :id")
     suspend fun setFavourite(id: String, favourite: Boolean)
+
+    @Query("UPDATE recipes SET isPrivate = :isPrivate WHERE id = :id")
+    suspend fun setPrivate(id: String, isPrivate: Boolean)
 }

@@ -1,27 +1,23 @@
 package com.elachi.app.ui.common
 
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Explore
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Kitchen
 import androidx.compose.material.icons.filled.MenuBook
-import androidx.compose.material3.Icon
-import androidx.compose.material3.NavigationBar
-import androidx.compose.material3.NavigationBarItem
-import androidx.compose.material3.NavigationBarItemDefaults
-import androidx.compose.material3.Text
+import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.compose.currentBackStackEntryAsState
 import com.elachi.app.navigation.Screen
-import com.elachi.app.ui.theme.ElachiCream
-import com.elachi.app.ui.theme.ElachiGreen
-import androidx.compose.ui.unit.dp
 
 private data class BottomItem(val route: String, val label: String, val icon: ImageVector)
 
@@ -37,7 +33,12 @@ fun ElachiBottomNavBar(navController: NavController) {
     val backStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = backStackEntry?.destination
 
-    NavigationBar(containerColor = ElachiCream) {
+    NavigationBar(
+        containerColor = MaterialTheme.colorScheme.surface,
+        modifier = Modifier.height(72.dp),
+        windowInsets = WindowInsets(0.dp, 0.dp, 0.dp, 0.dp),
+        tonalElevation = 8.dp
+    ) {
         items.forEach { item ->
             val selected = currentRoute?.hierarchy?.any { it.route == item.route } == true
             NavigationBarItem(
@@ -49,12 +50,20 @@ fun ElachiBottomNavBar(navController: NavController) {
                         restoreState = true
                     }
                 },
-                icon = { Icon(item.icon, contentDescription = item.label, modifier = Modifier.size(22.dp)) },
+                icon = { 
+                    Icon(
+                        item.icon, 
+                        contentDescription = item.label, 
+                        modifier = Modifier.size(22.dp)
+                    ) 
+                },
                 label = { Text(item.label) },
                 colors = NavigationBarItemDefaults.colors(
-                    selectedIconColor = ElachiGreen,
-                    selectedTextColor = ElachiGreen,
-                    indicatorColor = ElachiGreen.copy(alpha = 0.1f),
+                    selectedIconColor = MaterialTheme.colorScheme.primary,
+                    selectedTextColor = MaterialTheme.colorScheme.primary,
+                    unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                    unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                    indicatorColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f),
                 ),
             )
         }

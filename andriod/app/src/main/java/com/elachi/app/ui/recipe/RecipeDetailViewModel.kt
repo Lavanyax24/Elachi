@@ -40,7 +40,29 @@ class RecipeDetailViewModel(
                 null,
             )
 
-    val availableBooks: StateFlow<List<RecipeBookEntity>> =
+    val isLoadingRemote = mutableStateOf(false)
+    val remoteRecipe = mutableStateOf<com.elachi.app.data.remote.dto.RecipeDto?>(null)
+
+    init {
+        // If the recipe is not found locally, try to fetch it from the API
+        viewModelScope.launch {
+            val local = recipeRepository.getRecipeOnce(recipeId)
+            if (local == null) {
+                isLoadingRemote.value = true
+                try {
+                    val response = api.getRecipe(recipeId)
+                    if (response.isSuccessful) {
+                        remoteRecipe.value = response.body()
+                    }
+                } catch (e: Exception) {
+                    Log.e("RecipeDetailVM", "Failed to fetch remote recipe", e)
+                } finally {
+                    isLoadingRemote.value = false
+                }
+            }
+        }
+    }
+    val availableBooks: StateFlow<List<com.elachi.app.data.local.entities.RecipeBookEntity>> =
         recipeRepository.observeBooks(userId)
             .stateIn(
                 viewModelScope,
@@ -67,6 +89,12 @@ class RecipeDetailViewModel(
     fun toggleFavourite(current: Boolean) {
         viewModelScope.launch {
             recipeRepository.toggleFavourite(recipeId, !current)
+        }
+    }
+
+    fun toggleVisibility(current: Boolean) {
+        viewModelScope.launch {
+            recipeRepository.updateRecipeVisibility(recipeId, !current)
         }
     }
 

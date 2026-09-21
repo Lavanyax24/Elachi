@@ -30,12 +30,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import com.elachi.app.data.local.entities.RecipeEntity
-import com.elachi.app.ui.theme.ElachiGreen
 
-/**
- * Shared recipe card used by both the All Recipes tab and cookbook details.
- * The only visibility badges currently supported are Public and Private.
- */
 @Composable
 fun RecipeGridCard(
     recipe: RecipeEntity,
@@ -49,18 +44,19 @@ fun RecipeGridCard(
             .height(238.dp),
         shape = RoundedCornerShape(14.dp),
         colors = CardDefaults.cardColors(
-            containerColor = Color.White,
+            containerColor = MaterialTheme.colorScheme.surface,
         ),
         elevation = CardDefaults.cardElevation(
-            defaultElevation = 2.dp,
+            defaultElevation = 1.dp,
         ),
+        border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outline)
     ) {
         Column(modifier = Modifier.fillMaxSize()) {
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(138.dp)
-                    .background(Color(0xFFECE9E3)),
+                    .background(MaterialTheme.colorScheme.surfaceVariant),
             ) {
                 if (!recipe.imageUrl.isNullOrBlank()) {
                     AsyncImage(
@@ -73,7 +69,7 @@ fun RecipeGridCard(
                     Icon(
                         imageVector = Icons.Filled.Restaurant,
                         contentDescription = null,
-                        tint = ElachiGreen.copy(alpha = 0.55f),
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f),
                         modifier = Modifier
                             .size(44.dp)
                             .align(Alignment.Center),
@@ -98,6 +94,7 @@ fun RecipeGridCard(
                 Text(
                     text = recipe.title,
                     style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurface,
                     fontWeight = FontWeight.Bold,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
@@ -154,7 +151,7 @@ private fun RecipeVisibilityBadge(
 ) {
     val label = if (isPrivate) "Private" else "Public"
     val colour = if (isPrivate) {
-        Color(0xFF9B3A33)
+        Color(0xFFBA1A1A)
     } else {
         Color(0xFF3478B9)
     }

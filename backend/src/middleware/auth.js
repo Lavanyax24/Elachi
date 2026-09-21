@@ -6,15 +6,23 @@ const { pool } = require('../db');
 // Guard both cases so requiring this file never throws.
 if (!admin.apps || !admin.apps.length) {
   try {
-    const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT_JSON || '{}');
+    const raw = process.env.FIREBASE_SERVICE_ACCOUNT_JSON;
+    console.error('Firebase Admin init: FIREBASE_SERVICE_ACCOUNT_JSON length =', raw ? raw.length : 0);
+    console.error('Firebase Admin init: first 60 chars =', raw ? raw.slice(0, 60) : '(null)');
+
+    const serviceAccount = JSON.parse(raw || '{}');
+
     // Render's env var box can't hold real newlines, so the private key
     // arrives with literal "\n" characters — swap them back to real newlines.
     if (serviceAccount.private_key) {
       serviceAccount.private_key = serviceAccount.private_key.replace(/\\n/g, '\n');
     }
     admin.initializeApp({ credential: admin.credential.cert(serviceAccount) });
+    console.error('Firebase Admin init: SUCCESS');
   } catch (e) {
-    console.warn('Firebase Admin not initialised — set FIREBASE_SERVICE_ACCOUNT_JSON to enable auth verification.');
+    console.error('Firebase Admin init: FAILED with error:', e.message);
+    console.error('Firebase Admin init: error name:', e.name);
+    console.error('Firebase Admin not initialised — set FIREBASE_SERVICE_ACCOUNT_JSON to enable auth verification.');
   }
 }
 

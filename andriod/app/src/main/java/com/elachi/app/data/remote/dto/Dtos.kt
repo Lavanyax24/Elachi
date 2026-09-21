@@ -166,6 +166,22 @@ data class ParsedRecipeAiDto(
 
 data class ForkRecipeRequest(val bookId: String)
 
+data class UpdateRecipeRequest(
+    val title: String? = null,
+    val category: String? = null,
+    val cuisine: String? = null,
+    val foodType: String? = null,
+    val difficulty: String? = null,
+    val servings: Int? = null,
+    val cookTimeMinutes: Int? = null,
+    val method: String? = null,
+    val allergens: List<String>? = null,
+    val isPrivate: Boolean? = null,
+    val imageUrl: String? = null,
+    val bookId: String? = null,
+    val ingredients: List<IngredientDto>? = null,
+    val steps: List<StepDto>? = null,
+)
 
 data class DiscoverRecipeDto(
     val id: String,

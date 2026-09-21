@@ -23,8 +23,6 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.elachi.app.ui.theme.ElachiGreen
-import com.elachi.app.ui.theme.ElachiTextPrimary
 
 /**
  * Shared data class and composables for the Privacy Policy and Terms of
@@ -43,7 +41,7 @@ internal fun LegalHeroCard(
     subtitle: String,
 ) {
     Surface(
-        color = ElachiGreen,
+        color = MaterialTheme.colorScheme.primary,
         shape = RoundedCornerShape(16.dp),
         modifier = Modifier.fillMaxWidth(),
     ) {
@@ -88,9 +86,9 @@ internal fun LegalSectionCard(
     section: PolicySection,
 ) {
     Surface(
-        color = Color.White,
+        color = MaterialTheme.colorScheme.surface,
         shape = RoundedCornerShape(14.dp),
-        border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFE5E2DD)),
+        border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outline),
         modifier = Modifier.fillMaxWidth(),
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
@@ -98,7 +96,7 @@ internal fun LegalSectionCard(
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Surface(
-                    color = ElachiGreen.copy(alpha = 0.1f),
+                    color = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f),
                     shape = RoundedCornerShape(10.dp),
                     modifier = Modifier.size(32.dp),
                 ) {
@@ -113,7 +111,7 @@ internal fun LegalSectionCard(
                                 fontWeight = FontWeight.Bold,
                                 fontSize = 15.sp,
                             ),
-                            color = ElachiGreen,
+                            color = MaterialTheme.colorScheme.primary,
                         )
                     }
                 }
@@ -121,21 +119,21 @@ internal fun LegalSectionCard(
                 Icon(
                     section.icon,
                     contentDescription = null,
-                    tint = ElachiGreen,
+                    tint = MaterialTheme.colorScheme.primary,
                     modifier = Modifier.size(20.dp),
                 )
                 Spacer(Modifier.width(8.dp))
                 Text(
                     section.title,
                     style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-                    color = ElachiTextPrimary,
+                    color = MaterialTheme.colorScheme.onSurface,
                 )
             }
             Spacer(Modifier.height(12.dp))
             Text(
                 section.body,
                 style = MaterialTheme.typography.bodyMedium,
-                color = ElachiTextPrimary,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
                 lineHeight = 22.sp,
             )
         }

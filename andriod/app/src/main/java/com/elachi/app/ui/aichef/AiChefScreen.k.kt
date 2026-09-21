@@ -25,10 +25,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.elachi.app.data.repository.ChatTurn
 import com.elachi.app.ui.common.ElachiTopBar
-import com.elachi.app.ui.theme.ElachiAccent
-import com.elachi.app.ui.theme.ElachiCream
-import com.elachi.app.ui.theme.ElachiGreen
-import com.elachi.app.ui.theme.ElachiSurface
 
 private val QUICK_PROMPTS = listOf(
     "What can I cook with eggs?",
@@ -37,7 +33,6 @@ private val QUICK_PROMPTS = listOf(
     "Quick 15-minute dinner ideas",
 )
 
-// Chat bubble shapes: the corner nearest the avatar is squared off
 private val UserBubbleShape = RoundedCornerShape(topStart = 18.dp, topEnd = 18.dp, bottomStart = 18.dp, bottomEnd = 4.dp)
 private val AiBubbleShape = RoundedCornerShape(topStart = 18.dp, topEnd = 18.dp, bottomStart = 4.dp, bottomEnd = 18.dp)
 
@@ -47,11 +42,8 @@ fun AiChefScreen(viewModel: AiChefViewModel, onBack: () -> Unit) {
     val isSending by viewModel.isSending.collectAsState()
     var input by remember { mutableStateOf("") }
     val listState = rememberLazyListState()
-
-    // Messages plus the "typing" bubble while waiting for a reply
     val itemCount = messages.size + if (isSending) 1 else 0
 
-    // Auto-scroll to the newest message (or typing indicator) whenever the list grows
     LaunchedEffect(itemCount) {
         if (itemCount > 0) listState.animateScrollToItem(itemCount - 1)
     }
@@ -65,7 +57,7 @@ fun AiChefScreen(viewModel: AiChefViewModel, onBack: () -> Unit) {
     }
 
     Scaffold(
-        containerColor = ElachiCream,
+        containerColor = MaterialTheme.colorScheme.background,
         topBar = { ElachiTopBar(title = "AI Chef Assistant", onBackClick = onBack) },
         bottomBar = {
             ChatInputBar(
@@ -79,7 +71,7 @@ fun AiChefScreen(viewModel: AiChefViewModel, onBack: () -> Unit) {
     ) { padding ->
         LazyColumn(
             state = listState,
-            modifier = Modifier.padding(padding).fillMaxSize(),
+            modifier = Modifier.padding(padding).fillMaxSize().background(MaterialTheme.colorScheme.background),
             contentPadding = PaddingValues(16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
@@ -105,8 +97,8 @@ private fun MessageRow(turn: ChatTurn) {
         }
         Surface(
             shape = if (isUser) UserBubbleShape else AiBubbleShape,
-            color = if (isUser) ElachiGreen else ElachiSurface,
-            border = if (isUser) null else BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
+            color = if (isUser) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surface,
+            border = if (isUser) null else BorderStroke(1.dp, MaterialTheme.colorScheme.outline),
             modifier = Modifier.widthIn(max = 280.dp),
         ) {
             Text(
@@ -130,14 +122,14 @@ private fun TypingRow() {
         Spacer(Modifier.width(8.dp))
         Surface(
             shape = AiBubbleShape,
-            color = ElachiSurface,
-            border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
+            color = MaterialTheme.colorScheme.surface,
+            border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline),
         ) {
             Row(
                 modifier = Modifier.padding(horizontal = 14.dp, vertical = 12.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                CircularProgressIndicator(modifier = Modifier.size(16.dp), strokeWidth = 2.dp, color = ElachiGreen)
+                CircularProgressIndicator(modifier = Modifier.size(16.dp), strokeWidth = 2.dp, color = MaterialTheme.colorScheme.primary)
                 Spacer(Modifier.width(8.dp))
                 Text("Thinking…", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
@@ -151,13 +143,13 @@ private fun Avatar(isUser: Boolean) {
         modifier = Modifier
             .size(32.dp)
             .clip(CircleShape)
-            .background(if (isUser) ElachiAccent else ElachiGreen),
+            .background(if (isUser) MaterialTheme.colorScheme.secondary else MaterialTheme.colorScheme.primary),
         contentAlignment = Alignment.Center,
     ) {
         if (isUser) {
             Icon(Icons.Filled.Person, contentDescription = "You", tint = Color.White, modifier = Modifier.size(18.dp))
         } else {
-            Text("\uD83C\uDF73", fontSize = 16.sp) // cooking emoji as the AI Chef avatar
+            Text("\uD83C\uDF73", fontSize = 16.sp)
         }
     }
 }
@@ -170,7 +162,7 @@ private fun ChatInputBar(
     onSend: () -> Unit,
     onQuickPrompt: (String) -> Unit,
 ) {
-    Surface(color = ElachiCream, tonalElevation = 3.dp) {
+    Surface(color = MaterialTheme.colorScheme.surface, tonalElevation = 3.dp) {
         Column(modifier = Modifier.navigationBarsPadding().imePadding()) {
             LazyRow(
                 contentPadding = PaddingValues(horizontal = 12.dp, vertical = 8.dp),
@@ -181,6 +173,11 @@ private fun ChatInputBar(
                         onClick = { onQuickPrompt(prompt) },
                         label = { Text(prompt) },
                         enabled = !isSending,
+                        colors = AssistChipDefaults.assistChipColors(
+                            labelColor = MaterialTheme.colorScheme.onSurface,
+                            containerColor = MaterialTheme.colorScheme.surface
+                        ),
+                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline)
                     )
                 }
             }
@@ -197,14 +194,20 @@ private fun ChatInputBar(
                     maxLines = 4,
                     keyboardOptions = KeyboardOptions(imeAction = ImeAction.Send),
                     keyboardActions = KeyboardActions(onSend = { onSend() }),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedContainerColor = MaterialTheme.colorScheme.surface,
+                        unfocusedContainerColor = MaterialTheme.colorScheme.surface,
+                        focusedBorderColor = MaterialTheme.colorScheme.primary,
+                        unfocusedBorderColor = MaterialTheme.colorScheme.outline
+                    )
                 )
                 Spacer(Modifier.width(8.dp))
                 FilledIconButton(
                     onClick = onSend,
                     enabled = input.isNotBlank() && !isSending,
-                    colors = IconButtonDefaults.filledIconButtonColors(containerColor = ElachiGreen),
+                    colors = IconButtonDefaults.filledIconButtonColors(containerColor = MaterialTheme.colorScheme.primary),
                 ) {
-                    Icon(Icons.AutoMirrored.Filled.Send, contentDescription = "Send")
+                    Icon(Icons.AutoMirrored.Filled.Send, contentDescription = "Send", tint = Color.White)
                 }
             }
         }

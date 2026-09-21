@@ -52,6 +52,12 @@ interface ApiService {
     @DELETE("api/recipes/{id}")
     suspend fun deleteRecipe(@Path("id") id: String): Response<Unit>
 
+    @retrofit2.http.PATCH("api/recipes/{id}")
+    suspend fun patchRecipe(
+        @retrofit2.http.Path("id") id: String,
+        @Body body: UpdateRecipeRequest,
+    ): Response<RecipeDto>
+
     @GET("api/recipes/suggestions")
     suspend fun getSuggestions(): Response<List<RecipeSuggestionDto>>
 

@@ -32,21 +32,30 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.geometry.Offset
 import com.elachi.app.R
+import com.elachi.app.data.repository.AuthRepository
 import kotlinx.coroutines.delay
 
 /**
  * Shown for 2 seconds while the app checks whether a user is signed in.
- * For now, always routes to Login — the sign-in check gets wired in
- * when AuthRepository lands.
  */
 @Composable
 fun SplashScreen(
+    authRepository: AuthRepository,
     onNavigateToHome: () -> Unit,
     onNavigateToLogin: () -> Unit,
 ) {
     LaunchedEffect(Unit) {
-        delay(4000)
-        onNavigateToLogin()
+        val startTime = System.currentTimeMillis()
+        val isLoggedIn = authRepository.restoreSession()
+        val elapsed = System.currentTimeMillis() - startTime
+        val remaining = 2000L - elapsed
+        if (remaining > 0) delay(remaining)
+
+        if (isLoggedIn) {
+            onNavigateToHome()
+        } else {
+            onNavigateToLogin()
+        }
     }
 
     Box(
@@ -80,17 +89,17 @@ fun SplashScreen(
             )
 
             Surface(
-                modifier = Modifier.size((120 * scale).dp),
-                shape = RoundedCornerShape(26.dp),
+                modifier = Modifier.size((160 * scale).dp),
+                shape = RoundedCornerShape(28.dp),
                 color = Color.White,
                 shadowElevation = 24.dp,
             ) {
                 Box(
                     contentAlignment = Alignment.Center,
-                    modifier = Modifier.padding(20.dp),
+                    modifier = Modifier.padding(16.dp),
                 ) {
                     Image(
-                        painter = painterResource(id = R.mipmap.ic_launcher_foreground),
+                        painter = painterResource(id = R.drawable.elachi_logo),
                         contentDescription = "Elachi Logo",
                         modifier = Modifier.fillMaxSize(),
                     )

@@ -6,6 +6,9 @@ import com.elachi.app.data.remote.dto.UserSyncRequest
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.auth.GoogleAuthProvider
+import kotlinx.coroutines.channels.awaitClose
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.tasks.await
 
 sealed class AuthResult {
@@ -17,6 +20,16 @@ class AuthRepository(
     private val firebaseAuth: FirebaseAuth? = try { FirebaseAuth.getInstance() } catch (e: Exception) { null },
 ) {
     val currentUser: FirebaseUser? get() = firebaseAuth?.currentUser
+
+    val authState: Flow<FirebaseUser?> = callbackFlow {
+        val listener = FirebaseAuth.AuthStateListener { auth ->
+            trySend(auth.currentUser)
+        }
+        firebaseAuth?.addAuthStateListener(listener)
+        awaitClose {
+            firebaseAuth?.removeAuthStateListener(listener)
+        }
+    }
 
     suspend fun signUpWithEmail(
         firstName: String,
@@ -110,5 +123,16 @@ class AuthRepository(
     fun signOut() {
         firebaseAuth?.signOut()
         UserSession.clear()
+    }
+
+    /**
+     * Attempts to restore the UserSession from the current Firebase user.
+     * Should be called at app startup if currentUser is not null.
+     */
+    suspend fun restoreSession(): Boolean {
+        val user = currentUser ?: return false
+        val (first, last) = splitDisplayName(user.displayName)
+        syncProfileWithBackend(user, firstName = first, surname = last)
+        return UserSession.userId != null
     }
 }
