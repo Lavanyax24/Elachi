@@ -1,12 +1,22 @@
+// recipeParse.js - AI recipe text parsing endpoint.
+// The Android app runs OCR on a photo of a recipe card or screenshot,
+// then sends the raw text here. This route passes it to Cohere with a
+// strict prompt that forces the response into a structured JSON shape
+// the Add Recipe form can use. The Cohere API key stays on the server.
+
 const express = require('express');
 const { requireAuth } = require('../middleware/auth');
 
 const router = express.Router();
 router.use(requireAuth);
 
+// Cohere endpoint and model
 const COHERE_CHAT_URL = 'https://api.cohere.com/v2/chat';
 const COHERE_MODEL = 'command-r-plus-08-2024';
 
+// System prompt that tells Cohere exactly what to extract and the
+// exact JSON shape to return. Short, specific rules work better than
+// vague instructions with LLMs.
 const PARSE_SYSTEM_PROMPT = 'You extract structured recipe data from raw, '
   + 'messy OCR text scanned from a recipe card, cookbook page, or website '
   + 'screenshot. The text may have broken lines, missing punctuation, or OCR '
@@ -27,6 +37,9 @@ const PARSE_SYSTEM_PROMPT = 'You extract structured recipe data from raw, '
   + '- If "servings" or "cookTimeMinutes" cannot be determined, use 0.\n'
   + '- Never include markdown, explanation, or text outside the JSON object.';
 
+// POST /api/recipes/parse-text - takes { rawText } and returns a
+// normalised { title, ingredients, steps, method, servings, cookTimeMinutes }
+// object ready to pre-fill the Add Recipe form.
 router.post('/parse-text', async (req, res) => {
   const { rawText } = req.body;
   if (!rawText || !rawText.trim()) {
@@ -37,6 +50,8 @@ router.post('/parse-text', async (req, res) => {
   }
 
   try {
+    // Send the raw OCR text to Cohere with the parse prompt.
+    // response_format: json_object makes Cohere return valid JSON only.
     const response = await fetch(COHERE_CHAT_URL, {
       method: 'POST',
       headers: {
@@ -59,11 +74,13 @@ router.post('/parse-text', async (req, res) => {
       return res.status(502).json({ error: 'AI recipe parsing is unavailable right now.' });
     }
 
+    // Cohere's reply may be nested; try the common shapes before giving up.
     const data = await response.json();
     const rawJsonText = data?.message?.content?.find((c) => c.type === 'text')?.text
       || data?.message?.content?.[0]?.text
       || '{}';
 
+    // The reply should be valid JSON. If not, bail out gracefully.
     let parsed;
     try {
       parsed = JSON.parse(rawJsonText);
@@ -72,6 +89,8 @@ router.post('/parse-text', async (req, res) => {
       return res.status(502).json({ error: 'AI recipe parsing returned an unexpected format.' });
     }
 
+    // Normalise the parsed object so the client always receives the same
+    // shape, even if Cohere sends missing or unexpected types.
     const normalised = {
       title: typeof parsed.title === 'string' ? parsed.title : '',
       ingredients: Array.isArray(parsed.ingredients)
