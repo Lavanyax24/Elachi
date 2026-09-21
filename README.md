@@ -1839,8 +1839,6 @@ Potential future improvements include:
 
 > **Code Attribution**
 
-## 📚 References
-
 - Axios, [s.a.]. Axios documentation. [online] Available at: <https://axios-http.com/docs/intro> [Accessed 21 September 2026].
 
 - Cohere, [s.a.]. Chat API. [online] Available at: <https://docs.cohere.com/reference/chat> [Accessed 21 September 2026].
