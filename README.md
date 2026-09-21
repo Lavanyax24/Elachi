@@ -1,17 +1,18 @@
-# 🍳 Elachi
+# 🍳 Elachi 
+**Mouth Full Of Flavour**
 
 **A modern recipe management Android application powered by a custom REST API, cloud storage, Firebase authentication, and intelligent cooking features.**
 
 Built with **Kotlin, Jetpack Compose, Node.js, Express, PostgreSQL, Supabase and Firebase**.
 
-> 🎥 **Project Demonstration:**  
+> 🎥 **Project Demonstration:**
 > **[INSERT YOUTUBE VIDEO LINK HERE]**
 
 ---
 
 ## 👥 Developer Information
 
-**Project:** Elachi Recipe Management Application  
+**Project:** Elachi Recipe Management Application
 **Academic Year:** 2026
 
 | TEAM MEMBER | STUDENT NUMBER |
@@ -25,63 +26,119 @@ Built with **Kotlin, Jetpack Compose, Node.js, Express, PostgreSQL, Supabase and
 
 # 📑 Table of Contents
 
-- [Project Overview](#project-overview)
-- [Documentation](#documentation)
-- [Technology Stack](#technology-stack)
-- [Key Features](#key-features)
-  - [Recipe Management](#recipe-management)
-  - [Recipe Books](#recipe-books)
-  - [Recipe Discovery](#recipe-discovery)
-  - [Pantry Management](#pantry-management)
-  - [Pantry-Based Recipe Suggestions](#pantry-based-recipe-suggestions)
-  - [Pantry Health](#pantry-health)
-  - [AI Chef Assistant](#ai-chef-assistant)
-  - [Recipe Text Parsing](#recipe-text-parsing)
-  - [Camera and OCR](#camera-and-ocr)
-  - [Cooking Tools](#cooking-tools)
-  - [Achievements](#achievements)
-  - [Cooking Streaks](#cooking-streaks)
-  - [Notifications](#notifications)
-  - [User Profiles](#user-profiles)
-- [System Architecture](#system-architecture)
-- [Android Application](#android-application)
-- [Backend REST API](#backend-rest-api)
-- [Database and Storage](#database-and-storage)
-- [Authentication and Security](#authentication-and-security)
-- [AI Chef Assistant](#ai-chef-assistant-1)
-- [Camera and OCR](#camera-and-ocr-1)
-- [Notifications](#notifications-1)
-- [Achievements and Cooking Streaks](#achievements-and-cooking-streaks)
-- [Project Structure](#project-structure)
-  - [Android Project Structure](#android-project-structure)
-  - [Backend Project Structure](#backend-project-structure)
-- [Requirements](#requirements)
-- [Setup and Run Instructions](#setup-and-run-instructions)
-  - [Clone the Repository](#clone-the-repository)
-  - [Backend Setup](#backend-setup)
-  - [Database Setup](#database-setup)
-  - [Running the Backend](#running-the-backend)
-  - [Running the Android Application](#running-the-android-application)
-  - [Firebase Setup](#firebase-setup)
-  - [Supabase Setup](#supabase-setup)
-  - [AI Configuration](#ai-configuration)
-- [Testing](#testing)
-  - [Backend Tests](#backend-tests)
-  - [Android Unit Tests](#android-unit-tests)
-  - [Android Instrumented Tests](#android-instrumented-tests)
-  - [Manual API Testing](#manual-api-testing)
-- [Deployment](#deployment)
-- [CI and GitHub Workflows](#ci-and-github-workflows)
-- [Security Practices](#security-practices)
-- [Troubleshooting](#troubleshooting)
-- [Development Workflow](#development-workflow)
-- [Repository Hygiene](#repository-hygiene)
-- [Responsible Configuration](#responsible-configuration)
-- [Future Improvements](#future-improvements)
-- [Team](#team)
-- [Code Attribution](#code-attribution)
-- [Final Demonstration](#final-demonstration)
-- [License](#license)
+Project Overview
+
+Documentation
+
+Technology Stack
+
+Key Features
+
+Recipe Management
+
+Recipe Books
+
+Recipe Discovery
+
+Pantry Management
+
+Pantry-Based Recipe Suggestions
+
+Pantry Health
+
+AI Chef Assistant
+
+Recipe Text Parsing
+
+Camera and OCR
+
+Cooking Tools
+
+Achievements
+
+Cooking Streaks
+
+Notifications
+
+User Profiles
+
+System Architecture
+
+Android Application
+
+Backend REST API
+
+Database and Storage
+
+Authentication and Security
+
+AI Chef Assistant
+
+Camera and OCR
+
+Notifications
+
+Achievements and Cooking Streaks
+
+Project Structure
+
+Android Project Structure
+
+Backend Project Structure
+
+Requirements
+
+Setup and Run Instructions
+
+Clone the Repository
+
+Backend Setup
+
+Database Setup
+
+Running the Backend
+
+Running the Android Application
+
+Firebase Setup
+
+Supabase Setup
+
+AI Configuration
+
+Testing
+
+Backend Tests
+
+Android Unit Tests
+
+Android Instrumented Tests
+
+Manual API Testing
+
+Deployment
+
+CI and GitHub Workflows
+
+Security Practices
+
+Troubleshooting
+
+Development Workflow
+
+Repository Hygiene
+
+Responsible Configuration
+
+Future Improvements
+
+Team
+
+Code Attribution
+
+Final Demonstration
+
+License
 
 ---
 
@@ -382,10 +439,10 @@ Elachi follows a client-server architecture.
 │ Firebase Authentication       │
 │ CameraX + ML Kit              │
 └───────────────┬───────────────┘
-                │
-                │ HTTPS / REST API
-                │ Firebase Bearer Token
-                ▼
+│
+│ HTTPS / REST API
+│ Firebase Bearer Token
+▼
 ┌───────────────────────────────┐
 │       Node.js / Express       │
 │                               │
@@ -396,17 +453,17 @@ Elachi follows a client-server architecture.
 │ Achievement Services          │
 │ Notification Services         │
 └───────┬───────────┬───────────┘
-        │           │
-        │           │
-        ▼           ▼
+│           │
+│           │
+▼           ▼
 ┌─────────────┐  ┌────────────────┐
 │  Supabase   │  │ Firebase       │
 │ PostgreSQL  │  │ Authentication │
 │             │  │ Firestore      │
 │ Storage     │  │ FCM            │
 └─────────────┘  └────────────────┘
-        │
-        ▼
+│
+▼
 ┌───────────────────────────────┐
 │          Cohere API           │
 │                               │
@@ -771,27 +828,27 @@ The backend can also provide relevant pantry context to the AI assistant when av
 
 ```text
 Android App
-     │
-     ▼
+│
+▼
 POST /api/chat
-     │
-     ▼
+│
+▼
 Firebase Authentication
-     │
-     ▼
+│
+▼
 Express Backend
-     │
-     ├── User information
-     ├── Pantry context
-     └── Conversation context
-     │
-     ▼
+│
+├── User information
+├── Pantry context
+└── Conversation context
+│
+▼
 Cohere API
-     │
-     ▼
+│
+▼
 AI response
-     │
-     ▼
+│
+▼
 Android App
 ```
 
@@ -805,26 +862,26 @@ A typical recipe capture flow is:
 
 ```text
 Camera
-  │
-  ▼
+│
+▼
 Image Capture
-  │
-  ▼
+│
+▼
 Text Recognition
-  │
-  ▼
+│
+▼
 Extracted Recipe Text
-  │
-  ▼
+│
+▼
 Recipe Parsing
-  │
-  ▼
+│
+▼
 Structured Recipe
-  │
-  ▼
+│
+▼
 User Review
-  │
-  ▼
+│
+▼
 Recipe Saved
 ```
 
@@ -1005,10 +1062,10 @@ andriod/app/src/main/java/com/elachi/app/
 │   └── tools/
 │
 └── util/
-    ├── AlarmPlayer.kt
-    ├── RecipePdfExporter.kt
-    ├── RecipeTextParser.kt
-    └── ServingScaler.kt
+├── AlarmPlayer.kt
+├── RecipePdfExporter.kt
+├── RecipeTextParser.kt
+└── ServingScaler.kt
 ```
 
 ---
@@ -1732,32 +1789,32 @@ A typical development workflow for the project is:
 
 ```text
 1. Create or update a feature
-          │
-          ▼
+│
+▼
 2. Implement Android UI / ViewModel / Repository changes
-          │
-          ▼
+│
+▼
 3. Implement required backend API changes
-          │
-          ▼
+│
+▼
 4. Update database functionality if required
-          │
-          ▼
+│
+▼
 5. Run backend tests
-          │
-          ▼
+│
+▼
 6. Build and test Android application
-          │
-          ▼
+│
+▼
 7. Test the feature end-to-end
-          │
-          ▼
+│
+▼
 8. Review changes for security
-          │
-          ▼
+│
+▼
 9. Commit changes
-          │
-          ▼
+│
+▼
 10. Push to GitHub
 ```
 
@@ -1835,9 +1892,15 @@ Potential future improvements include:
 
 ---
 
-# 🙏 Code Attribution 
+# 📚 Code Attribution
 
-> **Code Attribution**
+- Android Developers, [s.a.]. CameraX overview. [online] Available at: <https://developer.android.com/training/camerax> [Accessed 21 September 2026].
+
+- Android Developers, [s.a.]. Create and manage documents. [online] Available at: <https://developer.android.com/training/data-storage/shared/documents-files> [Accessed 21 September 2026].
+
+- Android Developers, [s.a.]. DataStore. [online] Available at: <https://developer.android.com/topic/libraries/architecture/datastore> [Accessed 21 September 2026].
+
+- Android Developers, [s.a.]. Save data in a local database using Room. [online] Available at: <https://developer.android.com/training/data-storage/room> [Accessed 21 September 2026].
 
 - Axios, [s.a.]. Axios documentation. [online] Available at: <https://axios-http.com/docs/intro> [Accessed 21 September 2026].
 
@@ -1846,6 +1909,10 @@ Potential future improvements include:
 - Express.js, [s.a.]. Express.js routing. [online] Available at: <https://expressjs.com/en/guide/routing/> [Accessed 21 September 2026].
 
 - Firebase, [s.a.]. Add the Firebase Admin SDK to your server. [online] Available at: <https://firebase.google.com/docs/admin/setup> [Accessed 21 September 2026].
+
+- Firebase, [s.a.]. Get started with Firebase Cloud Messaging in Android apps. [online] Available at: <https://firebase.google.com/docs/cloud-messaging/android/get-started> [Accessed 21 September 2026].
+
+- Google Developers, [s.a.]. Recognize text in images with ML Kit on Android. [online] Available at: <https://developers.google.com/ml-kit/vision/text-recognition/v2/android> [Accessed 21 September 2026].
 
 - Microsoft, [s.a.]. Playwright documentation. [online] Available at: <https://playwright.dev/docs/intro> [Accessed 21 September 2026].
 
@@ -1884,3 +1951,4 @@ Third-party libraries and services remain subject to their respective licences a
 Built with Kotlin, Jetpack Compose, Node.js, PostgreSQL, Firebase and Supabase.
 
 </p>
+
