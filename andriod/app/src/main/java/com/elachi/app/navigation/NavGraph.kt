@@ -11,6 +11,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -113,6 +114,11 @@ fun ElachiNavGraph() {
     val navController = rememberNavController()
     val backStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = backStackEntry?.destination?.route
+
+    LaunchedEffect(currentRoute) {
+        android.util.Log.d("Navigation", "Navigating to: $currentRoute")
+    }
+
     val showBottomBar = bottomNavRoutes.any { it == currentRoute }
     val showDrawer = drawerEnabledRoutes.any { it == currentRoute }
     val scope = rememberCoroutineScope()

@@ -16,6 +16,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
 class ElachiApp : Application() {
+    private val TAG = "ElachiApp"
 
     val database: AppDatabase by lazy { AppDatabase.getInstance(this) }
     val api: ApiService by lazy { RetrofitClient.apiService }
@@ -30,6 +31,7 @@ class ElachiApp : Application() {
 
     override fun onCreate() {
         super.onCreate()
+        android.util.Log.d(TAG, "Application onCreate called")
 
         CoroutineScope(Dispatchers.IO).launch {
             try {
