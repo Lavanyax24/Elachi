@@ -56,10 +56,6 @@ import com.elachi.app.ui.theme.ElachiGreen
 import com.elachi.app.ui.theme.ElachiTextPrimary
 import com.elachi.app.ui.theme.ElachiTextSecondary
 
-/**
- * Redesigned Settings screen — grouped sections with icon-led rows
- * and a proper Account block at the bottom.
- */
 @Composable
 fun SettingsScreen(
     viewModel: SettingsViewModel,

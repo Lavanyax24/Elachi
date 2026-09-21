@@ -10,16 +10,11 @@ import kotlinx.coroutines.flow.map
 
 private val Context.dataStore by preferencesDataStore(name = "elachi_settings")
 
-/**
- * Persists lightweight user preferences on-device. Theme and unit
- * preference are used by the app today; the notification-permission flag
- * stops us asking for POST_NOTIFICATIONS on every launch.
- */
 class SettingsRepository(private val context: Context) {
 
     private object Keys {
         fun darkThemeKey(userId: String?) = booleanPreferencesKey("dark_theme_${userId ?: "guest"}")
-        val UNITS = stringPreferencesKey("units") // "metric" | "imperial"
+        val UNITS = stringPreferencesKey("units")
         val SEEN_ONBOARDING = booleanPreferencesKey("seen_onboarding")
         val ASKED_NOTIF_PERMISSION = booleanPreferencesKey("asked_notif_permission")
     }

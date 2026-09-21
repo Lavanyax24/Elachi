@@ -43,10 +43,6 @@ class CameraCaptureViewModel(
             return
         }
 
-        /*
-         * Always parse locally as well. The local result supplies any fields
-         * omitted by the backend and is also the offline fallback.
-         */
         val localResult = RecipeTextParser.parse(cleanedLines)
         val combinedRawText = cleanedLines.joinToString("\n")
 

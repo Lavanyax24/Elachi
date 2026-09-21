@@ -181,7 +181,7 @@ fun CompleteProfileScreen(
                     color = MaterialTheme.colorScheme.primary,
                 )
                 Text(
-                    "Tell us a bit about yourself", 
+                    "Tell us a bit about yourself",
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -368,6 +368,26 @@ fun CompleteProfileScreen(
                 }
             }
 
+            if (viewModel.selectedDietary.any { it !in viewModel.dietaryOptions }) {
+                Spacer(Modifier.height(8.dp))
+                androidx.compose.foundation.layout.FlowRow(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    modifier = Modifier.fillMaxWidth(),
+                ) {
+                    viewModel.selectedDietary.filter { it !in viewModel.dietaryOptions }.forEach { custom ->
+                        FilterChip(
+                            selected = true,
+                            onClick = { viewModel.toggleDietary(custom) },
+                            label = { Text(custom) },
+                            colors = FilterChipDefaults.filterChipColors(
+                                selectedContainerColor = MaterialTheme.colorScheme.primary,
+                                selectedLabelColor = Color.White
+                            )
+                        )
+                    }
+                }
+            }
+
             viewModel.errorMessage.value?.let {
                 Spacer(Modifier.height(12.dp))
                 Text(it, color = MaterialTheme.colorScheme.error)
@@ -403,8 +423,8 @@ fun CompleteProfileScreen(
 
             if (!isEditMode) {
                 Spacer(Modifier.height(8.dp))
-                TextButton(onClick = onDone) { 
-                    Text("Skip for now", color = MaterialTheme.colorScheme.onSurfaceVariant) 
+                TextButton(onClick = onDone) {
+                    Text("Skip for now", color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
             }
 

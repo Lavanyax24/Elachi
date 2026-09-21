@@ -24,10 +24,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
-/**
- * Shared data class and composables for the Privacy Policy and Terms of
- * Service screens so both look identical.
- */
 internal data class PolicySection(
     val title: String,
     val icon: ImageVector,

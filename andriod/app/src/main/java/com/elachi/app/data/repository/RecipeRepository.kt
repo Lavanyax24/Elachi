@@ -296,7 +296,6 @@ class RecipeRepository(
                 },
             )
         } catch (e: Exception) {
-            // Same note as updateBook above.
         }
     }
 

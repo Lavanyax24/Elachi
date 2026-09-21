@@ -22,13 +22,6 @@ import kotlinx.coroutines.launch
 
 private const val CHANNEL_ID = "elachi_default"
 
-/**
- * Handles two things: a new FCM token being issued registers it with the
- * backend so pushes can actually reach this device and an incoming
- * notification while the app is in the foreground FCM only auto-displays
- * notifications when the app is backgrounded, so this is required for
- * foreground delivery too.
- */
 class ElachiMessagingService : FirebaseMessagingService() {
 
     override fun onNewToken(token: String) {
@@ -66,7 +59,7 @@ class ElachiMessagingService : FirebaseMessagingService() {
         if (Build.VERSION.SDK_INT >= 33 &&
             ActivityCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED
         ) {
-            return // Permission not granted — MainActivity requests it on first launch, see below.
+            return
         }
         NotificationManagerCompat.from(context).notify(System.currentTimeMillis().toInt(), notification)
     }
@@ -84,13 +77,9 @@ class ElachiMessagingService : FirebaseMessagingService() {
     }
 
     companion object {
-        /** Called both from onNewToken above and once at app launch see
-         * MainActivity registering on every launch as well as on token
-         * refresh covers the case where the user logged out and back in
-         * with a different account on the same device. */
         fun registerTokenWithBackend(context: Context, token: String) {
             val app = context.applicationContext as? ElachiApp ?: return
-            if (app.authRepository.currentUser == null) return // Not signed in yet — MainActivity's post-login call covers this instead.
+            if (app.authRepository.currentUser == null) return
             CoroutineScope(Dispatchers.IO).launch {
                 try {
                     app.api.registerNotificationToken(com.elachi.app.data.remote.dto.NotificationTokenRequest(token))

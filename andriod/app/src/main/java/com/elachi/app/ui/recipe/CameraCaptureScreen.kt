@@ -122,10 +122,6 @@ fun CameraCaptureScreen(
         )
     }
 
-    /*
-     * This replaces PickVisualMedia, which only returns one Uri.
-     * PickMultipleVisualMedia returns a List<Uri>.
-     */
     val screenshotPicker = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.PickMultipleVisualMedia(
             maxItems = MAX_SCREENSHOTS,
@@ -159,11 +155,7 @@ fun CameraCaptureScreen(
                         .filter { it.isNotBlank() }
 
                     if (screenshotLines.isNotEmpty()) {
-                        /*
-                         * A blank line separates screenshot pages without
-                         * inserting text that could be mistaken for a recipe
-                         * title, ingredient or cooking step.
-                         */
+
                         if (combinedRawLines.isNotEmpty()) {
                             combinedRawLines.add("")
                         }
@@ -172,10 +164,6 @@ fun CameraCaptureScreen(
                         successfulScreenshots++
                     }
                 } catch (exception: Exception) {
-                    /*
-                     * Continue processing the other screenshots if one image
-                     * cannot be read.
-                     */
                 }
             }
 

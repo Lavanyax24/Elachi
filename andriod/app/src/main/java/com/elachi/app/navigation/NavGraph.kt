@@ -109,7 +109,7 @@ fun ElachiNavGraph() {
         return
     }
 
-    val elachiApp = app // Smart cast holder
+    val elachiApp = app
     val navController = rememberNavController()
     val backStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = backStackEntry?.destination?.route
@@ -119,8 +119,6 @@ fun ElachiNavGraph() {
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
 
     // ---------- Drawer header data ----------
-    // Scoped to NavGraph so the drawer has access to real profile data.
-    // Only constructed when a user is signed in.
     val currentUserId = UserSession.userId
     val profileVm: ProfileViewModel? = if (currentUserId != null) {
         viewModel(
@@ -136,14 +134,10 @@ fun ElachiNavGraph() {
         )
     } else null
 
-    // Real display name from the profile fetch; falls back to "Chef" while
-    // the request is in flight or if the profile has a blank name.
     val drawerDisplayName = profileVm?.profile?.value?.displayName
         ?.takeIf { it.isNotBlank() }
         ?: "Chef"
 
-    // UserProfileDto has no email field, and the drawer gracefully handles an
-    // empty subtitle. Left blank rather than faking a value.
     val drawerEmail = ""
 
     ModalNavigationDrawer(
@@ -821,8 +815,6 @@ fun ElachiNavGraph() {
                     )
                 }
 
-                // Tutorial-only onboarding — returns to Help when finished, does not
-                // continue into Complete Profile / Create First Book.
                 composable("onboarding_tutorial") {
                     OnboardingScreen(
                         tutorialMode = true,

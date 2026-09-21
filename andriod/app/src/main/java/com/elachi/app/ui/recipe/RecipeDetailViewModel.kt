@@ -17,6 +17,7 @@ import com.elachi.app.data.repository.RecipeRepository
 import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
@@ -44,7 +45,6 @@ class RecipeDetailViewModel(
     val remoteRecipe = mutableStateOf<com.elachi.app.data.remote.dto.RecipeDto?>(null)
 
     init {
-        // If the recipe is not found locally, try to fetch it from the API
         viewModelScope.launch {
             val local = recipeRepository.getRecipeOnce(recipeId)
             if (local == null) {
@@ -98,7 +98,6 @@ class RecipeDetailViewModel(
         }
     }
 
-    /** null = dialog closed, empty list = user already has everything. */
     val missingIngredients = mutableStateOf<List<MissingIngredient>?>(null)
     val shoppingMessage = mutableStateOf<String?>(null)
 
@@ -137,6 +136,48 @@ class RecipeDetailViewModel(
         shoppingMessage.value = null
     }
 
+    val isSavingToCookbook = mutableStateOf(false)
+    val saveToCookbookMessage = mutableStateOf<String?>(null)
+
+    fun saveRemoteRecipeToCookbook() {
+        val dto = remoteRecipe.value ?: return
+        if (isSavingToCookbook.value) return
+
+        viewModelScope.launch {
+            isSavingToCookbook.value = true
+            try {
+                // If the state flow is empty, it might still be loading from DB.
+                // We'll try to refresh from network as a backup, and wait a moment for the flow to emit.
+                if (availableBooks.value.isEmpty()) {
+                    recipeRepository.refreshBooksFromNetwork(userId)
+                }
+                
+                // Wait for the flow to emit something if it hasn't yet, or use the current value.
+                // We use firstOrNull on the flow itself to get the most up-to-date data.
+                val targetBookId = recipeRepository.observeBooks(userId)
+                    .firstOrNull { it.isNotEmpty() }
+                    ?.firstOrNull()?.id
+                    ?: availableBooks.value.firstOrNull()?.id
+
+                if (targetBookId == null) {
+                    saveToCookbookMessage.value = "Create a cookbook first, then save this recipe."
+                } else {
+                    recipeRepository.upsertRecipeFromServer(userId, dto.copy(bookId = targetBookId))
+                    saveToCookbookMessage.value = "Saved to your cookbook."
+                }
+            } catch (exception: Exception) {
+                Log.e("RecipeDetailVM", "saveRemoteRecipeToCookbook failed", exception)
+                saveToCookbookMessage.value = "Couldn't save this recipe. Please try again."
+            } finally {
+                isSavingToCookbook.value = false
+            }
+        }
+    }
+
+    fun clearSaveToCookbookMessage() {
+        saveToCookbookMessage.value = null
+    }
+
     fun deleteRecipe(onDeleted: () -> Unit) {
         if (isDeleting.value) return
 
@@ -160,7 +201,6 @@ class RecipeDetailViewModel(
         onUnlocked: (List<String>) -> Unit,
     ) {
         viewModelScope.launch {
-            // Local work only (fast), so the screen can close straight away.
             recipeRepository.markCooked(recipeId)
 
             val unlocked =
@@ -169,9 +209,6 @@ class RecipeDetailViewModel(
                     recipeId,
                 )
 
-            // Sync with the server in the background. NonCancellable is needed
-            // because leaving the screen clears this ViewModel, which would
-            // otherwise cancel the request before it is sent.
             val completedAt = java.time.Instant.now().toString()
             viewModelScope.launch(NonCancellable) {
                 try {

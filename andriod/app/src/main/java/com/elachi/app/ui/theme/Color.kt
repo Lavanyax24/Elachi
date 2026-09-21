@@ -20,11 +20,10 @@ val DarkTextPrimary = Color(0xFFE4E3DA)
 val DarkTextSecondary = Color(0xFFA4A79D)
 val DarkBorder = Color(0xFF32362D)
 
-// Gradient colours, used on Splash / Login / SignUp
+
 val ElachiGradientStart = Color(0xFFD97706)
 val ElachiGradientEnd = Color(0xFF452411)
 
-// Light surface tones kept for backward-compatibility with existing screens
 val ElachiBrownLight = Color(0xFFF6F3EE)
 val ElachiOrange = ElachiAccent
 val ElachiSurface = Color(0xFFFFFFFF)

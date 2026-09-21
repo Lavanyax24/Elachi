@@ -35,9 +35,6 @@ import com.elachi.app.R
 import com.elachi.app.data.repository.AuthRepository
 import kotlinx.coroutines.delay
 
-/**
- * Shown for 2 seconds while the app checks whether a user is signed in.
- */
 @Composable
 fun SplashScreen(
     authRepository: AuthRepository,
@@ -64,9 +61,9 @@ fun SplashScreen(
             .background(
                 brush = Brush.linearGradient(
                     colors = listOf(
-                        Color(0xFFD97706),   // lighter warm orange (top-left)
-                        Color(0xFF8A4B2A),   // mid cinnamon brown
-                        Color(0xFF452411),   // dark burnt brown (bottom-right)
+                        Color(0xFFD97706),
+                        Color(0xFF8A4B2A),
+                        Color(0xFF452411),
                     ),
                     start = Offset(0f, 0f),
                     end = Offset(Float.POSITIVE_INFINITY, Float.POSITIVE_INFINITY),

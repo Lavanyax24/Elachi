@@ -53,7 +53,6 @@ class AuthViewModel(private val authRepository: AuthRepository) : ViewModel() {
             when (val result = authRepository.signInWithEmail(email, password)) {
                 is AuthResult.Success -> _uiState.value = AuthUiState.Success(result.isNewUser)
                 is AuthResult.Error -> {
-                    // Check if the error is related to credentials or generic Firebase errors to supply the custom message
                     val customMessage = if (result.message.contains("password", ignoreCase = true) ||
                         result.message.contains("email", ignoreCase = true) ||
                         result.message.contains("invalid", ignoreCase = true) ||

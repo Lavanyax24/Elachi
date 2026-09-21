@@ -72,7 +72,6 @@ fun HomeScreen(
         ) {
             Spacer(modifier = Modifier.height(10.dp))
 
-            // Pantry Health + Your Momentum row
             Row(
                 modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
                 horizontalArrangement = Arrangement.spacedBy(12.dp),
@@ -160,7 +159,6 @@ fun HomeScreen(
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            // What You Can Cook Now  top pantry match
             val topMatch = matches.firstOrNull()
             if (topMatch != null) {
                 Column(modifier = Modifier.padding(horizontal = 16.dp)) {
@@ -258,7 +256,6 @@ fun HomeScreen(
                 Spacer(modifier = Modifier.height(24.dp))
             }
 
-            // For You remaining matches beyond the top one
             val forYou = matches.drop(1)
             if (forYou.isNotEmpty()) {
                 Row(
@@ -283,7 +280,6 @@ fun HomeScreen(
                 Spacer(modifier = Modifier.height(24.dp))
             }
 
-            // Recent Activity
             Column(modifier = Modifier.padding(horizontal = 16.dp)) {
                 Text(
                     "Recent Activity", 

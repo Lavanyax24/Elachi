@@ -9,10 +9,6 @@ import android.media.ToneGenerator
 import android.os.Build
 import android.util.Log
 
-/**
- * Plays the phone's alarm sound (looping on Android 9+) until [stop] is called.
- * Falls back to a beep if the device has no alarm sound configured.
- */
 class AlarmPlayer(context: Context) {
     private val appContext = context.applicationContext
     private var ringtone: Ringtone? = null

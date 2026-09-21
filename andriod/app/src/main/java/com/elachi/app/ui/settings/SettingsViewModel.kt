@@ -39,12 +39,10 @@ class SettingsViewModel(
     fun deleteAccount(api: com.elachi.app.data.remote.ApiService, onDone: () -> Unit) {
         viewModelScope.launch {
             try {
-                // Call the API service to remove it on the remote backend
                 api.deleteAccount()
             } catch (e: Exception) {
                 android.util.Log.e("SettingsViewModel", "Remote account deletion failed", e)
             }
-            // Delete the local user session and Firebase auth account completely
             try {
                 authRepository.currentUser?.delete()?.also {
                     it.addOnCompleteListener { task ->

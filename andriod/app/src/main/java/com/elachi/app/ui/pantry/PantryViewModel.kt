@@ -23,7 +23,6 @@ class PantryViewModel(
     private val achievementRepository: AchievementRepository,
 ) : ViewModel() {
 
-    /** One-shot message for the screen's snackbar (errors and confirmations). */
     val message = mutableStateOf<String?>(null)
 
     fun clearMessage() {
@@ -43,10 +42,9 @@ class PantryViewModel(
                 initialValue = emptyList(),
             )
 
-    /** Not-yet-bought items first (newest first), bought items at the bottom. */
     val shoppingList: StateFlow<List<ShoppingListItemEntity>> =
         pantryRepository.observeShoppingList(userId)
-            .map { list -> list.sortedBy { it.isBought } } // stable sort keeps newest-first inside each group
+            .map { list -> list.sortedBy { it.isBought } }
             .catch { e ->
                 Log.e(TAG, "observeShoppingList failed", e)
                 message.value = "Couldn't load your shopping list."
@@ -59,17 +57,12 @@ class PantryViewModel(
             )
 
     init {
-        // Tidy up old duplicates and retry anything that failed to upload earlier.
         launchSafely(errorMessage = null) {
             pantryRepository.cleanUpShoppingDuplicates(userId)
             pantryRepository.retryPendingPantrySync(userId)
         }
     }
 
-    /**
-     * Runs [block] and turns any failure into a friendly message instead of a crash.
-     * Pass null as [errorMessage] for background work the user doesn't need to hear about.
-     */
     private fun launchSafely(errorMessage: String?, block: suspend () -> Unit): Job =
         viewModelScope.launch {
             try {
@@ -91,7 +84,6 @@ class PantryViewModel(
                 message.value = "Saved on your phone. We'll sync \"$name\" when you're back online."
             }
 
-            // An achievement problem must never make a successful add look like a failure.
             try {
                 achievementRepository.onPantryItemAdded(totalPantryItems = pantryItems.value.size + 1)
             } catch (e: CancellationException) {

@@ -49,11 +49,20 @@ fun RecipeDetailScreen(
     val snackbarHostState = remember { SnackbarHostState() }
     val missingIngredients = viewModel.missingIngredients.value
     val shoppingMessage = viewModel.shoppingMessage.value
+    val isSavingToCookbook by viewModel.isSavingToCookbook
+    val saveToCookbookMessage = viewModel.saveToCookbookMessage.value
 
     LaunchedEffect(shoppingMessage) {
         if (shoppingMessage != null) {
             snackbarHostState.showSnackbar(shoppingMessage)
             viewModel.clearShoppingMessage()
+        }
+    }
+
+    LaunchedEffect(saveToCookbookMessage) {
+        if (saveToCookbookMessage != null) {
+            snackbarHostState.showSnackbar(saveToCookbookMessage)
+            viewModel.clearSaveToCookbookMessage()
         }
     }
 
@@ -86,8 +95,7 @@ fun RecipeDetailScreen(
                         IconButton(onClick = { viewModel.toggleFavourite(recipe!!.isFavourite) }) {
                             Icon(if (recipe!!.isFavourite) Icons.Filled.Favorite else Icons.Filled.FavoriteBorder, contentDescription = "Favourite")
                         }
-                        
-                        // Visibility Toggle
+
                         Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(start = 4.dp)) {
                             Icon(
                                 imageVector = if (recipe!!.isPrivate) Icons.Filled.Lock else Icons.Filled.Public,
@@ -150,7 +158,7 @@ fun RecipeDetailScreen(
             }
             item {
                 Text(
-                    "$cuisine · $cookTime min · $difficulty", 
+                    "$cuisine · $cookTime min · $difficulty",
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -172,12 +180,12 @@ fun RecipeDetailScreen(
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text("Servings: $currentServings", style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onSurface)
                     Spacer(Modifier.weight(1f))
-                    IconButton(onClick = { if (servingMultiplier > 1) servingMultiplier-- }) { 
-                        Icon(Icons.Filled.Remove, contentDescription = "Fewer servings", tint = MaterialTheme.colorScheme.primary) 
+                    IconButton(onClick = { if (servingMultiplier > 1) servingMultiplier-- }) {
+                        Icon(Icons.Filled.Remove, contentDescription = "Fewer servings", tint = MaterialTheme.colorScheme.primary)
                     }
                     Text("$servingMultiplier×", color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.Bold)
-                    IconButton(onClick = { servingMultiplier++ }) { 
-                        Icon(Icons.Filled.Add, contentDescription = "More servings", tint = MaterialTheme.colorScheme.primary) 
+                    IconButton(onClick = { servingMultiplier++ }) {
+                        Icon(Icons.Filled.Add, contentDescription = "More servings", tint = MaterialTheme.colorScheme.primary)
                     }
                 }
             }
@@ -224,12 +232,17 @@ fun RecipeDetailScreen(
                         }
                     } else {
                         Button(
-                            onClick = { Toast.makeText(context, "Save recipe to cook", Toast.LENGTH_SHORT).show() },
+                            onClick = { viewModel.saveRemoteRecipeToCookbook() },
+                            enabled = !isSavingToCookbook,
                             modifier = Modifier.weight(1f),
                             colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
                             shape = RoundedCornerShape(12.dp)
                         ) {
-                            Text("Save to Cookbook", color = Color.White)
+                            if (isSavingToCookbook) {
+                                CircularProgressIndicator(modifier = Modifier.size(18.dp), strokeWidth = 2.dp, color = Color.White)
+                            } else {
+                                Text("Save to Cookbook", color = Color.White)
+                            }
                         }
                     }
                 }
@@ -403,10 +416,10 @@ private fun MissingIngredientsDialog(
                 onClick = { onConfirm(items.filterIndexed { index, _ -> checked[index] }) },
             ) { Text(if (selectedCount == 0) "Add to list" else "Add $selectedCount to list", color = MaterialTheme.colorScheme.primary) }
         },
-        dismissButton = { 
-            TextButton(onClick = onDismiss) { 
-                Text("Cancel", color = MaterialTheme.colorScheme.onSurfaceVariant) 
-            } 
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Cancel", color = MaterialTheme.colorScheme.onSurfaceVariant)
+            }
         },
     )
 }

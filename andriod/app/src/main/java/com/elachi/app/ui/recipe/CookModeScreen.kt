@@ -1,11 +1,5 @@
 package com.elachi.app.ui.recipe
 
-import android.media.AudioAttributes
-import android.media.AudioManager
-import android.media.Ringtone
-import android.media.RingtoneManager
-import android.media.ToneGenerator
-import android.os.Build
 import android.os.CountDownTimer
 import android.speech.tts.TextToSpeech
 import androidx.compose.foundation.layout.*
@@ -19,6 +13,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
+import com.elachi.app.util.AlarmPlayer
 import kotlinx.coroutines.delay
 import java.util.Locale
 
@@ -35,10 +30,10 @@ fun CookModeScreen(
     var countDownTimer by remember { mutableStateOf<CountDownTimer?>(null) }
     var showCustomTimerDialog by remember { mutableStateOf(false) }
     var showTimerDoneDialog by remember { mutableStateOf(false) }
-    var alarm by remember { mutableStateOf<Ringtone?>(null) }
     var ttsReady by remember { mutableStateOf(false) }
     var finishing by remember { mutableStateOf(false) }
 
+    val alarmPlayer = remember(context) { AlarmPlayer(context) }
     val textToSpeech = remember(context) { TextToSpeech(context) { status -> ttsReady = status == TextToSpeech.SUCCESS } }
 
     LaunchedEffect(currentStep, steps, ttsReady) {
@@ -48,20 +43,11 @@ fun CookModeScreen(
         }
     }
 
-    fun stopAlarm() { try { alarm?.stop() } catch (_: Exception) {} ; alarm = null }
+    fun stopAlarm() { alarmPlayer.stop() }
 
     fun playAlarm() {
-        stopAlarm(); textToSpeech.stop()
-        try {
-            val uri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM) ?: RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION)
-            val ringtone = RingtoneManager.getRingtone(context, uri)
-            if (ringtone != null) {
-                ringtone.audioAttributes = AudioAttributes.Builder().setUsage(AudioAttributes.USAGE_ALARM).setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION).build()
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) ringtone.isLooping = true
-                ringtone.play(); alarm = ringtone; return
-            }
-        } catch (_: Exception) {}
-        try { ToneGenerator(AudioManager.STREAM_ALARM, 100).startTone(ToneGenerator.TONE_CDMA_ALERT_CALL_GUARD, 3000) } catch (_: Exception) {}
+        textToSpeech.stop()
+        alarmPlayer.play()
     }
 
     LaunchedEffect(showTimerDoneDialog) { if (showTimerDoneDialog) { delay(30_000L); stopAlarm(); showTimerDoneDialog = false } }

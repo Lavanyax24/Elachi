@@ -71,18 +71,16 @@ class AchievementRepository(
             CookSessionEntity(id = UUID.randomUUID().toString(), userId = userId, recipeId = recipeId, completedAt = System.currentTimeMillis()),
         )
 
-        // 1. Cook-session counter -> "recipesCooked" achievements
         val totalCooked = pantryDao.countCookSessions(userId)
         newlyUnlocked += checkAndUnlock("recipesCooked", totalCooked)
 
-        // 2. Streak calculation
         val today = LocalDate.now(ZoneOffset.UTC)
         val existing = achievementDao.getStreak(userId)
         val newStreak = when (val lastDay = existing?.lastCookedDateEpochDay?.let { LocalDate.ofEpochDay(it) }) {
             null -> 1
-            today -> existing.currentStreak // already logged today, no change
+            today -> existing.currentStreak
             today.minusDays(1) -> existing.currentStreak + 1
-            else -> 1 // streak broken
+            else -> 1
         }
         val longest = maxOf(newStreak, existing?.longestStreak ?: 0)
         achievementDao.upsertStreak(

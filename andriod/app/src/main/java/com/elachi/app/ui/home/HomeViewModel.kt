@@ -66,7 +66,6 @@ class HomeViewModel(
             }
         }
 
-        // Fetch interests once from the profile API.
         viewModelScope.launch {
             profileRepository.getMyProfile()
                 .onSuccess { profile ->

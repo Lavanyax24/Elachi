@@ -54,9 +54,6 @@ class AuthRepository(
             val result = auth.signInWithEmailAndPassword(email, password).await()
             val user = result.user ?: return AuthResult.Error("Sign in failed. Please try again.")
 
-            // Derive name from the Firebase user's displayName if present.
-            // For email/password sign-ins this is often blank, so fall back to
-            // an empty string — the backend generates a profile either way.
             val (first, last) = splitDisplayName(user.displayName)
             syncProfileWithBackend(user, firstName = first, surname = last)
 
@@ -83,12 +80,6 @@ class AuthRepository(
         }
     }
 
-    /**
-     * Splits a Firebase displayName into (first, last). Google sign-ins
-     * typically return "First Last"; email/password sign-ups often return
-     * null, in which case both parts come back blank and the backend
-     * generates a fallback display name.
-     */
     private fun splitDisplayName(displayName: String?): Pair<String, String> {
         if (displayName.isNullOrBlank()) return "" to ""
         val parts = displayName.trim().split(" ", limit = 2)
@@ -125,10 +116,6 @@ class AuthRepository(
         UserSession.clear()
     }
 
-    /**
-     * Attempts to restore the UserSession from the current Firebase user.
-     * Should be called at app startup if currentUser is not null.
-     */
     suspend fun restoreSession(): Boolean {
         val user = currentUser ?: return false
         val (first, last) = splitDisplayName(user.displayName)

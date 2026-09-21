@@ -48,7 +48,6 @@ private const val HERO_HEIGHT = 200f
 
 object RecipePdfExporter {
 
-    /** Suspend because the recipe photo has to be downloaded. Call from a coroutine. */
     suspend fun export(
         context: Context,
         recipe: RecipeEntity,
@@ -86,12 +85,10 @@ object RecipePdfExporter {
         context.startActivity(Intent.createChooser(send, "Share recipe PDF").addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
     }
 
-    // ------------------------------------------------------------------
-
     private suspend fun loadBitmap(context: Context, url: String): Bitmap? = try {
         val request = ImageRequest.Builder(context)
             .data(url)
-            .allowHardware(false) // hardware bitmaps can't be drawn onto a PDF canvas
+            .allowHardware(false)
             .size(1200)
             .build()
         (context.imageLoader.execute(request) as? SuccessResult)?.drawable?.toBitmap()
@@ -197,7 +194,6 @@ object RecipePdfExporter {
     }
 
     private fun drawHero(canvas: Canvas, bmp: Bitmap, x: Float, y: Float, w: Float, h: Float) {
-        // centre-crop the bitmap into a rounded rectangle
         val targetRatio = w / h
         val srcRatio = bmp.width.toFloat() / bmp.height
         val src = if (srcRatio > targetRatio) {
@@ -248,7 +244,6 @@ object RecipePdfExporter {
             .build()
 }
 
-/** Handles page creation, page breaks and the footer so the drawing code stays simple. */
 private class PageWriter(private val doc: PdfDocument) {
     private var pageNumber = 0
     private lateinit var page: PdfDocument.Page

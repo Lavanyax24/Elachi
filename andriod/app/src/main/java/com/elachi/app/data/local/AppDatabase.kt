@@ -23,7 +23,7 @@ import com.elachi.app.data.local.entities.*
         UserAchievementProgressEntity::class,
         StreakRecordEntity::class,
     ],
-    version = 2, // bumped for RecipeEntity's new @ForeignKey to RecipeBookEntity
+    version = 2,
     exportSchema = false,
 )
 abstract class AppDatabase : RoomDatabase() {

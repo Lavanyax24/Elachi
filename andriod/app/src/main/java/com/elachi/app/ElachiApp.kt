@@ -31,7 +31,6 @@ class ElachiApp : Application() {
     override fun onCreate() {
         super.onCreate()
 
-        // Seed achievements in background without blocking app startup
         CoroutineScope(Dispatchers.IO).launch {
             try {
                 achievementRepository.seedDefinitionsIfNeeded()

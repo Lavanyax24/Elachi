@@ -15,7 +15,6 @@ import java.util.UUID
 
 data class RecipeMatch(val recipe: RecipeEntity, val matchPercent: Int)
 
-/** What happened when something was added to the shopping list. */
 data class ShoppingAddResult(
     val merged: Boolean,
     val name: String,
@@ -23,7 +22,6 @@ data class ShoppingAddResult(
     val unit: String,
 )
 
-/** An ingredient the user still needs to buy for a recipe. */
 data class MissingIngredient(
     val name: String,
     val quantity: Double,
@@ -38,9 +36,7 @@ class PantryRepository(
 ) {
     fun observePantry(userId: String): Flow<List<PantryItemEntity>> = pantryDao.observePantry(userId)
     fun observeShoppingList(userId: String): Flow<List<ShoppingListItemEntity>> = pantryDao.observeShoppingList(userId)
-
-    /** Saves on the phone first. Returns true if the server accepted it too. */
-    suspend fun addPantryItem(userId: String, name: String, quantity: Double, unit: String): Boolean {
+     suspend fun addPantryItem(userId: String, name: String, quantity: Double, unit: String): Boolean {
         val item = PantryItemEntity(
             id = UUID.randomUUID().toString(), userId = userId, name = name,
             quantity = quantity, unit = unit, updatedAt = System.currentTimeMillis(),
@@ -49,11 +45,6 @@ class PantryRepository(
         return syncPantryItem(item)
     }
 
-    /**
-     * Uploads one item. On any failure the item is flagged so it can be retried later.
-     * The API has no update endpoint and re-POSTing an existing id fails, so when
-     * [replaceExisting] is true the old server copy is deleted first (harmless if it isn't there).
-     */
     private suspend fun syncPantryItem(item: PantryItemEntity, replaceExisting: Boolean = false): Boolean {
         return try {
             if (replaceExisting) {
@@ -78,8 +69,7 @@ class PantryRepository(
         }
     }
 
-    /** Saves the edit on the phone first. Returns true if the server was updated too. */
-    suspend fun updatePantryItem(item: PantryItemEntity, name: String, quantity: Double, unit: String): Boolean {
+   suspend fun updatePantryItem(item: PantryItemEntity, name: String, quantity: Double, unit: String): Boolean {
         val updated = item.copy(
             name = name, quantity = quantity, unit = unit,
             updatedAt = System.currentTimeMillis(),
@@ -88,13 +78,10 @@ class PantryRepository(
         return syncPantryItem(updated, replaceExisting = true)
     }
 
-    /** Retries anything that could not be uploaded earlier (e.g. added or edited while offline). */
     suspend fun retryPendingPantrySync(userId: String) {
-        // replaceExisting makes this safe even if the server already has a copy.
         pantryDao.getPendingPantryItems(userId).forEach { syncPantryItem(it, replaceExisting = true) }
     }
 
-    /** Removes locally first. Returns true if the server delete worked too. */
     suspend fun deletePantryItem(id: String): Boolean {
         pantryDao.delete(id)
         return try {
@@ -109,11 +96,6 @@ class PantryRepository(
         }
     }
 
-    /**
-     * Adds to the shopping list without ever creating a duplicate row.
-     * If the same ingredient (same unit, not yet bought) is already there,
-     * the quantities are combined instead. "Tomato" and "tomatoes" count as the same.
-     */
     suspend fun addShoppingItem(userId: String, name: String, quantity: Double, unit: String): ShoppingAddResult {
         val key = nameKey(name)
         val unitKey = unit.trim().lowercase()
@@ -142,8 +124,7 @@ class PantryRepository(
     suspend fun clearBoughtShoppingItems(userId: String) = pantryDao.clearBoughtShoppingItems(userId)
     suspend fun clearShoppingList(userId: String) = pantryDao.clearShoppingList(userId)
 
-    /** One-off tidy-up: merges duplicate rows that were created before duplicates were prevented. */
-    suspend fun cleanUpShoppingDuplicates(userId: String) {
+     suspend fun cleanUpShoppingDuplicates(userId: String) {
         val groups = pantryDao.getShoppingListOnce(userId)
             .filter { !it.isBought }
             .groupBy { nameKey(it.name) to it.unit.trim().lowercase() }
@@ -160,18 +141,8 @@ class PantryRepository(
 
     private fun roundTo2(value: Double): Double = (value * 100).roundToInt() / 100.0
 
-    /** Same-ingredient key: ignores case, punctuation and simple plurals. */
     private fun nameKey(name: String): Set<String> =
         tokens(name).ifEmpty { setOf(name.trim().lowercase()) }
-
-    /**
-     * Works out what the user still needs to buy for a recipe.
-     *  - quantities are scaled to the servings currently selected
-     *  - "flour" is matched against "plain flour" in the pantry (word based, so
-     *    "salt" will not wrongly match "unsalted butter")
-     *  - if the pantry has some but not enough (same unit), only the shortfall is returned
-     *  - items already on the (unbought) shopping list are flagged
-     */
     suspend fun getMissingIngredients(
         userId: String,
         recipeId: String,
@@ -193,7 +164,7 @@ class PantryRepository(
                 inPantry == null -> needed
                 inPantry.unit.trim().equals(ingredient.unit.trim(), ignoreCase = true) ->
                     needed - inPantry.quantity
-                else -> 0.0 // different units: assume the pantry covers it
+                else -> 0.0
             }
 
             if (inPantry != null && stillNeeded <= 0.0) {
@@ -221,9 +192,9 @@ class PantryRepository(
             .toSet()
 
     private fun singular(word: String): String = when {
-        word.endsWith("oes") && word.length > 4 -> word.dropLast(2) // tomatoes -> tomato
+        word.endsWith("oes") && word.length > 4 -> word.dropLast(2)
         word.endsWith("ss") -> word
-        word.endsWith("s") && word.length > 3 -> word.dropLast(1)   // onions -> onion
+        word.endsWith("s") && word.length > 3 -> word.dropLast(1)
         else -> word
     }
 
