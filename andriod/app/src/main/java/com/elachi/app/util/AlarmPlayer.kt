@@ -9,6 +9,9 @@ import android.media.ToneGenerator
 import android.os.Build
 import android.util.Log
 
+//This is the class that plays the alarm when the timer is up
+//It works by playing a ringtone or a beep sound
+
 class AlarmPlayer(context: Context) {
     private val appContext = context.applicationContext
     private var ringtone: Ringtone? = null

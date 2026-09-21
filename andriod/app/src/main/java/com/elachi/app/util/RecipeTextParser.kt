@@ -2,6 +2,13 @@ package com.elachi.app.util
 
 import java.util.Locale
 
+/*
+* This class is how Elachi can extract text from a recipe
+* This class processes raw recipe text by detecting titles, ingredients, steps, servings,
+* and cooking times using regex patterns and normalization rules.
+* It then structures the extracted data into a ParsedRecipe object with clean quantities, units, and step instructions.
+*/
+
 data class DraftIngredient(
     var name: String = "",
     var quantity: String = "",

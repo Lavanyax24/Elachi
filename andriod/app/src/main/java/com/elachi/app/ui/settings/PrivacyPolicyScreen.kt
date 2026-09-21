@@ -26,6 +26,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.elachi.app.ui.common.ElachiTopBar
 
+// This is the applications privacy policy
+
 private val PRIVACY_SECTIONS = listOf(
     PolicySection(
         title = "Information We Collect",

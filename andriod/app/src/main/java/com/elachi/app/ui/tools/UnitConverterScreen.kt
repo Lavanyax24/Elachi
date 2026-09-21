@@ -12,6 +12,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 
+// This is the unit convertor class that allows the user to choose a measurement and can convert it depending on what the recipe states
+
 private val UNITS_BY_CATEGORY = mapOf(
     "Weight" to listOf("g", "kg", "oz", "lb"),
     "Volume" to listOf("ml", "l", "cups", "tbsp", "tsp", "fl oz"),

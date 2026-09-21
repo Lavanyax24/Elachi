@@ -21,6 +21,8 @@ import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
+// This class allows the user to view a recipe in detail.
+
 class RecipeDetailViewModel(
     private val userId: String,
     private val recipeId: String,

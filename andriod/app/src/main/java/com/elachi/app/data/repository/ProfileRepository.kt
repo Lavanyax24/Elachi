@@ -4,6 +4,7 @@ import com.elachi.app.data.remote.ApiService
 import com.elachi.app.data.remote.dto.UpdateProfileRequest
 import com.elachi.app.data.remote.dto.UserProfileDto
 
+//This class handles the profile data.
 
 class ProfileRepository(private val api: ApiService) {
 

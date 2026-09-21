@@ -35,6 +35,8 @@ import com.elachi.app.R
 import com.elachi.app.data.repository.AuthRepository
 import kotlinx.coroutines.delay
 
+// This is the splash screen
+
 @Composable
 fun SplashScreen(
     authRepository: AuthRepository,

@@ -25,6 +25,8 @@ import coil.compose.AsyncImage
 import com.elachi.app.data.local.entities.RecipeEntity
 import com.elachi.app.ui.common.ElachiTopBar
 
+// this is the home screen that displays the users streaks and achievements as well as what the recipes the user may be interested in
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(

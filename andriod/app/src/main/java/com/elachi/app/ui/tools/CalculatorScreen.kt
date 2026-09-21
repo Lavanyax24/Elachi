@@ -14,6 +14,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
+// This is the calculator screen, where they can add, subtract, multiply and divide numbers
+
 @Composable
 fun CalculatorScreen() {
     var expression by remember { mutableStateOf("") }

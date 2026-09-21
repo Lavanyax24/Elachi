@@ -27,6 +27,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.elachi.app.ui.common.ElachiTopBar
 
+// This screen displays Elachi's Terms of Service and explains the conditions users agree to when using the application.
+// It presents information about user accounts, uploaded content, cooking safety, application availability, and acceptable use.
+// The terms are organised into clear sections using reusable cards within a vertically scrollable Compose interface.
+
 private val TERMS_SECTIONS = listOf(
     PolicySection(
         title = "About Elachi",

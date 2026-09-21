@@ -56,6 +56,10 @@ import com.elachi.app.ui.theme.ElachiGreen
 import com.elachi.app.ui.theme.ElachiTextPrimary
 import com.elachi.app.ui.theme.ElachiTextSecondary
 
+// This repository manages the application's locally stored settings and preferences using Android DataStore.
+// It stores user preferences such as dark theme selection, measurement units, onboarding status, and notification permission state.
+// It provides observable data flows and functions for reading and updating these settings throughout the application.
+
 @Composable
 fun SettingsScreen(
     viewModel: SettingsViewModel,

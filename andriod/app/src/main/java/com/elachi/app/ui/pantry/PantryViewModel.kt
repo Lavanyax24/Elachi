@@ -17,6 +17,8 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
+// This class handles the pantry screen.
+
 class PantryViewModel(
     private val userId: String,
     private val pantryRepository: PantryRepository,

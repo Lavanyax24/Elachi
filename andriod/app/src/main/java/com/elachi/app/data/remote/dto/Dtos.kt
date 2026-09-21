@@ -1,5 +1,11 @@
 package com.elachi.app.data.remote.dto
 
+/*
+* This file defines the data transfer objects (DTOs) used in the app.
+* The UserSyncRequest represents a request to sync user data with the server.
+* The UserSyncResponse represents a response from the server after syncing user data.
+*/
+
 data class UserSyncRequest(
     val firebaseUid: String,
     val email: String,

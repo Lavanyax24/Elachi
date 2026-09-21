@@ -15,6 +15,8 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
+// This is the main application class, it handles the initialization of the repositories and the database.
+
 class ElachiApp : Application() {
     private val TAG = "ElachiApp"
 

@@ -21,6 +21,8 @@ import com.elachi.app.ui.theme.ElachiTheme
 import com.google.firebase.messaging.FirebaseMessaging
 import kotlinx.coroutines.launch
 
+// This is the MainActivity class, it handles the UI and the navigation as well as handles the permissions and the edge-to-edge.
+
 class MainActivity : ComponentActivity() {
     private val TAG = "MainActivity"
 

@@ -4,6 +4,12 @@ import androidx.room.Entity
 import androidx.room.ForeignKey
 import androidx.room.PrimaryKey
 
+/*
+* This file defines the entities used in the Room database.
+* The RecipeEntity represents a recipe, with a foreign key to the RecipeBookEntity.
+* The IngredientEntity represents an ingredient, with a foreign key to the RecipeEntity.
+*/
+
 @Entity(
     tableName = "recipes",
     foreignKeys = [

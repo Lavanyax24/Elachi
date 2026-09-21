@@ -13,6 +13,10 @@ import java.io.File
 import java.io.FileOutputStream
 import java.util.UUID
 
+/*
+* This file contains the implementation of the SupabaseStorageClient class,
+* It handles uploading images to the Supabase storage service.
+*/
 
 object SupabaseStorageClient {
 

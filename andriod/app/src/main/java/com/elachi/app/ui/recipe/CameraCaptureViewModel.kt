@@ -7,6 +7,10 @@ import com.elachi.app.data.repository.RecipeRepository
 import com.elachi.app.util.RecipeTextParser
 import kotlinx.coroutines.launch
 
+/*
+* This class is used to parse the text from the camera capture screen.
+* */
+
 data class OcrResult(
     val title: String,
     val ingredients: List<DraftIngredient>,

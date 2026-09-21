@@ -72,6 +72,8 @@ import com.elachi.app.ui.aichef.AiChefViewModel
 import com.elachi.app.ui.streak.StreakCalendarScreen
 import com.elachi.app.ui.streak.StreakCalendarViewModel
 
+// This class handles the navigation.
+
 private val bottomNavRoutes = setOf(
     Screen.Home.route,
     Screen.Cookbook.route,

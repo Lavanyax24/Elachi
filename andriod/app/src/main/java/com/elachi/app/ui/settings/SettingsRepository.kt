@@ -8,6 +8,10 @@ import androidx.datastore.preferences.preferencesDataStore
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 
+// This screen provides the user interface for viewing and managing the application's settings.
+// It allows users to control appearance settings and access profile, privacy, account deletion, and logout options.
+// It also displays unavailable upcoming features such as language selection, biometric security, and push notifications.
+
 private val Context.dataStore by preferencesDataStore(name = "elachi_settings")
 
 class SettingsRepository(private val context: Context) {

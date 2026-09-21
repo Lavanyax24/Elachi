@@ -12,6 +12,10 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
+// This ViewModel manages the data and state required when creating or editing a recipe.
+// It handles recipe details, ingredients, cooking steps, allergens, image uploads, and input validation.
+// It communicates with the recipe repository to load, create, update, and save recipe information.
+
 data class DraftIngredient(
     val name: String = "",
     val quantity: String = "",

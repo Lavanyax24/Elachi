@@ -35,6 +35,8 @@ import com.elachi.app.ui.tools.UnitConverterScreen
 import com.elachi.app.util.AlarmPlayer
 import kotlinx.coroutines.delay
 
+// This is the pantry screen where the users can add items to their pantry.
+
 private const val MAX_NAME_LENGTH = 40
 private const val MAX_QUANTITY = 100_000.0
 

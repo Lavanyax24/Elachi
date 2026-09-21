@@ -28,6 +28,8 @@ import coil.compose.AsyncImage
 import com.elachi.app.data.remote.SupabaseStorageClient
 import kotlinx.coroutines.launch
 
+// When the user 1st logs in they will need to create a cook book to save all their recipes
+
 internal val ICON_OPTIONS = listOf("📖", "🏠", "⚡", "🍜", "🌮", "🎂", "🥗", "🔍", "🎯", "🌍")
 internal val COLOUR_OPTIONS = listOf("#2F5233", "#8A4B2A", "#3B82F6", "#9333EA", "#DC2626", "#0F766E", "#EA580C")
 

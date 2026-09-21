@@ -3,6 +3,12 @@ package com.elachi.app.data.local.entities
 import androidx.room.Entity
 import androidx.room.PrimaryKey
 
+/*
+* This file defines the entities used in the Room database.
+* The PantryItemEntity represents an item in the user's pantry.
+* The ShoppingListItemEntity represents an item in the user's shopping list.
+*/
+
 @Entity(tableName = "pantry_items")
 data class PantryItemEntity(
     @PrimaryKey val id: String,

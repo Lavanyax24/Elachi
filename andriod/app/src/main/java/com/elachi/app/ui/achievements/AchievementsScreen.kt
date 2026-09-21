@@ -40,6 +40,9 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn
 
+// This is the AchievementsViewModel class, it handles the data for the AchievementsScreen.
+// It works by observing the data from the database and updating the UI accordingly.
+
 class AchievementsViewModel(
     private val userId: String,
     private val achievementDao: AchievementDao,
@@ -63,6 +66,7 @@ private fun iconFor(achievementId: String): ImageVector = when (achievementId) {
     else -> Icons.Filled.EmojiEvents
 }
 
+// This is the AchievementsScreen composable function, it handles the UI for the AchievementsScreen.
 @Composable
 fun AchievementsScreen(viewModel: AchievementsViewModel, onBack: () -> Unit) {
     val definitions by viewModel.definitions.collectAsState()

@@ -46,6 +46,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.graphics.Brush
 
+// This class is responsible for handling the navigation drawer for the app.
+// It uses the AuthViewModel to handle the authentication process.
+
 private data class DrawerItem(val label: String, val icon: ImageVector, val route: String)
 
 private val mainItems = listOf(

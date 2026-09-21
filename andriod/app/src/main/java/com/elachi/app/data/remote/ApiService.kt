@@ -4,6 +4,10 @@ import com.elachi.app.data.remote.dto.*
 import retrofit2.Response
 import retrofit2.http.*
 
+/*
+* This file defines the Retrofit API service interface for the app.
+* The ApiService interface provides methods for syncing user data, creating and updating recipe books.
+*/
 
 interface ApiService {
 

@@ -15,6 +15,8 @@ import com.elachi.app.data.remote.dto.StepDto
 import kotlinx.coroutines.flow.Flow
 import java.util.UUID
 
+// This class handles the recipe data.
+
 class RecipeRepository(
     private val api: ApiService,
     private val bookDao: RecipeBookDao,

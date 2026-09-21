@@ -9,6 +9,9 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
+// This class is responsible for handling the authentication process for the user.
+// It uses the AuthRepository to handle the authentication process.
+
 sealed class AuthUiState {
     data object Idle : AuthUiState()
     data object Loading : AuthUiState()

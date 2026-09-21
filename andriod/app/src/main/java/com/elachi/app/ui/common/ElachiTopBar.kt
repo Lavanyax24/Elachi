@@ -25,6 +25,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
+// The top navigation bar for the app.
+// It uses the NavController to navigate between the different screens.
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ElachiTopBar(
