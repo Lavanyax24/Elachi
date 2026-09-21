@@ -14,12 +14,12 @@ Built with **Kotlin, Jetpack Compose, Node.js, Express, PostgreSQL, Supabase and
 **Project:** Elachi Recipe Management Application  
 **Academic Year:** 2026
 
-| TEAM MEMBER |
-| :--- |
-| **Saa'diyah Mansoor** |
-| **Jarrud Cochrane** |
-| **Lavanya Pillay** |
-| **Diya Lakha** |
+| TEAM MEMBER | STUDENT NUMBER |
+| :--- | :--- |
+| DIYA LAKHA | ST10439176 |
+| LAVANYA PILLAY | ST10438009 |
+| SAA'DIYAH MANSOOR | ST10439057 |
+| JARRUD FREDERICK COCHRANE | ST10266083 |
 
 ---
 
@@ -1839,12 +1839,12 @@ Potential future improvements include:
 
 Elachi was developed collaboratively by:
 
-| Team Member |
-| :--- |
-| **Saa'diyah Mansoor** |
-| **Jarrud Cochrane** |
-| **Lavanya Pillay** |
-| **Diya Lakha** |
+| TEAM MEMBER | STUDENT NUMBER |
+| :--- | :--- |
+| DIYA LAKHA | ST10439176 |
+| LAVANYA PILLAY | ST10438009 |
+| SAA'DIYAH MANSOOR | ST10439057 |
+| JARRUD FREDERICK COCHRANE | ST10266083 |
 
 The project combines Android development, backend API development, database integration, authentication, cloud services, testing, and user-focused application design.
 
@@ -1853,18 +1853,7 @@ The project combines Android development, backend API development, database inte
 # 🙏 Code Attribution
 
 > **Code Attribution**
->
-> This project was developed collaboratively by the Elachi team.
->
-> Where third-party libraries, frameworks, APIs, documentation, tutorials, or other external resources were used, the relevant source should be acknowledged in accordance with the applicable project and academic requirements.
->
-> **Team:**  
-> Saa'diyah Mansoor  
-> Jarrud Cochrane  
-> Lavanya Pillay  
-> Diya Lakha
->
-> **Additional attribution / external resources:**  
+
 > `[INSERT ATTRIBUTION DETAILS HERE]`
 
 ---
