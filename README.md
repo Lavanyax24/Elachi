@@ -1416,7 +1416,7 @@ The Android utility tests were successfully executed in Android Studio.
 
 **11 tests passed, 11 tests total.**
 
-![Android unit test results](docs/images/android-tests.png)
+<img width="1600" height="761" alt="image" src="https://github.com/user-attachments/assets/4f9b511d-fbe0-4961-9387-d42c52d9a869" />
 
 *Figure 1: Android unit tests successfully passing in Android Studio.*
 
@@ -1541,7 +1541,7 @@ The repository includes CI workflows for both the Android and backend components
 
 The GitHub Actions workflow runs can be viewed from the repository's **Actions** tab.
 
-![GitHub Actions workflow results](docs/images/github-actions.png)
+<img width="1600" height="661" alt="image" src="https://github.com/user-attachments/assets/fbdbf239-a5ea-45b1-87ad-b260cb9e5943" />
 
 *Figure 2: GitHub Actions showing successful Android CI and Backend CI workflow runs.*
 
@@ -1835,37 +1835,11 @@ Potential future improvements include:
 
 ---
 
-# 👥 Team
-
-Elachi was developed collaboratively by:
-
-| TEAM MEMBER | STUDENT NUMBER |
-| :--- | :--- |
-| DIYA LAKHA | ST10439176 |
-| LAVANYA PILLAY | ST10438009 |
-| SAA'DIYAH MANSOOR | ST10439057 |
-| JARRUD FREDERICK COCHRANE | ST10266083 |
-
-The project combines Android development, backend API development, database integration, authentication, cloud services, testing, and user-focused application design.
-
----
-
 # 🙏 Code Attribution
 
 > **Code Attribution**
 
 > `[INSERT ATTRIBUTION DETAILS HERE]`
-
----
-
-# 🎥 Final Demonstration
-
-A complete demonstration of Elachi is available here:
-
-**YouTube:**  
-🔗 **[INSERT FINAL YOUTUBE VIDEO LINK HERE]**
-
-The demonstration should cover the major application functionality, including authentication, recipe management, recipe books, pantry functionality, discovery, cooking features, AI functionality, and other relevant project requirements.
 
 ---
 
@@ -1883,7 +1857,7 @@ Third-party libraries and services remain subject to their respective licences a
 
 🍳 **Elachi**
 
-**Plan it. Cook it. Track it.**
+**Mouth Full Of Flavour**
 
 Built with Kotlin, Jetpack Compose, Node.js, PostgreSQL, Firebase and Supabase.
 
