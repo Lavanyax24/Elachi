@@ -10,6 +10,10 @@ import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
+// This ViewModel manages the application settings and account-related actions for the user.
+// It handles theme preferences, measurement units, user logout, and account deletion functionality.
+// It communicates with the settings and authentication repositories to store preferences and manage the user's account.
+
 @OptIn(ExperimentalCoroutinesApi::class)
 class SettingsViewModel(
     private val settingsRepository: SettingsRepository,

@@ -30,6 +30,8 @@ import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import kotlinx.coroutines.launch
 
+// This the onboarding screens to show the user how to naviagate through the application
+
 data class OnboardingSlide(
     val title: String,
     val subtitle: String,

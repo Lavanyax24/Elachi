@@ -24,6 +24,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
+//This tells the user what data we need to capture in order for them to use the application
+
 internal data class PolicySection(
     val title: String,
     val icon: ImageVector,

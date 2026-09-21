@@ -31,6 +31,8 @@ import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import com.elachi.app.data.local.entities.RecipeEntity
 
+// This class handles the layout of the recipes, it formats it such that it can be displayed in a grid
+
 @Composable
 fun RecipeGridCard(
     recipe: RecipeEntity,

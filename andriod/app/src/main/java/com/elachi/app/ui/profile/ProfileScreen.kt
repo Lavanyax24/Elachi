@@ -33,6 +33,8 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
+// This is the profile screen, it displays the users preferences and allows them to edit them
+
 class ProfileViewModel(
     userId: String,
     private val profileRepository: ProfileRepository,

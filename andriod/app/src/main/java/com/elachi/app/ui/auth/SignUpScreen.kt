@@ -35,6 +35,9 @@ import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 import com.google.android.gms.common.api.ApiException
 
+// This class is responsible for handling the sign up process for the user.
+// It uses the AuthViewModel to handle the authentication process.
+
 @Composable
 fun SignUpScreen(
     viewModel: AuthViewModel,

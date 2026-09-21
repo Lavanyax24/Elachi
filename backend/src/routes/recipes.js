@@ -1,3 +1,9 @@
+// recipes.js - Recipe endpoints: CRUD, discover feed, pantry suggestions,
+// pantry health, comments.
+// All routes require a valid Firebase token via requireAuth; the app's
+// data operations live here. Most of the heavy lifting (pantry matching,
+// discovery ranking) happens on the server.
+
 const express = require('express');
 const { pool } = require('../db');
 const { requireAuth } = require('../middleware/auth');
@@ -7,6 +13,8 @@ const { checkAndUnlock } = require('../services/achievements');
 const router = express.Router();
 router.use(requireAuth);
 
+// Loads a single recipe plus its ingredients and steps, mapped to the
+// camelCase shape the app expects. Returns null if no such recipe.
 async function loadFullRecipe(recipeId) {
   const recipeResult = await pool.query('SELECT * FROM recipes WHERE id = $1', [recipeId]);
   if (recipeResult.rows.length === 0) return null;
@@ -33,6 +41,9 @@ async function loadFullRecipe(recipeId) {
   };
 }
 
+// GET /api/recipes - all recipes owned by the signed-in user.
+// Optional query params: bookId (filter to a single Recipe Book) and
+// search (fuzzy match on title).
 router.get('/', async (req, res) => {
   const { bookId, search } = req.query;
   let query = 'SELECT id FROM recipes WHERE owner_id = $1';
@@ -48,11 +59,14 @@ router.get('/', async (req, res) => {
 });
 
 // GET /api/recipes/discover?mode=global|personalised&search=&cuisine=
+// Feed of public recipes from every user. "Personalised" filters by the
+// signed-in user's cooking interests.
 router.get('/discover', async (req, res) => {
   const { mode = 'global', search, cuisine } = req.query;
   const params = [];
   let whereClauses = ['r.is_private = false'];
 
+  // Personalised mode: match on the user's cooking interests
   if (mode === 'personalised') {
     const interests = req.user.cooking_interests || [];
     if (interests.length > 0) {
@@ -69,6 +83,7 @@ router.get('/discover', async (req, res) => {
     whereClauses.push('r.cuisine = $' + params.length);
   }
 
+  // Join to users for creator info and to comments for rating aggregate
   const query = 'SELECT r.id, r.title, r.image_url, r.cook_time_minutes, r.difficulty, r.cuisine, '
     + 'r.times_cooked, u.id AS creator_id, u.display_name AS creator_name, '
     + 'COALESCE(AVG(c.rating), 0) AS avg_rating, COUNT(DISTINCT c.id) AS rating_count '
@@ -89,6 +104,8 @@ router.get('/discover', async (req, res) => {
   })));
 });
 
+// GET /api/recipes/suggestions - recipes ranked by how many of their
+// ingredients the user already has in their pantry.
 router.get('/suggestions', async (req, res) => {
   const recipesResult = await pool.query('SELECT id FROM recipes WHERE owner_id = $1', [req.user.id]);
   const pantryResult = await pool.query('SELECT LOWER(TRIM(name)) AS name FROM pantry_items WHERE user_id = $1', [req.user.id]);
@@ -105,6 +122,9 @@ router.get('/suggestions', async (req, res) => {
   res.json(suggestions);
 });
 
+// GET /api/recipes/pantry-health - single percentage for the Home screen's
+// Pantry Health ring. Average match percent across all of the user's recipes.
+// Must be declared before GET /:id so "pantry-health" isn't treated as an id.
 router.get('/pantry-health', async (req, res) => {
   const recipesResult = await pool.query('SELECT id FROM recipes WHERE owner_id = $1', [req.user.id]);
   if (recipesResult.rows.length === 0) return res.json({ pantryHealthPercent: 0 });
@@ -126,12 +146,17 @@ router.get('/pantry-health', async (req, res) => {
   res.json({ pantryHealthPercent });
 });
 
+// GET /api/recipes/:id - full recipe with ingredients, steps and comments.
 router.get('/:id', async (req, res) => {
   const recipe = await loadFullRecipe(req.params.id);
   if (!recipe) return res.status(404).json({ error: 'Recipe not found.' });
   res.json(recipe);
 });
 
+// POST /api/recipes - create a new recipe with its ingredients and steps.
+// Accepts an optional client-generated id so a recipe created offline
+// keeps its UUID. Everything is inserted in one transaction so a failure
+// anywhere rolls back cleanly.
 router.post('/', async (req, res) => {
   const {
     id, bookId, title, category, cuisine, foodType, difficulty, servings,
@@ -141,6 +166,8 @@ router.post('/', async (req, res) => {
   const client = await pool.connect();
   try {
     await client.query('BEGIN');
+
+    // Insert the recipe row first
     const recipeResult = await client.query(
       'INSERT INTO recipes (id, owner_id, book_id, title, category, cuisine, food_type, difficulty, '
       + 'servings, cook_time_minutes, method, allergens, is_private, image_url) '
@@ -149,6 +176,7 @@ router.post('/', async (req, res) => {
     );
     const recipeId = recipeResult.rows[0].id;
 
+    // Then its ingredient rows
     for (let i = 0; i < (ingredients || []).length; i++) {
       const ing = ingredients[i];
       await client.query(
@@ -156,6 +184,8 @@ router.post('/', async (req, res) => {
         [recipeId, ing.name, ing.quantity, ing.unit, i],
       );
     }
+
+    // And its step rows
     for (const step of steps || []) {
       await client.query(
         'INSERT INTO steps (recipe_id, "order", instruction, timer_seconds) VALUES ($1,$2,$3,$4)',
@@ -165,6 +195,7 @@ router.post('/', async (req, res) => {
 
     await client.query('COMMIT');
 
+    // Check badge thresholds - "recipesAdded" is based on total count
     const totalRecipes = (await pool.query('SELECT COUNT(*) FROM recipes WHERE owner_id = $1', [req.user.id])).rows[0].count;
     await checkAndUnlock(req.user.id, 'recipesAdded', Number(totalRecipes));
 
@@ -178,10 +209,11 @@ router.post('/', async (req, res) => {
   }
 });
 
-// PATCH /api/recipes/:id — partial update. Any subset of fields may be
-// supplied; only the fields present in the body are changed. If `ingredients`
-// or `steps` are supplied, they replace the entire existing list for that
-// recipe (simplest, matches how the Add Recipe form submits a complete list).
+// PATCH /api/recipes/:id - partial update. Any subset of fields may be
+// supplied; only the fields present in the body are changed.
+// If "ingredients" or "steps" are supplied, they replace the entire
+// existing list for that recipe (simplest, matches how the Add Recipe
+// form submits a complete list). Ownership is verified before any change.
 router.patch('/:id', async (req, res) => {
   const {
     title, category, cuisine, foodType, difficulty, servings,
@@ -193,7 +225,7 @@ router.patch('/:id', async (req, res) => {
   try {
     await client.query('BEGIN');
 
-    // Verify the recipe exists and belongs to the caller before touching it.
+    // Verify the recipe exists and belongs to the caller before touching it
     const existing = await client.query(
       'SELECT id FROM recipes WHERE id = $1 AND owner_id = $2',
       [req.params.id, req.user.id],
@@ -229,7 +261,7 @@ router.patch('/:id', async (req, res) => {
       ],
     );
 
-    // If the caller supplied a full ingredient list, replace the old one.
+    // If the caller supplied a full ingredient list, replace the old one
     if (Array.isArray(ingredients)) {
       await client.query('DELETE FROM ingredients WHERE recipe_id = $1', [req.params.id]);
       for (let i = 0; i < ingredients.length; i++) {
@@ -241,7 +273,7 @@ router.patch('/:id', async (req, res) => {
       }
     }
 
-    // Same for steps.
+    // Same for steps
     if (Array.isArray(steps)) {
       await client.query('DELETE FROM steps WHERE recipe_id = $1', [req.params.id]);
       for (const step of steps) {
@@ -263,11 +295,13 @@ router.patch('/:id', async (req, res) => {
   }
 });
 
+// DELETE /api/recipes/:id - remove a recipe owned by the signed-in user.
 router.delete('/:id', async (req, res) => {
   await pool.query('DELETE FROM recipes WHERE id = $1 AND owner_id = $2', [req.params.id, req.user.id]);
   res.status(204).send();
 });
 
+// GET /api/recipes/:id/comments - all ratings and reviews for a recipe.
 router.get('/:id/comments', async (req, res) => {
   const result = await pool.query(
     'SELECT c.id, c.rating, c.text, c.created_at, u.display_name FROM comments c '
@@ -280,6 +314,8 @@ router.get('/:id/comments', async (req, res) => {
   })));
 });
 
+// POST /api/recipes/:id/comments - leave a rating and/or comment on a
+// recipe. If the commenter isn't the owner, the owner gets a push.
 router.post('/:id/comments', async (req, res) => {
   const { rating, text } = req.body;
   const result = await pool.query(
@@ -287,6 +323,7 @@ router.post('/:id/comments', async (req, res) => {
     [req.params.id, req.user.id, rating, text],
   );
 
+  // Notify the recipe owner unless they're commenting on their own recipe
   const recipeOwner = await pool.query('SELECT owner_id, title FROM recipes WHERE id = $1', [req.params.id]);
   if (recipeOwner.rows.length > 0 && recipeOwner.rows[0].owner_id !== req.user.id) {
     sendPushToUser(recipeOwner.rows[0].owner_id, {

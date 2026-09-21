@@ -6,6 +6,11 @@ import com.elachi.app.data.local.entities.StreakRecordEntity
 import com.elachi.app.data.local.entities.UserAchievementProgressEntity
 import kotlinx.coroutines.flow.Flow
 
+/*
+* This class defines the Data Access Object (DAO) for the RecipeBook entity.
+* The DAO provides methods for inserting, updating, and deleting recipe books.
+*/
+
 @Dao
 interface AchievementDao {
     @Insert(onConflict = OnConflictStrategy.IGNORE)

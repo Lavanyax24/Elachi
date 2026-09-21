@@ -17,6 +17,10 @@ import com.elachi.app.util.AlarmPlayer
 import kotlinx.coroutines.delay
 import java.util.Locale
 
+// This screen provides a step-by-step cooking mode that guides the user through a recipe.
+// It includes text-to-speech functionality that reads each cooking step aloud to the user.
+// It also provides built-in countdown timers with pause, resume, reset, custom timer, and alarm functionality.
+
 @Composable
 fun CookModeScreen(
     steps: List<String>,

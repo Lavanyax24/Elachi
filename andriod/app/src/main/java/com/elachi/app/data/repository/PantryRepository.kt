@@ -13,6 +13,8 @@ import kotlinx.coroutines.flow.Flow
 import kotlin.math.roundToInt
 import java.util.UUID
 
+// This class handles the pantry data.
+
 data class RecipeMatch(val recipe: RecipeEntity, val matchPercent: Int)
 
 data class ShoppingAddResult(

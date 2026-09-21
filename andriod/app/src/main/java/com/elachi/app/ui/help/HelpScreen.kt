@@ -37,6 +37,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.elachi.app.ui.common.ElachiTopBar
 
+// This is the help screen that answers the user questions
+
 private data class Faq(val question: String, val answer: String)
 
 private val FAQS = listOf(

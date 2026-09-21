@@ -3,6 +3,7 @@ package com.elachi.app
 import android.Manifest
 import android.os.Build
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -20,9 +21,14 @@ import com.elachi.app.ui.theme.ElachiTheme
 import com.google.firebase.messaging.FirebaseMessaging
 import kotlinx.coroutines.launch
 
+// This is the MainActivity class, it handles the UI and the navigation as well as handles the permissions and the edge-to-edge.
+
 class MainActivity : ComponentActivity() {
+    private val TAG = "MainActivity"
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        Log.d(TAG, "onCreate called")
         try {
             enableEdgeToEdge()
         } catch (e: Exception) {
@@ -66,5 +72,30 @@ class MainActivity : ComponentActivity() {
                 }
             }
         }
+    }
+
+    override fun onStart() {
+        super.onStart()
+        Log.d(TAG, "onStart called")
+    }
+
+    override fun onResume() {
+        super.onResume()
+        Log.d(TAG, "onResume called")
+    }
+
+    override fun onPause() {
+        super.onPause()
+        Log.d(TAG, "onPause called")
+    }
+
+    override fun onStop() {
+        super.onStop()
+        Log.d(TAG, "onStop called")
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        Log.d(TAG, "onDestroy called")
     }
 }

@@ -3,6 +3,12 @@ package com.elachi.app.data.local.entities
 import androidx.room.Entity
 import androidx.room.PrimaryKey
 
+/*
+* This class defines the entities used in the Room database.
+* The AchievementDefinitionEntity represents an achievement definition,
+* The AchievementEntity represents an achievement, with a foreign key to the UserEntity.
+*/
+
 @Entity(tableName = "achievement_definitions")
 data class AchievementDefinitionEntity(
     @PrimaryKey val id: String,

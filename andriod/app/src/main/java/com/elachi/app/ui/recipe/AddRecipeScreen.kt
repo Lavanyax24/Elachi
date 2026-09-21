@@ -31,6 +31,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 
+// This is the addRecipeScreen which allows the user to add a new recipe
+
 @Composable
 fun AddRecipeScreen(
     viewModel: AddRecipeViewModel,

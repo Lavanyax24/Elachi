@@ -1,9 +1,10 @@
 package com.elachi.app.data.repository
 
-
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+
+// This class handles the user's session state.
 
 object UserSession {
     var userId by mutableStateOf<String?>(null)

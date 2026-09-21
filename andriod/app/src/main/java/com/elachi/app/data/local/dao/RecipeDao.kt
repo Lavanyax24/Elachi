@@ -6,6 +6,11 @@ import com.elachi.app.data.local.entities.RecipeEntity
 import com.elachi.app.data.local.entities.StepEntity
 import kotlinx.coroutines.flow.Flow
 
+/*
+* This class defines the Data Access Object (DAO) for the Recipe entity.
+* The DAO provides methods for inserting, updating, and deleting recipes.
+*/
+
 @Dao
 interface RecipeDao {
 

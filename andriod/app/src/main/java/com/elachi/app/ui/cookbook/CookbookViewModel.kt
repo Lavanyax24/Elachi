@@ -10,6 +10,9 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
+// This class handles the data for the cookbook screen
+// It also handles the creation, updating, and deletion of recipe books
+
 class CookbookViewModel(
     private val userId: String,
     private val recipeRepository: RecipeRepository,

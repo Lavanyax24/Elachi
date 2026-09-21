@@ -27,6 +27,8 @@ import com.elachi.app.ui.common.ElachiTopBar
 import com.elachi.app.util.RecipePdfExporter
 import kotlinx.coroutines.launch
 
+// This class allows the user to view a recipe in more detail
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun RecipeDetailScreen(

@@ -30,6 +30,8 @@ import kotlinx.coroutines.withContext
 import java.io.File
 import java.io.FileOutputStream
 
+//This is the class that exports the recipe into a pdf
+
 // ---- Elachi palette, as android.graphics colours ----
 private val GREEN = Color.parseColor("#425529")
 private val GREEN_LIGHT = Color.parseColor("#5A6E3F")

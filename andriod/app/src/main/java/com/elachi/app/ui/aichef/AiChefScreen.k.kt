@@ -26,6 +26,9 @@ import androidx.compose.ui.unit.sp
 import com.elachi.app.data.repository.ChatTurn
 import com.elachi.app.ui.common.ElachiTopBar
 
+// This is the AiChefViewModel class, it handles the data for the AiChefScreen.
+// It works by observing the data from the database and updating the UI accordingly.
+
 private val QUICK_PROMPTS = listOf(
     "What can I cook with eggs?",
     "Substitute for butter?",

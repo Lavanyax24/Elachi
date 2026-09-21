@@ -20,6 +20,8 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
+// This class handles notification to the user
+
 private const val CHANNEL_ID = "elachi_default"
 
 class ElachiMessagingService : FirebaseMessagingService() {

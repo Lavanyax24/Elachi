@@ -19,6 +19,9 @@ import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.compose.currentBackStackEntryAsState
 import com.elachi.app.navigation.Screen
 
+// The bottom navigation bar for the app.
+// It uses the NavController to navigate between the different screens.
+
 private data class BottomItem(val route: String, val label: String, val icon: ImageVector)
 
 private val items = listOf(

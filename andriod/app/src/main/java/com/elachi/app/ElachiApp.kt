@@ -15,7 +15,10 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
+// This is the main application class, it handles the initialization of the repositories and the database.
+
 class ElachiApp : Application() {
+    private val TAG = "ElachiApp"
 
     val database: AppDatabase by lazy { AppDatabase.getInstance(this) }
     val api: ApiService by lazy { RetrofitClient.apiService }
@@ -30,6 +33,7 @@ class ElachiApp : Application() {
 
     override fun onCreate() {
         super.onCreate()
+        android.util.Log.d(TAG, "Application onCreate called")
 
         CoroutineScope(Dispatchers.IO).launch {
             try {

@@ -9,6 +9,8 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn
 
+// This class handles the data for the recipe book detail screen
+
 class RecipeBookDetailViewModel(
     bookId: String,
     recipeRepository: RecipeRepository,

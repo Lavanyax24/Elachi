@@ -41,6 +41,7 @@ class AuthRepository(
         return try {
             val result = auth.createUserWithEmailAndPassword(email, password).await()
             val user = result.user ?: return AuthResult.Error("Registration failed. Please try again.")
+            Log.d("AuthRepository", "signUpWithEmail successful: ${user.uid}")
             syncProfileWithBackend(user, firstName, surname)
             AuthResult.Success(user, isNewUser = true)
         } catch (e: Exception) {
@@ -53,6 +54,7 @@ class AuthRepository(
         return try {
             val result = auth.signInWithEmailAndPassword(email, password).await()
             val user = result.user ?: return AuthResult.Error("Sign in failed. Please try again.")
+            Log.d("AuthRepository", "signInWithEmail successful: ${user.uid}")
 
             val (first, last) = splitDisplayName(user.displayName)
             syncProfileWithBackend(user, firstName = first, surname = last)
@@ -112,6 +114,7 @@ class AuthRepository(
     }
 
     fun signOut() {
+        Log.d("AuthRepository", "signOut called for user: ${currentUser?.uid}")
         firebaseAuth?.signOut()
         UserSession.clear()
     }

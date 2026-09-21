@@ -45,6 +45,9 @@ import com.elachi.app.ui.common.ElachiTopBar
 import com.elachi.app.ui.theme.ElachiCream
 import com.elachi.app.ui.theme.ElachiGreen
 
+// This class handles the layout of the recipe book detail screen
+// It displays the recipe book name, description, and the recipes in the book
+
 @Composable
 fun RecipeBookDetailScreen(
     viewModel: RecipeBookDetailViewModel,

@@ -3,6 +3,8 @@ package com.elachi.app.data.repository
 import com.elachi.app.data.remote.ApiService
 import com.elachi.app.data.remote.dto.ChatRequest
 
+//This class handles the chat data.
+
 data class ChatTurn(val fromUser: Boolean, val text: String)
 
 

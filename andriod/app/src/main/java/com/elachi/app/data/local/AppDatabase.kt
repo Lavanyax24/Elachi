@@ -10,6 +10,8 @@ import com.elachi.app.data.local.dao.RecipeBookDao
 import com.elachi.app.data.local.dao.RecipeDao
 import com.elachi.app.data.local.entities.*
 
+// This class defines the Room database for the app and provides access to the DAOs.
+
 @Database(
     entities = [
         RecipeBookEntity::class,

@@ -4,6 +4,11 @@ import androidx.room.*
 import com.elachi.app.data.local.entities.RecipeBookEntity
 import kotlinx.coroutines.flow.Flow
 
+/*
+* This class defines the Data Access Object (DAO) for the RecipeBook entity.
+* The DAO provides methods for inserting, updating, and deleting recipe books.
+*/
+
 @Dao
 interface RecipeBookDao {
     @Query("SELECT * FROM recipe_books WHERE ownerId = :userId ORDER BY createdAt DESC")

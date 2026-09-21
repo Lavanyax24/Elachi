@@ -35,6 +35,9 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
+// On the discover screen, this class handles the data for the discover screen
+// It works by fetching data from the API and displaying it in a list of recipes
+
 private val CUISINE_OPTIONS = listOf("Italian", "Asian", "Mexican", "Indian", "Mediterranean", "American")
 private val DIETARY_OPTIONS = listOf("Vegetarian", "Vegan", "Gluten-Free", "Pescatarian")
 

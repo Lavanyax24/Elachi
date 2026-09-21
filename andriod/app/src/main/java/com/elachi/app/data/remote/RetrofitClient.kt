@@ -11,6 +11,10 @@ import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 
+/*
+* This file contains the implementation of the AuthInterceptor class, which is used to add the Firebase authentication token to each request.
+* It also contains the RetrofitClient object, which is used to create an instance of the ApiService interface.
+*/
 
 class AuthInterceptor : Interceptor {
     override fun intercept(chain: Interceptor.Chain): Response {

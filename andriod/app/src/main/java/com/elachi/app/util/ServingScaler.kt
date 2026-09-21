@@ -2,6 +2,8 @@ package com.elachi.app.util
 
 import kotlin.math.roundToInt
 
+// This class handle the serving scaling such that if the user wants to increase the serving quantity this is the
+// class that handles the calculations for it
 
 object ServingScaler {
     fun scale(baseQuantity: Double, baseServings: Int, currentServings: Int): Double {

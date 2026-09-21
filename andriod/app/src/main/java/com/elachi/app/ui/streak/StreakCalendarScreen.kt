@@ -39,6 +39,8 @@ import java.time.ZoneOffset
 import java.time.format.TextStyle
 import java.util.Locale
 
+// This is the class that tracks the users streaks and contributions
+
 class StreakCalendarViewModel(
     private val userId: String,
     private val achievementRepository: AchievementRepository,

@@ -1,3 +1,8 @@
+// books.js - Recipe Book CRUD endpoints.
+// Every route requires a valid Firebase token via requireAuth.
+// Books belong to the authenticated user; ownership is enforced
+// on every update and delete.
+
 const express = require('express');
 const { pool } = require('../db');
 const { requireAuth } = require('../middleware/auth');
@@ -5,6 +10,7 @@ const { requireAuth } = require('../middleware/auth');
 const router = express.Router();
 router.use(requireAuth);
 
+// Maps a raw DB row (snake_case) into the camelCase shape the app expects.
 function toBookDto(b) {
   return {
     id: b.id,
@@ -17,6 +23,8 @@ function toBookDto(b) {
   };
 }
 
+// GET /api/books - all of the signed-in user's Recipe Books, with a count
+// of how many recipes each book contains.
 router.get('/', async (req, res) => {
   const result = await pool.query(
     `SELECT b.*, COUNT(r.id) AS recipe_count
@@ -27,8 +35,9 @@ router.get('/', async (req, res) => {
   res.json(result.rows.map(toBookDto));
 });
 
-// Accepts an optional client-generated id so the Android app can create a
-// book offline with a local UUID and have the server keep that same id.
+// POST /api/books - create a new Recipe Book.
+// Accepts an optional client-generated id so a book created offline with a
+// local UUID keeps the same id on the server.
 router.post('/', async (req, res) => {
   const { id, name, description, coverImageUrl, icon, colour } = req.body;
   const result = await pool.query(
@@ -39,6 +48,8 @@ router.post('/', async (req, res) => {
   res.status(201).json({ ...toBookDto(result.rows[0]), recipeCount: 0 });
 });
 
+// PATCH /api/books/:id - partial update of a Recipe Book.
+// Only fields present in the body are changed.
 router.patch('/:id', async (req, res) => {
   const { name, description, coverImageUrl, icon, colour } = req.body;
   const result = await pool.query(
@@ -50,9 +61,12 @@ router.patch('/:id', async (req, res) => {
     [name, description, coverImageUrl, icon, colour, req.params.id, req.user.id],
   );
   if (result.rows.length === 0) return res.status(404).json({ error: 'Book not found.' });
-  res.json(toBookDto(result.rows[0])); // camelCase, matches every other endpoint
+  res.json(toBookDto(result.rows[0]));
 });
 
+// DELETE /api/books/:id - removes a book owned by the signed-in user.
+// Recipes inside the book are also removed by the ON DELETE CASCADE
+// constraint on recipes.book_id.
 router.delete('/:id', async (req, res) => {
   await pool.query('DELETE FROM recipe_books WHERE id = $1 AND owner_id = $2', [req.params.id, req.user.id]);
   res.status(204).send();

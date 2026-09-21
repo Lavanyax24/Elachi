@@ -54,6 +54,10 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 import java.util.concurrent.Executors
 
+// This screen allows users to capture recipe images using the camera or select existing screenshots from their device.
+// It uses ML Kit Text Recognition (OCR) to extract recipe text from the selected or captured images.
+// The recognised text is processed and structured into recipe details such as the title, ingredients, steps, servings, and cooking time.
+
 private const val MAX_SCREENSHOTS = 10
 
 @OptIn(ExperimentalMaterial3Api::class)

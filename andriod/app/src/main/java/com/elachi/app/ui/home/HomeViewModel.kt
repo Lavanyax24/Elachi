@@ -12,6 +12,8 @@ import com.elachi.app.data.repository.RecipeRepository
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 
+// This class handles the data for the home screen
+
 class HomeViewModel(
     private val userId: String,
     private val recipeRepository: RecipeRepository,
