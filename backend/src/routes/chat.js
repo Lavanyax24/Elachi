@@ -1,3 +1,9 @@
+// chat.js - AI Chef Assistant proxy.
+// The Android app sends a message here; the backend forwards it to
+// Cohere's chat API along with a cooking-only system prompt and the
+// user's pantry contents, then returns the reply. The Cohere API key
+// never leaves the server.
+
 const express = require('express');
 const { v4: uuidv4 } = require('uuid');
 const { pool } = require('../db');
@@ -6,9 +12,11 @@ const { requireAuth } = require('../middleware/auth');
 const router = express.Router();
 router.use(requireAuth);
 
+// Cohere endpoint and model
 const COHERE_CHAT_URL = 'https://api.cohere.com/v2/chat';
 const COHERE_MODEL = 'command-r-plus-08-2024';
 
+// Base system prompt - restricts the assistant to cooking topics.
 const BASE_SYSTEM_PROMPT = 'You are the Elachi AI Chef Assistant, a friendly cooking '
   + 'expert embedded in a recipe app. Only answer questions about recipes, '
   + 'ingredient substitutions, cooking techniques, nutrition, and meal ideas from '
@@ -16,6 +24,8 @@ const BASE_SYSTEM_PROMPT = 'You are the Elachi AI Chef Assistant, a friendly coo
   + 'redirect the conversation back to cooking. Keep responses concise and '
   + 'practical — a home cook reading this on a phone screen while cooking.';
 
+// Appends the user's current pantry items to the system prompt so the
+// assistant can suggest recipes using what they already have.
 async function buildSystemPrompt(userId) {
   let pantryContext = '\n\nThe user has not added anything to their pantry yet.';
   try {
@@ -28,18 +38,19 @@ async function buildSystemPrompt(userId) {
       pantryContext = '\n\nThe user currently has these items in their pantry: ' + itemsList + '. When relevant, suggest recipes using what they have.';
     }
   } catch (e) {
-    // Pantry lookup is best-effort — a failure here just means the assistant
+    // Pantry lookup is best-effort - a failure here just means the assistant
     // doesn't have pantry context, not that the chat is broken.
   }
   return BASE_SYSTEM_PROMPT + pantryContext;
 }
 
-// In-memory conversation store. Fine for a prototype; the durable log lives
-// in Firestore (see logToFirestore below), satisfying the POE's NoSQL
-// requirement.
+// In-memory conversation history. The durable log lives in Firestore
+// (see logToFirestore below), satisfying the POE's NoSQL requirement.
 const conversations = new Map();
 const MAX_CONVERSATIONS = 500;
 
+// POST /api/chat - takes a user message and optional conversationId,
+// returns the assistant's reply.
 router.post('/', async (req, res) => {
   const { message, conversationId } = req.body;
   if (!message || !message.trim()) {
@@ -53,6 +64,7 @@ router.post('/', async (req, res) => {
   const history = conversations.get(convId) || [];
 
   try {
+    // Build the full message list: system prompt + prior turns + new message
     const systemPrompt = await buildSystemPrompt(req.user.id);
     const messages = [
       { role: 'system', content: systemPrompt },
@@ -76,18 +88,24 @@ router.post('/', async (req, res) => {
     }
 
     const data = await response.json();
+
+    // Cohere's response shape can differ slightly across models, so try
+    // a couple of common paths before falling back.
     const reply = data?.message?.content?.find((c) => c.type === 'text')?.text
       || data?.message?.content?.[0]?.text
       || "Sorry, I couldn't come up with a reply to that — could you rephrase?";
 
+    // Save this turn, keeping only the last 20 turns per conversation
     history.push({ role: 'user', text: message }, { role: 'assistant', text: reply });
     conversations.set(convId, history.slice(-20));
 
+    // Cap the number of live conversations to avoid unbounded memory growth
     if (conversations.size > MAX_CONVERSATIONS) {
       const oldestKey = conversations.keys().next().value;
       conversations.delete(oldestKey);
     }
 
+    // Fire-and-forget durable log; a failure here doesn't break the chat
     logToFirestore(req.user.id, convId, message, reply)
       .catch((e) => console.warn('Firestore chat log failed:', e.message));
 
@@ -98,6 +116,8 @@ router.post('/', async (req, res) => {
   }
 });
 
+// Writes a user/assistant message pair to Firestore's chatMessages
+// collection. Skips silently if Firebase Admin isn't initialised.
 async function logToFirestore(userId, conversationId, userMessage, assistantReply) {
   const admin = require('firebase-admin');
   if (!admin.apps || !admin.apps.length) return;
