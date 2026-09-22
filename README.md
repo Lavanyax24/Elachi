@@ -10,6 +10,9 @@ Built with **Kotlin, Jetpack Compose, Node.js, Express, PostgreSQL, Supabase and
 > 🎥 **Project Demonstration:**
 > **[INSERT YOUTUBE VIDEO LINK HERE]**
 
+> 🌐 **Live API:** [https://elachi-backend.onrender.com](https://elachi-backend.onrender.com)
+> **Health check:** [https://elachi-backend.onrender.com/health](https://elachi-backend.onrender.com/health)
+
 ---
 
 <a id="developer-information"></a>
@@ -39,6 +42,7 @@ Built with **Kotlin, Jetpack Compose, Node.js, Express, PostgreSQL, Supabase and
   - [Recipe Books](#recipe-books)
   - [Recipe Discovery](#recipe-discovery)
   - [Pantry Management](#pantry-management)
+  - [Shopping List](#shopping-list)
   - [Pantry-Based Recipe Suggestions](#pantry-based-recipe-suggestions)
   - [Pantry Health](#pantry-health)
   - [AI Chef Assistant](#feature-ai-chef-assistant)
@@ -49,15 +53,17 @@ Built with **Kotlin, Jetpack Compose, Node.js, Express, PostgreSQL, Supabase and
   - [Cooking Streaks](#feature-cooking-streaks)
   - [Notifications](#feature-notifications)
   - [User Profiles](#user-profiles)
+- [Application Screenshots](#application-screenshots)
 - [System Architecture](#system-architecture)
   - [Request Flow](#request-flow)
 - [Android Application](#android-application)
 - [Backend REST API](#backend-rest-api)
+  - [API Endpoint Reference](#api-endpoint-reference)
 - [Database and Storage](#database-and-storage)
 - [Authentication and Security](#authentication-and-security)
-- [AI Chef Assistant (Architecture)](#ai-chef-assistant)
-- [Camera and OCR (Architecture)](#camera-and-ocr)
-- [Notifications (Architecture)](#notifications)
+- [AI Chef Assistant (Architecture)](#ai-chef-architecture)
+- [Camera and OCR (Architecture)](#camera-ocr-architecture)
+- [Notifications (Architecture)](#notifications-architecture)
 - [Achievements and Cooking Streaks](#achievements-and-cooking-streaks)
 - [Project Structure](#project-structure)
   - [Android Project Structure](#android-project-structure)
@@ -78,8 +84,19 @@ Built with **Kotlin, Jetpack Compose, Node.js, Express, PostgreSQL, Supabase and
   - [Android Instrumented Tests](#android-instrumented-tests)
   - [Manual API Testing](#manual-api-testing)
 - [Deployment](#deployment)
+- [Version Control and Collaboration](#version-control-and-collaboration)
+  - [Branching Strategy](#branching-strategy)
+  - [Pull Requests](#pull-requests)
+  - [Commit Conventions](#commit-conventions)
+  - [Contributors and Commit History](#contributors-and-commit-history)
 - [CI and GitHub Workflows](#ci-and-github-workflows)
+  - [Android CI Workflow](#android-ci-workflow)
+  - [Backend CI Workflow](#backend-ci-workflow)
+  - [GitHub Actions Availability Note](#github-actions-availability-note)
+  - [Running the CI Checks Locally](#running-ci-checks-locally)
+  - [GitHub Actions Results](#github-actions-results)
 - [Security Practices](#security-practices)
+  - [Secure Demonstrations](#secure-demonstrations)
 - [Troubleshooting](#troubleshooting)
 - [Development Workflow](#development-workflow)
 - [Repository Hygiene](#repository-hygiene)
@@ -87,7 +104,6 @@ Built with **Kotlin, Jetpack Compose, Node.js, Express, PostgreSQL, Supabase and
 - [Future Improvements](#future-improvements)
 - [Team](#team)
 - [Code Attribution](#code-attribution)
-- [Final Demonstration](#final-demonstration)
 - [License](#license)
 
 ---
@@ -104,6 +120,12 @@ The application also includes intelligent features such as the **AI Chef Assista
 The system follows a client-server architecture.
 
 The Android application acts as the primary user interface while the Node.js backend provides authenticated REST API functionality and communicates with the application's cloud services.
+
+The backend is hosted on Render and is available at:
+
+```text
+https://elachi-backend.onrender.com
+```
 
 [⬆ Back to top](#top)
 
@@ -136,6 +158,13 @@ backend/src/db/schema.sql
 
 ```text
 backend/.env.example
+```
+
+### CI Workflows
+
+```text
+.github/workflows/android-ci.yml
+.github/workflows/backend-ci.yml
 ```
 
 ### Android Application
@@ -210,6 +239,8 @@ Users can create and manage detailed recipes containing:
 
 Recipes can be updated and organised into recipe books.
 
+Users can also leave ratings and comments on recipes.
+
 ---
 
 <a id="recipe-books"></a>
@@ -265,7 +296,27 @@ Users can maintain a digital pantry containing:
 - Quantities
 - Units
 
+Pantry items can be added and removed.
+
 The pantry is used by the application to provide useful cooking functionality, including recipe suggestions based on ingredients the user already has.
+
+Pantry changes made while offline are stored locally and synchronised with the backend once the device reconnects.
+
+---
+
+<a id="shopping-list"></a>
+## 🛒 Shopping List
+
+Users can maintain a shopping list of ingredients they need to buy.
+
+The shopping list supports:
+
+- Adding items manually
+- Generating items from a recipe
+- Marking items as bought
+- Removing items
+
+When a list is generated from a recipe, the backend only adds ingredients that are not already in the user's pantry.
 
 ---
 
@@ -378,9 +429,9 @@ The application provides a streak calendar and tracks cooking sessions to help u
 
 Elachi integrates Firebase Cloud Messaging for push notifications.
 
-Notifications can be used to keep users informed about relevant application activity.
+Notifications can be used to keep users informed about relevant application activity, such as new comments on a user's recipes.
 
-The Android application registers for Firebase messaging and handles notification events through its dedicated messaging service.
+The Android application registers its device token with the backend and handles notification events through its dedicated messaging service.
 
 ---
 
@@ -392,9 +443,31 @@ Users can maintain application profiles containing information such as:
 - Display name
 - Profile information
 - Cooking interests
+- Dietary restrictions
 - User preferences
 
 The backend associates the application profile with the authenticated Firebase user.
+
+[⬆ Back to top](#top)
+
+---
+
+<a id="application-screenshots"></a>
+# 📸 Application Screenshots
+
+| Login (SSO) | Home | Recipe Books |
+| :---: | :---: | :---: |
+| <img src="PASTE-LOGIN-SCREENSHOT-URL" width="250" alt="Login screen"> | <img src="PASTE-HOME-SCREENSHOT-URL" width="250" alt="Home screen"> | <img src="PASTE-COOKBOOK-SCREENSHOT-URL" width="250" alt="Recipe books screen"> |
+
+| Recipe Detail | Pantry | AI Chef |
+| :---: | :---: | :---: |
+| <img src="PASTE-RECIPE-SCREENSHOT-URL" width="250" alt="Recipe detail screen"> | <img src="PASTE-PANTRY-SCREENSHOT-URL" width="250" alt="Pantry screen"> | <img src="PASTE-AICHEF-SCREENSHOT-URL" width="250" alt="AI Chef screen"> |
+
+| Settings | Streak Calendar | Camera Capture |
+| :---: | :---: | :---: |
+| <img src="PASTE-SETTINGS-SCREENSHOT-URL" width="250" alt="Settings screen"> | <img src="PASTE-STREAK-SCREENSHOT-URL" width="250" alt="Streak calendar screen"> | <img src="PASTE-CAMERA-SCREENSHOT-URL" width="250" alt="Camera capture screen"> |
+
+*Figure 1: Key screens of the Elachi Android application running on a physical device.*
 
 [⬆ Back to top](#top)
 
@@ -550,16 +623,31 @@ The backend is built using:
 
 The backend provides the application's server-side business logic and data access.
 
-## Main API Areas
+The live API is hosted at:
+
+```text
+https://elachi-backend.onrender.com
+```
+
+<a id="api-endpoint-reference"></a>
+## API Endpoint Reference
+
+All `/api` routes require a valid Firebase ID token. `POST /api/users/sync` verifies the token directly within the route; all other routes use the shared authentication middleware.
 
 ### Users
 
-Handles user profile synchronisation and profile operations.
+Handles user profile synchronisation, profile operations, account deletion and notification settings.
 
 ```text
 POST   /api/users/sync
 GET    /api/users/me
 PATCH  /api/users/me
+DELETE /api/users/me
+GET    /api/users/:id
+POST   /api/users/me/notification-token
+DELETE /api/users/me/notification-token
+GET    /api/users/me/notification-preferences
+PATCH  /api/users/me/notification-preferences
 ```
 
 ### Recipe Books
@@ -575,17 +663,19 @@ DELETE /api/books/:id
 
 ### Recipes
 
-Handles recipe creation, retrieval, discovery and modification.
+Handles recipe creation, retrieval, discovery, modification and comments.
 
 ```text
 GET    /api/recipes
 POST   /api/recipes
-GET    /api/recipes/:id
-PATCH  /api/recipes/:id
-DELETE /api/recipes/:id
 GET    /api/recipes/discover
 GET    /api/recipes/suggestions
 GET    /api/recipes/pantry-health
+GET    /api/recipes/:id
+PATCH  /api/recipes/:id
+DELETE /api/recipes/:id
+GET    /api/recipes/:id/comments
+POST   /api/recipes/:id/comments
 ```
 
 ### Pantry
@@ -595,8 +685,19 @@ Provides pantry management functionality.
 ```text
 GET    /api/pantry
 POST   /api/pantry
-PATCH  /api/pantry/:id
 DELETE /api/pantry/:id
+```
+
+### Shopping List
+
+Provides shopping list management, including generating items from a recipe.
+
+```text
+GET    /api/shopping-list
+POST   /api/shopping-list
+POST   /api/shopping-list/generate
+PATCH  /api/shopping-list/:id
+DELETE /api/shopping-list/:id
 ```
 
 ### Cook Sessions
@@ -621,6 +722,14 @@ Provides cooking streak information.
 
 ```text
 GET /api/streaks
+```
+
+### Offline Sync
+
+Receives changes made on the device while offline and returns server-side changes made since the last sync. Conflicts are resolved using a last-write-wins rule based on timestamps.
+
+```text
+POST /api/sync
 ```
 
 ### AI Chef
@@ -669,12 +778,21 @@ The database stores application data such as:
 - Recipe steps
 - Recipe books
 - Pantry items
+- Shopping list items
 - Comments
 - Ratings
 - Cooking sessions
+- Streak records
+- Notification preferences
 - Other application records
 
 Database queries use parameterised PostgreSQL queries rather than directly concatenating user-provided values into SQL statements.
+
+---
+
+## Firestore
+
+Firestore is used by the backend to store a log of AI Chef conversation messages.
 
 ---
 
@@ -699,6 +817,8 @@ Security is an important part of the Elachi architecture.
 
 Firebase Authentication is used for user authentication.
 
+Users can register and sign in with email and password or with Google Sign-In (single sign-on).
+
 The Android application authenticates the user and receives a Firebase ID token.
 
 Authenticated API requests use:
@@ -713,7 +833,7 @@ The backend verifies the token using the Firebase Admin SDK.
 
 ## Protected API Routes
 
-Most application API routes require authentication.
+All application API routes require authentication.
 
 The backend authentication middleware:
 
@@ -803,7 +923,7 @@ If a secret is accidentally committed, removing it from the latest commit is not
 
 ---
 
-<a id="ai-chef-assistant"></a>
+<a id="ai-chef-architecture"></a>
 # 🤖 AI Chef Assistant (Architecture)
 
 The AI Chef Assistant is intentionally accessed through the backend.
@@ -848,7 +968,7 @@ Android App
 
 ---
 
-<a id="camera-and-ocr"></a>
+<a id="camera-ocr-architecture"></a>
 # 📷 Camera and OCR (Architecture)
 
 Elachi uses CameraX for camera functionality and Google ML Kit Text Recognition for OCR.
@@ -886,7 +1006,7 @@ Users should always review automatically extracted recipe information before sav
 
 ---
 
-<a id="notifications"></a>
+<a id="notifications-architecture"></a>
 # 🔔 Notifications (Architecture)
 
 Firebase Cloud Messaging is integrated into the Android application.
@@ -897,7 +1017,13 @@ The project includes a dedicated messaging service:
 ElachiMessagingService
 ```
 
-The application can receive Firebase Cloud Messaging events and handle notification-related functionality.
+The application registers its FCM device token with the backend through:
+
+```text
+POST /api/users/me/notification-token
+```
+
+The backend stores each user's notification preferences and uses the Firebase Admin SDK to send push notifications, for example when another user comments on a recipe.
 
 Notification permissions are requested according to the Android platform requirements.
 
@@ -914,7 +1040,7 @@ Elachi includes gamification features designed to encourage continued cooking ac
 
 Achievement logic is handled by backend services.
 
-Achievements can be unlocked based on application activity such as creating recipes or completing relevant milestones.
+Achievements can be unlocked based on application activity such as creating recipes, adding pantry items or completing relevant milestones.
 
 ## Cooking Streaks
 
@@ -929,14 +1055,15 @@ The Android application includes a streak calendar for presenting this informati
 <a id="project-structure"></a>
 # 📦 Project Structure
 
-The repository is divided into the Android application, backend API, CI workflows and supporting documentation.
+The repository is divided into the Android application, backend API and CI workflows.
 
 ```text
 Elachi/
 │
 ├── .github/
 │   └── workflows/
-│       └── .gitkeep
+│       ├── android-ci.yml
+│       └── backend-ci.yml
 │
 ├── andriod/
 │   ├── app/
@@ -949,7 +1076,8 @@ Elachi/
 │   │   └── google-services.json
 │   │
 │   ├── gradle/
-│   │   └── wrapper/
+│   │   ├── wrapper/
+│   │   └── libs.versions.toml
 │   │
 │   ├── build.gradle.kts
 │   ├── gradle.properties
@@ -959,6 +1087,8 @@ Elachi/
 │
 ├── backend/
 │   ├── src/
+│   │   ├── db.js
+│   │   │
 │   │   ├── db/
 │   │   │   ├── init.js
 │   │   │   └── schema.sql
@@ -992,14 +1122,10 @@ Elachi/
 │   │
 │   ├── .env.example
 │   ├── .gitignore
+│   ├── README.md
 │   ├── package.json
 │   ├── package-lock.json
 │   └── server.js
-│
-├── docs/
-│   └── images/
-│       ├── android-tests.png
-│       └── github-actions.png
 │
 ├── .gitignore
 └── README.md
@@ -1119,6 +1245,7 @@ backend/
 │
 ├── .env.example
 ├── .gitignore
+├── README.md
 ├── package.json
 └── package-lock.json
 ```
@@ -1180,13 +1307,13 @@ The backend declares Node.js 20+ as its supported runtime.
 Clone the GitHub repository:
 
 ```bash
-git clone <YOUR-GITHUB-REPOSITORY-URL>
+git clone https://github.com/<ORGANISATION>/emkndn-prog7314-2026-prog7314-poe-st10439057.git
 ```
 
 Enter the project directory:
 
 ```bash
-cd <YOUR-REPOSITORY-DIRECTORY>
+cd emkndn-prog7314-2026-prog7314-poe-st10439057
 ```
 
 ---
@@ -1323,7 +1450,11 @@ Allow Android Studio to:
 
 The Android application is configured to communicate with the deployed backend.
 
-The current project configuration contains the backend base URL through the Android BuildConfig setup.
+The backend base URL is set through the `API_BASE_URL` BuildConfig field in `andriod/app/build.gradle.kts`:
+
+```text
+https://elachi-backend.onrender.com/
+```
 
 For a local backend development environment, make sure the Android application can reach the development server from the emulator or physical device.
 
@@ -1438,11 +1569,14 @@ The backend uses:
 The test suite includes coverage for areas such as:
 
 - Health endpoints
-- Pantry functionality
+- Authentication being required on protected routes
+- Pantry and shopping list routes
 - Pantry matching
-- Recipes
+- Recipes and recipe books
 - Streaks
 - Users
+
+The tests do not require a real database or Firebase project. `tests/setup.js` provides safe placeholder environment values so the suite can run locally and in CI without secrets.
 
 ### Backend Test Files
 
@@ -1457,6 +1591,13 @@ backend/tests/
 └── users.test.js
 ```
 
+### Verified Backend Test Results
+
+```text
+Test Suites: 6 passed, 6 total
+Tests:       43 passed, 43 total
+```
+
 ---
 
 <a id="android-unit-tests"></a>
@@ -1467,6 +1608,11 @@ Android unit tests are located under:
 ```text
 andriod/app/src/test/
 ```
+
+The unit tests cover:
+
+- `RecipeTextParser` (recipe text, fractions, steps and empty input)
+- `ServingScaler` (scaling quantities up and down, rounding and zero values)
 
 Android Studio can run these tests through the standard Gradle test tools.
 
@@ -1492,7 +1638,7 @@ The Android utility tests were successfully executed in Android Studio.
 
 <img width="1600" height="761" alt="image" src="https://github.com/user-attachments/assets/4f9b511d-fbe0-4961-9387-d42c52d9a869" />
 
-*Figure 1: Android unit tests successfully passing in Android Studio.*
+*Figure 2: Android unit tests successfully passing in Android Studio.*
 
 ---
 
@@ -1508,6 +1654,8 @@ andriod/app/src/androidTest/
 These tests require an Android emulator or compatible physical Android device.
 
 They can be run from Android Studio using the Android testing tools.
+
+Instrumented tests are not run by the CI workflow because they require a device.
 
 ---
 
@@ -1537,10 +1685,16 @@ It documents example requests for:
 
 ### Health Check
 
-Once the backend is running:
+Once the backend is running locally:
 
 ```bash
 curl http://localhost:3000/health
+```
+
+Or against the live deployment:
+
+```bash
+curl https://elachi-backend.onrender.com/health
 ```
 
 A successful response should indicate that the backend is healthy.
@@ -1573,9 +1727,16 @@ Use test accounts and temporary credentials when demonstrating authenticated API
 <a id="deployment"></a>
 # ☁️ Deployment
 
-The backend is designed to run on Render.
+The backend is deployed on Render.
 
-The deployed environment should provide the required backend environment variables through Render's Environment configuration.
+```text
+Live API:      https://elachi-backend.onrender.com
+Health check:  https://elachi-backend.onrender.com/health
+```
+
+The deployment uses Render's free tier, so the service may take up to a minute to respond to the first request after a period of inactivity.
+
+The deployed environment provides the required backend environment variables through Render's Environment configuration.
 
 Production configuration should include:
 
@@ -1594,34 +1755,145 @@ They should never be committed to the repository.
 
 ---
 
+<a id="version-control-and-collaboration"></a>
+# 🌿 Version Control and Collaboration
+
+The project is managed with Git and hosted on GitHub. All four team members contributed to the repository throughout development.
+
+<a id="branching-strategy"></a>
+## Branching Strategy
+
+- `main` holds the stable, submission-ready version of the application.
+- New work is developed on feature branches named after the contributor and the work being done, for example `feature/jarrud-tests-ci`.
+- Feature branches are merged into `main` once the work is complete and checked.
+
+<a id="pull-requests"></a>
+## Pull Requests
+
+Changes are brought into `main` through GitHub pull requests. For example, the CI workflows and test changes were introduced through pull request #19 from `feature/jarrud-tests-ci`.
+
+Pull requests also trigger both CI workflows, so the Android build, Android unit tests and backend tests are checked before the changes are merged.
+
+<a id="commit-conventions"></a>
+## Commit Conventions
+
+Commits are made regularly and are kept small and focused on a single change.
+
+Commit messages describe what changed, and a type prefix is used where it helps, for example:
+
+```text
+ci: add GitHub Actions workflows
+chore: remove gitkeep file
+```
+
+<a id="contributors-and-commit-history"></a>
+## Contributors and Commit History
+
+- **Contributors:** 4 (see [Developer Information](#developer-information))
+- **Total commits:** 117+
+
+The full commit history and contributor breakdown can be viewed in the repository's **Commits** and **Insights → Contributors** pages.
+
+[⬆ Back to top](#top)
+
+---
+
 <a id="ci-and-github-workflows"></a>
 # 🔄 CI and GitHub Workflows
 
-The project reserves the following directory for continuous integration workflows:
+The repository uses GitHub Actions for continuous integration. Two workflows are defined:
 
 ```text
-.github/workflows/
+.github/workflows/android-ci.yml
+.github/workflows/backend-ci.yml
 ```
 
-GitHub Actions workflows can be placed here for automated processes such as:
+Both workflows run automatically on every **push** and every **pull request**. Neither workflow requires secrets, and neither prints environment variables to the logs.
 
-- Backend tests
-- Android builds
-- Static checks
-- Automated validation
-- Release workflows
+<a id="android-ci-workflow"></a>
+## Android CI Workflow
 
-Any workflow added to this directory should avoid printing secrets or exposing environment variables in logs.
+File: `.github/workflows/android-ci.yml`
 
+Runs on `ubuntu-latest` and performs the following steps:
+
+1. Checks out the repository (`actions/checkout@v4`).
+2. Sets up JDK 17 (Temurin) (`actions/setup-java@v4`).
+3. Sets up the Android SDK (`android-actions/setup-android@v3`).
+4. Installs `platform-tools`, `platforms;android-35` and `build-tools;35.0.0`.
+5. Sets up Gradle (`gradle/actions/setup-gradle@v4`).
+6. Makes the Gradle wrapper executable.
+7. Runs the Android unit tests:
+
+```bash
+./gradlew :app:testDebugUnitTest --stacktrace
+```
+
+8. Builds the debug APK:
+
+```bash
+./gradlew :app:assembleDebug --stacktrace
+```
+
+All Gradle steps run from the `andriod/` directory.
+
+<a id="backend-ci-workflow"></a>
+## Backend CI Workflow
+
+File: `.github/workflows/backend-ci.yml`
+
+Runs on `ubuntu-latest` from the `backend/` directory and performs the following steps:
+
+1. Checks out the repository (`actions/checkout@v4`).
+2. Sets up Node.js 20 with npm caching (`actions/setup-node@v4`).
+3. Installs dependencies from the lockfile:
+
+```bash
+npm ci
+```
+
+4. Runs the Jest and Supertest suite:
+
+```bash
+npm test
+```
+
+<a id="github-actions-availability-note"></a>
+## GitHub Actions Availability Note
+
+At the time of submission, GitHub Actions workflows were not running on the organisation's repositories because of an organisation-level issue communicated by the lecturer.
+
+The workflow files are committed in `.github/workflows/` so they can be run when marking. The runs shown in Figure 3 were completed successfully before this issue, and the same tests were also run locally as described below.
+
+<a id="running-ci-checks-locally"></a>
+## Running the CI Checks Locally
+
+The same checks performed by both workflows can be run locally.
+
+Backend (from `backend/`):
+
+```bash
+npm ci
+npm test
+```
+
+Android (from `andriod/`):
+
+```bash
+./gradlew :app:testDebugUnitTest
+./gradlew :app:assembleDebug
+```
+
+Local results are shown in the [Testing](#testing) section.
+
+<a id="github-actions-results"></a>
 ## GitHub Actions Results
-
-The repository includes CI workflows for both the Android and backend components.
 
 The GitHub Actions workflow runs can be viewed from the repository's **Actions** tab.
 
 <img width="1600" height="661" alt="image" src="https://github.com/user-attachments/assets/fbdbf239-a5ea-45b1-87ad-b260cb9e5943" />
 
-*Figure 2: GitHub Actions showing successful Android CI and Backend CI workflow runs.*
+*Figure 3: GitHub Actions showing successful Android CI and Backend CI workflow runs on the `feature/jarrud-tests-ci` branch, including pull request #19.*
 
 [⬆ Back to top](#top)
 
@@ -1698,6 +1970,7 @@ They must never be bundled into the Android application.
 
 ---
 
+<a id="secure-demonstrations"></a>
 ## Secure Demonstrations
 
 When recording the YouTube demonstration:
@@ -1793,6 +2066,8 @@ Check:
 5. Firebase authentication is working.
 6. The backend is reachable from the device.
 
+If the live backend has been inactive, open `https://elachi-backend.onrender.com/health` and wait for it to respond before using the app.
+
 ---
 
 ## Images Do Not Upload
@@ -1818,7 +2093,7 @@ Do not solve storage issues by adding privileged Supabase service credentials to
 A typical development workflow for the project is:
 
 ```text
-1. Create or update a feature
+1. Create a feature branch from main
         │
         ▼
 2. Implement Android UI / ViewModel / Repository changes
@@ -1842,10 +2117,10 @@ A typical development workflow for the project is:
 8. Review changes for security
         │
         ▼
-9. Commit changes
+9. Commit and push the feature branch
         │
         ▼
-10. Push to GitHub
+10. Open a pull request and merge into main
 ```
 
 Before pushing changes, verify that:
@@ -1980,18 +2255,6 @@ Elachi was designed and developed by the team listed in the [Developer Informati
 - Vite, [s.a.]. Getting Started. [online] Available at: <https://vite.dev/guide/> [Accessed 21 September 2026].
 
 - Vitest, [s.a.]. Getting Started. [online] Available at: <https://vitest.dev/guide/> [Accessed 21 September 2026].
-
-[⬆ Back to top](#top)
-
----
-
-<a id="final-demonstration"></a>
-# 🎬 Final Demonstration
-
-> 🎥 **Project Demonstration:**
-> **[INSERT YOUTUBE VIDEO LINK HERE]**
-
-Reminder: do not show `.env` files, API keys, Firebase service-account credentials, database passwords, or access tokens in the recording. See [Secure Demonstrations](#security-practices).
 
 [⬆ Back to top](#top)
 
