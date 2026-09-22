@@ -7,10 +7,11 @@
 
 Built with **Kotlin, Jetpack Compose, Node.js, Express, PostgreSQL, Supabase and Firebase**.
 
-> 🎥 **Project Demonstration:**
-> **[INSERT YOUTUBE VIDEO LINK HERE]**
+> 🎥 **Project Demonstration: YouTube Video**  
+> This video shows the running of the Android application as well as the app working on render (the backend API), firebase (Authentication) and supabase (Database)  
+> https://youtu.be/_9Ekp7AXjG8
 
-> 🌐 **Live API:** [https://elachi-backend.onrender.com](https://elachi-backend.onrender.com)
+> 🌐 **Live API:** [https://elachi-backend.onrender.com](https://elachi-backend.onrender.com)  
 > **Health check:** [https://elachi-backend.onrender.com/health](https://elachi-backend.onrender.com/health)
 
 ---
