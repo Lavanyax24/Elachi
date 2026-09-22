@@ -53,7 +53,6 @@ Built with **Kotlin, Jetpack Compose, Node.js, Express, PostgreSQL, Supabase and
   - [Cooking Streaks](#feature-cooking-streaks)
   - [Notifications](#feature-notifications)
   - [User Profiles](#user-profiles)
-- [Application Screenshots](#application-screenshots)
 - [System Architecture](#system-architecture)
   - [Request Flow](#request-flow)
 - [Android Application](#android-application)
@@ -447,27 +446,6 @@ Users can maintain application profiles containing information such as:
 - User preferences
 
 The backend associates the application profile with the authenticated Firebase user.
-
-[⬆ Back to top](#top)
-
----
-
-<a id="application-screenshots"></a>
-# 📸 Application Screenshots
-
-| Login (SSO) | Home | Recipe Books |
-| :---: | :---: | :---: |
-| <img src="PASTE-LOGIN-SCREENSHOT-URL" width="250" alt="Login screen"> | <img src="PASTE-HOME-SCREENSHOT-URL" width="250" alt="Home screen"> | <img src="PASTE-COOKBOOK-SCREENSHOT-URL" width="250" alt="Recipe books screen"> |
-
-| Recipe Detail | Pantry | AI Chef |
-| :---: | :---: | :---: |
-| <img src="PASTE-RECIPE-SCREENSHOT-URL" width="250" alt="Recipe detail screen"> | <img src="PASTE-PANTRY-SCREENSHOT-URL" width="250" alt="Pantry screen"> | <img src="PASTE-AICHEF-SCREENSHOT-URL" width="250" alt="AI Chef screen"> |
-
-| Settings | Streak Calendar | Camera Capture |
-| :---: | :---: | :---: |
-| <img src="PASTE-SETTINGS-SCREENSHOT-URL" width="250" alt="Settings screen"> | <img src="PASTE-STREAK-SCREENSHOT-URL" width="250" alt="Streak calendar screen"> | <img src="PASTE-CAMERA-SCREENSHOT-URL" width="250" alt="Camera capture screen"> |
-
-*Figure 1: Key screens of the Elachi Android application running on a physical device.*
 
 [⬆ Back to top](#top)
 
