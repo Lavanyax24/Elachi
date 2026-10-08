@@ -1,99 +1,326 @@
+<a id="top"></a>
+
 <p align="center">
-  <img src="andriod/app/src/main/res/drawable/elachi_logo.png" alt="Elachi logo" width="180" />
+  <img src="andriod/app/src/main/res/drawable/elachi_logo.png" alt="Elachi - Mouth Full Of Flavour" width="230" />
 </p>
 
-<h1 align="center">Elachi</h1>
-<p align="center"><strong>Mouth Full Of Flavour</strong></p>
-<p align="center">An Android recipe management application with pantry tools, recipe scanning and an AI cooking assistant.</p>
-<p align="center">
-  <a href="https://youtu.be/_9Ekp7AXjG8">Watch the project demonstration</a> ·
-  <a href="#my-contribution">My contribution</a> ·
-  <a href="#getting-started">Run the project</a>
+# 🍃 Elachi - Your Digital Kitchen Companion
+
+> 🌿 *“Mouth Full Of Flavour.”*
+
+**📖 Collect recipes · 🥬 Prepare your pantry · 🍳 Cook with confidence**
+
+<p align="left">
+  <img src="https://img.shields.io/badge/Kotlin-425529?style=for-the-badge&amp;logo=kotlin&amp;logoColor=white" alt="Kotlin" />
+  <img src="https://img.shields.io/badge/Jetpack_Compose-3D2E13?style=for-the-badge&amp;logo=jetpackcompose&amp;logoColor=white" alt="Jetpack Compose" />
+  <img src="https://img.shields.io/badge/Supabase-425529?style=for-the-badge&amp;logo=supabase&amp;logoColor=white" alt="Supabase" />
+  <img src="https://img.shields.io/badge/Firebase-D97706?style=for-the-badge&amp;logo=firebase&amp;logoColor=white" alt="Firebase" />
 </p>
 
-## About the project
+<p align="left">
+  <a href="https://youtu.be/_9Ekp7AXjG8"><img src="https://img.shields.io/badge/▶_Watch_the_Demo-D97706?style=for-the-badge" alt="Watch the Elachi demonstration" /></a>
+  <a href="https://github.com/EMKNDN/emkndn-prog7314-2026-prog7314-poe-st10439057"><img src="https://img.shields.io/badge/Original_Team_Project-3D2E13?style=for-the-badge&amp;logo=github&amp;logoColor=white" alt="Original team repository" /></a>
+</p>
 
-Elachi helps users organise recipes, plan meals using pantry ingredients and follow recipes while cooking. It combines a native Kotlin and Jetpack Compose Android application with an Express REST API, Supabase PostgreSQL and Firebase Authentication.
+<p align="left">
+  <a href="#my-contribution">My Contribution</a> ·
+  <a href="#custom-features">Feature Highlights</a> ·
+  <a href="#design-system">Design System</a> ·
+  <a href="#getting-started">Run the App</a>
+</p>
 
-This repository is my personal portfolio copy of a **four-person academic team project developed in 2026**. I am **Lavanya Pillay** ([Lavanyax24](https://github.com/Lavanyax24)). The complete application is included to demonstrate how my work fits into the shared system; the project was developed collaboratively.
+---
 
-## My contribution
+**Elachi** is an Android recipe management application developed by a **four-person team** for our **PROG7314 academic project (2026)**. It brings recipes, cookbooks, pantry ingredients and cooking tools into one place, with Firebase Authentication, a custom Express API and Supabase cloud services.
 
-My assigned development areas were **Phase 4 — Recipes**, **Phase 5a — Pantry, Timer and Discover**, and **Phase 6b — AI Chef, Achievements and Streaks**, as recorded in the team's build plan. The table below describes those areas and links to their implementation in this source snapshot. The allocation records responsibility; the original Git history provides the record of individual commits and later shared changes.
+> 🍃 **About this repository:** This is my personal portfolio copy of our team project. I am **Lavanya Pillay** ([Lavanyax24](https://github.com/Lavanyax24)), and this repository showcases my contribution within the complete application. Credit for the full project belongs to the team below.
 
-| Area | My assigned work | Source |
+## 🧭 Table of Contents
+
+| 🍃 Start Here | 🍳 Explore the App | 🛠️ Behind the Scenes |
+| :--- | :--- | :--- |
+| [🙋 My Contribution](#my-contribution) | [✨ Custom Features](#custom-features) | [🧰 Tech Stack](#tech-stack) |
+| [🍲 Project Overview](#project-overview) | [🌿 All Features](#all-features) | [🗂️ Project Structure](#project-structure) |
+| [🎬 Watch the Demo](#demonstration) | [📖 Recipes & Cook Mode](#recipes-and-cook-mode) | [🎨 Design System](#design-system) |
+| [🚀 Setup & Testing](#getting-started) | [🥬 Pantry & Kitchen Tools](#pantry-and-tools) | [🏗️ System Architecture](#architecture) |
+| [🌱 Future Enhancements](#future-enhancements) | [👩‍🍳 AI Chef & Progress](#ai-and-progress) | [🤝 Team & Attribution](#team-attribution) |
+| [📚 References](#references) | [⬆️ Back to Top](#top) | [📄 Project Rights](#project-rights) |
+
+---
+
+<a id="team-attribution"></a>
+
+## 🤝 Meet the Team
+
+| Team member | Student number | Allocated workstream |
 | --- | --- | --- |
-| Cookbooks and recipes | Cookbook screens and ViewModel; recipe entry, detail screens and ViewModels; recipe navigation | [Cookbooks](andriod/app/src/main/java/com/elachi/app/ui/cookbook/) · [Recipes](andriod/app/src/main/java/com/elachi/app/ui/recipe/) |
-| Recipe capture and cooking | Camera/OCR screens and ViewModel; guided cook mode with timers and text-to-speech; serving controls and PDF export in recipe detail | [Recipe screens](andriod/app/src/main/java/com/elachi/app/ui/recipe/) |
-| Pantry and shopping list | Pantry ViewModel and screens, ingredient quantity/unit entry and shopping-list interface | [Pantry](andriod/app/src/main/java/com/elachi/app/ui/pantry/) |
-| Kitchen timer | Custom duration controls, start/pause/reset behaviour and completion sound | [PantryScreen.kt](andriod/app/src/main/java/com/elachi/app/ui/pantry/PantryScreen.kt) |
-| Recipe discovery | Public recipe discovery interface with search and filtering | [DiscoverScreen.kt](andriod/app/src/main/java/com/elachi/app/ui/discover/DiscoverScreen.kt) |
-| AI Chef | Android chat interface and ViewModel connected to the team's backend AI service | [AI Chef](andriod/app/src/main/java/com/elachi/app/ui/aichef/) |
-| Achievements and streaks | Achievement progress interface and cooking streak calendar | [Achievements](andriod/app/src/main/java/com/elachi/app/ui/achievements/) · [Streaks](andriod/app/src/main/java/com/elachi/app/ui/streak/) |
+| **Lavanya Pillay** | **ST10438009** | **Recipes, pantry, discovery, timer, Android AI Chef, achievements and streaks** |
+| Jarrud Frederick Cochrane | ST10266083 | Data layer, authentication, home/profile/notifications, Android tests and CI |
+| Saa'diyah Mansoor | ST10439057 | Setup, onboarding, calculator/converter, settings/legal/help, shared docs/video |
+| Diya Lakha | ST10439176 | Backend API, backend tests, deployment verification, shared docs/video |
 
-Assigned branches: `feature/lavanya-recipes`, `feature/lavanya-pantry` and `feature/lavanya-aichef-achievements`.
+---
 
-These features integrate with the shared repositories, authentication, API and database developed by the team. Backend AI integration and server-side achievement/streak logic belong to the backend workstream.
+<a id="my-contribution"></a>
 
-## Features
+## 🙋 My Contribution
 
-- **Recipe collection:** create, edit and delete recipes; organise them into customised recipe books and mark favourites.
-- **Recipe capture:** use CameraX and ML Kit to capture and recognise recipe text.
-- **Cooking support:** adjust servings, follow step-by-step cook mode with spoken instructions and timers, and export recipes as PDFs.
-- **Pantry and shopping:** track ingredients, maintain shopping lists and request pantry-based recipe suggestions.
-- **Discovery:** browse and search public recipes.
-- **AI Chef:** ask cooking questions through a backend service that supplies pantry context to Cohere.
-- **Progress:** view achievements and cooking streaks.
-- **Shared platform:** Firebase sign-in, user profiles, settings, notifications and local persistence.
+My assigned areas covered much of the day-to-day cooking experience:
 
-Some controls in this academic snapshot remain placeholders, including recipe forking. Cloud-dependent features require configured services.
+- **📖 Cookbooks & Recipes** - cookbook screens and ViewModels; recipe entry and detail screens; recipe navigation, serving controls and PDF export.
+- **📷 Recipe Scanning & Cook Mode** - CameraX/ML Kit capture screens and ViewModel, plus guided cooking with timers and spoken instructions.
+- **🥬 Pantry & Shopping List** - pantry screens and ViewModel, ingredient quantity/unit entry and the shopping-list interface.
+- **⏱️ Kitchen Timer** - custom duration inputs, start/pause/reset controls and a completion sound.
+- **🔎 Discover Recipes** - the public recipe discovery interface, search and filtering.
+- **👩‍🍳 AI Chef Interface** - the Android chat screen and ViewModel connected to the team's backend AI service.
+- **🏅 Achievements & Streaks** - achievement progress cards and the cooking streak calendar.
 
-## Demonstration and visuals
+These responsibilities follow **Phases 4, 5a and 6b** of the team allocation. The original Git history records individual commits and shared integration changes. Authentication, shared data repositories, the backend API, cloud integration, backend AI calls and server-side achievement logic were part of my teammates' workstreams.
 
-[**Watch the Elachi demonstration on YouTube**](https://youtu.be/_9Ekp7AXjG8)
+<details>
+<summary><strong>🌿 Explore my assigned feature areas</strong></summary>
 
-The demonstration covers the Android application and its backend/cloud integrations. The header uses the existing Elachi logo from the application resources. This source snapshot includes branding assets rather than a gallery of application screenshots.
+| Area | Source | Assigned branch |
+| --- | --- | --- |
+| Recipes and cookbooks | [Cookbook screens](andriod/app/src/main/java/com/elachi/app/ui/cookbook/) · [Recipe screens](andriod/app/src/main/java/com/elachi/app/ui/recipe/) | `feature/lavanya-recipes` |
+| Pantry and timer | [Pantry screens](andriod/app/src/main/java/com/elachi/app/ui/pantry/) | `feature/lavanya-pantry` |
+| Recipe discovery | [Discover screen](andriod/app/src/main/java/com/elachi/app/ui/discover/) | `feature/lavanya-pantry` |
+| AI Chef | [Chat interface and ViewModel](andriod/app/src/main/java/com/elachi/app/ui/aichef/) | `feature/lavanya-aichef-achievements` |
+| Achievements and streaks | [Achievements](andriod/app/src/main/java/com/elachi/app/ui/achievements/) · [Streak calendar](andriod/app/src/main/java/com/elachi/app/ui/streak/) | `feature/lavanya-aichef-achievements` |
 
-## Technology stack
+</details>
 
-| Layer | Technologies |
+---
+
+
+
+<a id="project-overview"></a>
+
+## 🍲 Project Overview
+
+Elachi is designed to make a recipe collection useful in the kitchen. Users can organise favourite meals into cookbooks, keep track of ingredients and follow cooking steps without constantly switching between tools.
+
+| 📖 Collect | 🥬 Prepare | 🍳 Cook |
+| :--- | :--- | :--- |
+| Create recipe books, save favourites and capture recipe text. | Track pantry ingredients, build shopping lists and discover meal ideas. | Adjust servings, follow spoken steps, use timers and export recipe PDFs. |
+
+The app combines **Jetpack Compose screens**, **ViewModels and repositories**, **Room/DataStore persistence**, and a **Firebase-authenticated REST API**. Supabase provides PostgreSQL data storage and image storage; Cohere powers the backend AI service.
+
+---
+
+<a id="custom-features"></a>
+
+## ✨ Custom Features
+
+### 📷 From Recipe Text to Your Cookbook
+
+CameraX and Google ML Kit support recipe text capture. The recipe workflow helps users bring recipe information into the app instead of entering everything manually.
+
+### 👩‍🍳 An AI Chef in Your Pocket
+
+The chat interface connects to the backend's Cohere integration for cooking questions and ingredient ideas. The backend can include pantry ingredients as context, while keeping the AI credential on the server.
+
+### 🏅 Progress Beyond the Recipe
+
+Achievement cards and a cooking streak calendar give users a visual record of their cooking activity. The Android interfaces connect with the team's shared data and backend progression logic.
+
+---
+
+<a id="all-features"></a>
+
+## 🌿 All Features
+
+| Feature | What it offers |
 | --- | --- |
-| Android interface | Kotlin, Jetpack Compose, Material 3, Navigation Compose |
-| App state and data | ViewModels, repositories, coroutines, Room, DataStore |
-| Networking and images | Retrofit, OkHttp, Coil |
-| Camera and text recognition | CameraX, Google ML Kit |
-| Authentication and notifications | Firebase Authentication, Google sign-in, Firebase Cloud Messaging |
+| 🔐 Authentication | Firebase email/password authentication and Google sign-in integration |
+| 🏠 Home & Profile | Dashboard, user profile and cooking preferences |
+| 📚 Recipe Books | Customised books for organising recipe collections |
+| 📝 Recipe Management | Create, view, edit and delete recipes with ingredients, units and ordered steps |
+| ❤️ Favourites | Mark favourite recipes in your collection |
+| 📷 Recipe Capture | Camera capture and ML Kit text recognition |
+| 🍳 Cook Mode | Step-by-step instructions, timers and text-to-speech |
+| 📄 PDF Export | Export a recipe for sharing or keeping outside the app |
+| 🥬 Pantry | Ingredient tracking with quantities and units |
+| 🛒 Shopping List | Maintain a list and generate missing ingredients from a recipe |
+| 🔎 Discovery | Browse, search and filter public recipes |
+| 💡 Pantry Suggestions | Request recipe matches based on available ingredients |
+| 🧮 Kitchen Tools | Timer, unit converter and calculator |
+| 👩‍🍳 AI Chef | Cooking chat through the backend AI service |
+| 🏅 Achievements & Streaks | Cooking milestones, progress and activity calendar |
+| 🌙 Settings & Notifications | Light/dark appearance, account settings and Firebase messaging integration |
+| 💾 Local Persistence | Room and DataStore support for local data and preferences |
+
+**Snapshot status:** This is the academic source snapshot. Some controls, including recipe forking, remain placeholders; cloud-dependent features need configured services.
+
+---
+
+<a id="recipes-and-cook-mode"></a>
+
+## 📖 Recipes & Cook Mode
+
+A recipe carries more than a title and a list of ingredients. Elachi supports quantities and units, servings, categories, cooking details, allergens, images and ordered instructions.
+
+- **Organise:** group recipes into personalised books with icon and colour choices.
+- **Capture:** enter recipes manually or use the camera/text-recognition workflow.
+- **Adapt:** adjust servings to scale ingredient quantities.
+- **Cook:** move through ordered steps with spoken instructions and timers.
+- **Keep:** mark favourites and export a recipe as a PDF.
+
+**Assigned contribution area:** recipe and cookbook interfaces, ViewModels, capture screens and cooking navigation. These use the team's shared repositories and API.
+
+---
+
+<a id="pantry-and-tools"></a>
+
+## 🥬 Pantry & Kitchen Tools
+
+The pantry records ingredients with quantities and units. Shopping lists help users prepare for a recipe, while backend recipe matching supplies suggestions based on ingredients already available.
+
+| Tool | Cooking use |
+| --- | --- |
+| 🥬 Digital Pantry | See which ingredients are on hand |
+| 🛒 Shopping List | Track what still needs to be purchased |
+| ⏱️ Kitchen Timer | Set a duration, pause/reset it and hear a completion sound |
+| ⚖️ Unit Converter | Convert supported measurement units |
+| 🧮 Calculator | Perform everyday kitchen calculations |
+
+**Assigned contribution area:** pantry/shopping interfaces and kitchen timer. The standalone converter and calculator were allocated to Saa'diyah; ingredient matching belongs to the backend workstream.
+
+---
+
+<a id="ai-and-progress"></a>
+
+## 👩‍🍳 AI Chef & Cooking Progress
+
+**AI Chef** provides a chat interface for cooking guidance and meal ideas. Users can ask questions such as *“What can I make with rice and eggs?”* The request passes through the backend, which supplies relevant pantry context to Cohere.
+
+**Achievements** display cooking milestones and progress. The **streak calendar** makes recorded cooking activity visible over time.
+
+**Assigned contribution area:** Android chat screen/ViewModel, achievement interface and streak calendar. Cohere integration and server-side calculations were allocated to the backend workstream.
+
+---
+
+<a id="demonstration"></a>
+
+## 🎬 Project Demonstration
+
+<p align="left">
+  <a href="https://youtu.be/_9Ekp7AXjG8"><img src="https://img.shields.io/badge/Watch_Elachi_in_Action-D97706?style=for-the-badge&amp;logo=youtube&amp;logoColor=white" alt="Watch Elachi in action on YouTube" /></a>
+</p>
+
+The team demonstration covers the Android application and its Render, Firebase and Supabase integrations.
+
+The header uses the **original Elachi logo** included in the app. Application screenshots are not bundled in this source snapshot; the demo provides the app walkthrough.
+
+---
+
+<a id="tech-stack"></a>
+
+## 🧰 Tech Stack
+
+| Layer | Technology |
+| --- | --- |
+| Language | Kotlin |
+| Android UI | Jetpack Compose, Material 3 |
+| Navigation & State | Navigation Compose, ViewModels, Kotlin coroutines |
+| Local Data | Room, DataStore |
+| Networking | Retrofit, OkHttp |
+| Image Loading | Coil |
+| Camera & OCR | CameraX, Google ML Kit |
+| Authentication | Firebase Authentication, Google sign-in |
+| Notifications | Firebase Cloud Messaging |
 | Backend | Node.js, Express, Firebase Admin SDK |
-| Database and image storage | Supabase PostgreSQL, Supabase Storage |
-| AI service | Cohere, accessed through the backend |
-| Hosting | Render for the team's backend deployment |
-| Testing and automation | JUnit, Jest, Supertest, GitHub Actions |
+| Database & Storage | Supabase PostgreSQL, Supabase Storage |
+| AI | Cohere through the backend |
+| Backend Hosting | Render |
+| Testing | JUnit, Jest, Supertest |
+| Build & Automation | Gradle Kotlin DSL, GitHub Actions |
+| Minimum Android Version | API 24 - Android 7.0 |
+| Compile / Target SDK | API 35 |
+| Java Toolchain | JDK 17 |
 
-## Architecture
+---
 
-The Android app signs users in through Firebase and attaches their Firebase ID token to API requests. The Express backend verifies the token, performs database operations and calls supporting services. The app also uses Supabase Storage for image uploads and Room/DataStore for local data.
+<a id="project-structure"></a>
+
+## 🗂️ Project Structure
+
+**⭐ marks my assigned feature areas.** Shared source files may include contributions from multiple team members.
+
+| Path | Purpose |
+| --- | --- |
+| [`andriod/`](andriod/) | Native Android application - folder spelling retained from the team repository |
+| [`…/ui/cookbook/`](andriod/app/src/main/java/com/elachi/app/ui/cookbook/) ⭐ | Cookbook screens and ViewModels |
+| [`…/ui/recipe/`](andriod/app/src/main/java/com/elachi/app/ui/recipe/) ⭐ | Recipe entry/detail, camera capture and cook mode |
+| [`…/ui/pantry/`](andriod/app/src/main/java/com/elachi/app/ui/pantry/) ⭐ | Pantry, shopping-list interface and timer |
+| [`…/ui/discover/`](andriod/app/src/main/java/com/elachi/app/ui/discover/) ⭐ | Public recipe discovery |
+| [`…/ui/aichef/`](andriod/app/src/main/java/com/elachi/app/ui/aichef/) ⭐ | AI Chef interface and ViewModel |
+| [`…/ui/achievements/`](andriod/app/src/main/java/com/elachi/app/ui/achievements/) ⭐ | Achievement progress interface |
+| [`…/ui/streak/`](andriod/app/src/main/java/com/elachi/app/ui/streak/) ⭐ | Cooking streak calendar |
+| [`…/data/`](andriod/app/src/main/java/com/elachi/app/data/) | Shared Room entities/DAOs, API client and repositories |
+| [`…/navigation/`](andriod/app/src/main/java/com/elachi/app/navigation/) | Shared routes and navigation integration |
+| [`…/ui/theme/`](andriod/app/src/main/java/com/elachi/app/ui/theme/) | Elachi colours, typography and Material theme |
+| [`backend/`](backend/) | Express API and backend services |
+| [`backend/src/db/schema.sql`](backend/src/db/schema.sql) | PostgreSQL schema |
+| [`.github/workflows/`](.github/workflows/) | Android and backend workflows |
+| [`docs/TEAM_README.md`](docs/TEAM_README.md) | Preserved team documentation and acknowledgements |
+
+---
+
+<a id="design-system"></a>
+
+## 🎨 Design System
+
+Elachi's palette draws on **olive greens, warm earth tones and cream surfaces**, with orange highlights. The colours below come directly from the application's [Color.kt](andriod/app/src/main/java/com/elachi/app/ui/theme/Color.kt) and [Theme.kt](andriod/app/src/main/java/com/elachi/app/ui/theme/Theme.kt).
+
+| Colour | Token | Hex | Use in the app |
+| --- | --- | --- | --- |
+| ![Olive green](https://img.shields.io/badge/Olive-425529?style=flat-square) | `ElachiGreen` | `#425529` | Primary controls and brand accents |
+| ![Light olive](https://img.shields.io/badge/Light_Olive-5A6E3F?style=flat-square) | `ElachiGreenLight` | `#5A6E3F` | Primary colour in dark mode |
+| ![Warm brown](https://img.shields.io/badge/Brown-3D2E13?style=flat-square) | `ElachiBrown` | `#3D2E13` | Secondary colour in light mode |
+| ![Cream](https://img.shields.io/badge/Cream-FCF9F4?style=flat-square) | `ElachiCream` | `#FCF9F4` | Light-mode background |
+| ![Spiced orange](https://img.shields.io/badge/Orange-D97706?style=flat-square) | `ElachiAccent` | `#D97706` | Accent and dark-mode secondary colour |
+| ![Dark background](https://img.shields.io/badge/Dark-12140E?style=flat-square) | `DarkBackground` | `#12140E` | Dark-mode background |
+
+The app supports **light and dark themes** through its Material 3 colour schemes. This README echoes the app's palette in its badges while keeping GitHub's native page background.
+
+---
+
+<a id="architecture"></a>
+
+## 🏗️ System Architecture
+
+Firebase handles sign-in; the Android app attaches the user's ID token to API calls. Express verifies the token and accesses the database or supporting services. Image uploads use Supabase Storage, while Room and DataStore provide local persistence.
 
 ```mermaid
 flowchart TD
-    App["Android app"] -->|"Sign-in"| Auth["Firebase Authentication"]
-    App -->|"HTTPS + ID token"| API["Express REST API"]
+    App["Android · Kotlin + Compose"] -->|"Sign-in"| Auth["Firebase Authentication"]
+    App -->|"HTTPS + Firebase ID token"| API["Node.js + Express API"]
     API -->|"Verify token"| Auth
     API --> DB["Supabase PostgreSQL"]
-    API --> AI["Cohere"]
+    API --> AI["Cohere AI"]
     API --> FCM["Firebase Cloud Messaging"]
     App --> Storage["Supabase Storage"]
 ```
 
-## Getting started
+---
 
-### Requirements
+<a id="getting-started"></a>
+
+## 🚀 Getting Started & Testing
+
+<details>
+<summary><strong>📦 Requirements, backend configuration and Android setup</strong></summary>
+
+
+### ✅ What You’ll Need
 
 - Android Studio with Android SDK 35 and JDK 17.
 - Android device/emulator running Android 7.0 (API 24) or later.
 - Node.js 20 or newer and npm.
 - Your own Firebase and Supabase projects; a Cohere key for AI features.
 
-### Clone
+### 📥 Clone the Project
 
 ```bash
 git clone https://github.com/Lavanyax24/Elachi.git
@@ -102,7 +329,7 @@ cd Elachi
 
 The Android folder is named **`andriod/`** in this repository. Use that exact spelling in paths.
 
-### Backend
+### 🌐 Set Up the Backend
 
 From `backend/`, install dependencies and copy the configuration template:
 
@@ -129,7 +356,7 @@ npm run dev
 
 The local health endpoint is `http://localhost:3000/health` when using port 3000. See [backend documentation](backend/README.md) and the [database schema](backend/src/db/schema.sql) for more detail.
 
-### Android
+### 📱 Run the Android App
 
 1. Open `andriod/` in Android Studio and install the required SDK packages.
 2. Register application ID `com.elachi.app.new` in your Firebase project. Enable the authentication providers you intend to use and place your Android configuration in `andriod/app/google-services.json`.
@@ -140,7 +367,7 @@ The local health endpoint is `http://localhost:3000/health` when using port 3000
 
 For a local backend, use a device-reachable URL. Android emulators typically reach the host at `10.0.2.2`; physical devices need the host's LAN address. Local HTTP may require a development-only Android network configuration.
 
-## Testing
+### 🧪 Build & Test
 
 Backend, from `backend/`:
 
@@ -158,23 +385,47 @@ Android, from `andriod/` on Windows:
 
 On macOS/Linux, use `./gradlew` instead. Android utility tests cover serving scaling and recipe-text parsing. Backend tests use Jest and Supertest. The included [Android workflow](.github/workflows/android-ci.yml) and [backend workflow](.github/workflows/backend-ci.yml) currently run manually through `workflow_dispatch`.
 
-## Team and attribution
 
-Responsibilities below follow the supplied team allocation. Shared integration and later fixes may span these areas.
+</details>
 
-| Team member | Allocated responsibilities |
-| --- | --- |
-| **Lavanya Pillay** | Recipes and cookbooks; pantry, timer and discovery; Android AI Chef, achievements and streak screens |
-| **Jarrud Frederick Cochrane** | Data layer, authentication screens, home/profile/notifications, Android tests and CI |
-| **Saa'diyah Mansoor** | Project setup, onboarding, calculator/converter, settings/legal/help, shared documentation and video |
-| **Diya Lakha** | Backend API, backend tests, deployment verification, shared documentation and video |
+---
 
-This portfolio copy retains the team's authorship and existing source acknowledgements. The original team documentation and references are preserved in [TEAM_README.md](docs/TEAM_README.md).
+<a id="future-enhancements"></a>
 
-The build plan describes starting from an AI-assisted version and adapting it during development. This portfolio presentation does not claim that every line was written from scratch. Existing code comments, references and any AI usage documentation should remain with the source.
+## 🌱 Future Enhancements
 
-Original team repository: [Elachi team repository](https://github.com/EMKNDN/emkndn-prog7314-2026-prog7314-poe-st10439057).
+Possible next steps for the project include:
 
-## Project rights
+- **Recipe forking** - turn the current placeholder into a working recipe-copy workflow.
+- **More robust recipe capture** - improve handling of varied layouts and OCR results.
+- **Deeper cooking insights** - build on existing streak and achievement information.
+- **Broader verification** - expand device testing and coverage of cloud-dependent workflows.
 
-Elachi was developed as an academic team project. This portfolio copy does not introduce a new software licence. Source code and original materials remain subject to the team's and applicable institution's rights and requirements; third-party dependencies retain their own licences.
+These are improvement ideas, rather than features claimed for the current snapshot.
+
+---
+
+<a id="references"></a>
+
+## 📚 References & Attribution
+
+- **[Original team repository](https://github.com/EMKNDN/emkndn-prog7314-2026-prog7314-poe-st10439057)** - shared project source and development history.
+- **[Team documentation](docs/TEAM_README.md)** - preserved project documentation, source acknowledgements and references.
+- **[Backend README](backend/README.md)** - API, database and deployment documentation.
+- **[API testing notes](backend/tests/endpoints.md)** - endpoint testing documentation.
+- **[Project demonstration](https://youtu.be/_9Ekp7AXjG8)** - team application walkthrough.
+
+The team's build plan describes adapting an AI-assisted starting version. Existing source comments, references and any AI usage documentation remain part of the project attribution.
+
+<a id="project-rights"></a>
+
+## 📄 Project Rights
+
+Elachi is an academic team project. This personal copy introduces no new software licence. Original materials remain subject to the team's and applicable institution's rights; third-party dependencies retain their own licences.
+
+---
+
+### 🍃 Elachi · Mouth Full Of Flavour
+*🤝 Developed collaboratively by Lavanya Pillay, Jarrud Frederick Cochrane, Saa'diyah Mansoor and Diya Lakha.*
+🙋 Shared by **[Lavanya Pillay](https://github.com/Lavanyax24)** to showcase my contribution.
+[⬆️ Back to top](#top)
