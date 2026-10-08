@@ -22,3 +22,18 @@ Thumbs.db
 
 # IDE
 .vscode/
+
+# Actual Android directory in this project
+andriod/.gradle/
+andriod/build/
+andriod/app/build/
+andriod/.idea/
+andriod/local.properties
+andriod/*.iml
+
+# Local/backend credentials and signing material
+.env
+.env.*
+!.env.example
+*.jks
+*.keystore
